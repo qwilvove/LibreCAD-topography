@@ -3,6 +3,7 @@
 
 #include "document_interface.h"
 #include "topographytools.h"
+#include "tt_dialogedit.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -20,10 +21,11 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 
     if (!fileName.isEmpty())
     {
-        ui->label->setText(QString("Active file : %1").arg(fileName));
+        ui->label->setText(tr("Active file : %1").arg(fileName));
 
         ui->pbSave->setEnabled(true);
         ui->pbImport->setEnabled(true);
+        ui->pbEdit->setEnabled(true);
         ui->pbDraw->setEnabled(true);
 
         loadPoints();
@@ -110,6 +112,7 @@ void TT_DialogMain::loadPoint(QDataStream &stream, TT::Point &point)
     stream >> point.z;
     stream >> point.ih;
     stream >> point.v0;
+    stream >> point.ph;
     stream >> point.ha;
     stream >> point.va;
     stream >> point.id;
@@ -156,6 +159,7 @@ void TT_DialogMain::savePoint(QDataStream &stream, TT::Point &point)
     stream << point.z;
     stream << point.ih;
     stream << point.v0;
+    stream << point.ph;
     stream << point.ha;
     stream << point.va;
     stream << point.id;
@@ -263,56 +267,141 @@ void TT_DialogMain::displayPoints()
 // Add a line to tableWidget and fill it with point info
 void TT_DialogMain::displayPoint(TT::Point &point)
 {
+    // Add one line at the end
     int lineNumber = ui->tableWidget->rowCount() + 1;
     ui->tableWidget->setRowCount(lineNumber);
 
     // Fill the row
-    // Line number
-    QString infoLineNumber = QString("%1").arg(lineNumber);
-    QTableWidgetItem *item = new QTableWidgetItem(infoLineNumber);
-    ui->tableWidget->setItem(lineNumber - 1, 0, item);
-
-    // Type
-    QString infoType;
+    // Check for type
     if (point.type == TT::PTYPE::POINT)
     {
-        infoType = tr("POINT");
+        // Line number
+        QString infoLineNumber = QString("%1").arg(lineNumber);
+        QTableWidgetItem *itemLineNumber = new QTableWidgetItem(infoLineNumber);
+        itemLineNumber->setForeground(QColor(QString("dark green")));
+        ui->tableWidget->setItem(lineNumber - 1, 0, itemLineNumber);
+
+        // Type
+        QString infoType = tr("POINT");
+        QTableWidgetItem *itemType = new QTableWidgetItem(infoType);
+        itemType->setForeground(QColor(QString("dark green")));
+        ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
+
+        // Name
+        QString infoName = point.name;
+        QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
+        itemName->setForeground(QColor(QString("dark green")));
+        ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
+
+        // Parameters
+        QString infoParameters = tr("X=%1 , Y=%2").arg(point.x, 11, 'f', 3).arg(point.y, 11, 'f', 3);
+        if (point.hasZ)
+        {
+            infoParameters += tr(" , Z=%1").arg(point.z, 8, 'f', 3);
+        }
+        QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
+        itemParameters->setForeground(QColor(QString("dark green")));
+        ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
     else if (point.type == TT::PTYPE::STATION)
     {
-        infoType = tr("STATION");
+        // Line number
+        QString infoLineNumber = QString("%1").arg(lineNumber);
+        QTableWidgetItem *itemLineNumber = new QTableWidgetItem(infoLineNumber);
+        itemLineNumber->setForeground(QColor(QString("dark red")));
+        ui->tableWidget->setItem(lineNumber - 1, 0, itemLineNumber);
+
+        // Type
+        QString infoType = tr("STATION");
+        QTableWidgetItem *itemType = new QTableWidgetItem(infoType);
+        itemType->setForeground(QColor(QString("dark red")));
+        ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
+
+        // Name
+        QString infoName = point.name;
+        QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
+        itemName->setForeground(QColor(QString("dark red")));
+        ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
+
+        // Parameters
+        QString infoParameters = tr("IH=%1").arg(point.ih, 7, 'f', 3);
+        if (point.v0 >= 0)
+        {
+            infoParameters += tr(" , V0=%1").arg(point.v0, 8, 'f', 4);
+        }
+        QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
+        itemParameters->setForeground(QColor(QString("dark red")));
+        ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
     else if (point.type == TT::PTYPE::REFERENCE)
     {
-        infoType = tr("REFERENCE");
-    }
-    else if (point.type == TT::PTYPE::MEASURE)
-    {
-        infoType = tr("MEASURE");
-    }
-    QTableWidgetItem *itemType = new QTableWidgetItem(infoType);
-    ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
+        // Line number
+        QString infoLineNumber = QString("%1").arg(lineNumber);
+        QTableWidgetItem *itemLineNumber = new QTableWidgetItem(infoLineNumber);
+        itemLineNumber->setForeground(QColor(QString("dark blue")));
+        ui->tableWidget->setItem(lineNumber - 1, 0, itemLineNumber);
 
-    // Name
-    QString infoName = point.name;
-    QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
-    ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
+        // Type
+        QString infoType = tr("REFERENCE");
+        QTableWidgetItem *itemType = new QTableWidgetItem(infoType);
+        itemType->setForeground(QColor(QString("dark blue")));
+        ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
 
-    // Parameters
-    QString infoParameters;
-    if (point.type == TT::PTYPE::POINT)
-    {
-        if (point.hasZ)
-        {
-            infoParameters = QString("X=%1 , Y=%2 , Z=%3").arg(point.x).arg(point.y).arg(point.z);
-        }
-        else
-        {
-            infoParameters = QString("X=%1 , Y=%2").arg(point.x).arg(point.y);
-        }
+        // Name
+        QString infoName = point.name;
+        QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
+        itemName->setForeground(QColor(QString("dark blue")));
+        ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
+
+        // Parameters
+        QString infoParameters = tr("PH=%1 , HA=%2 , VA=%3 , ID=%4")
+                .arg(point.ph, 7, 'f', 3)
+                .arg(point.ha, 8, 'f', 4)
+                .arg(point.va, 8, 'f', 4)
+                .arg(point.id, 7, 'f', 3);
+        QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
+        itemParameters->setForeground(QColor(QString("dark blue")));
+        ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
-    QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
-    ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
+    else // point.type == TT::PTYPE::MEASURE
+    {
+        // Line number
+        QString infoLineNumber = QString("%1").arg(lineNumber);
+        QTableWidgetItem *itemLineNumber = new QTableWidgetItem(infoLineNumber);
+        itemLineNumber->setForeground(QColor(QString("dark cyan")));
+        ui->tableWidget->setItem(lineNumber - 1, 0, itemLineNumber);
+
+        // Type
+        QString infoType = tr("MEASURE");
+        QTableWidgetItem *itemType = new QTableWidgetItem(infoType);
+        itemType->setForeground(QColor(QString("dark cyan")));
+        ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
+
+        // Name
+        QString infoName = point.name;
+        QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
+        itemName->setForeground(QColor(QString("dark cyan")));
+        ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
+
+        // Parameters
+        QString infoParameters = tr("PH=%1 , HA=%2 , VA=%3 , ID=%4")
+                .arg(point.ph, 7, 'f', 3)
+                .arg(point.ha, 8, 'f', 4)
+                .arg(point.va, 8, 'f', 4)
+                .arg(point.id, 7, 'f', 3);
+        QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
+        itemParameters->setForeground(QColor(QString("dark cyan")));
+        ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
+    }
+}
+
+void TT_DialogMain::editPoint(TT::Point &point)
+{
+    TT_DialogEdit editDialog(this, &point);
+    if (editDialog.exec() == QDialog::Accepted)
+    {
+        displayPoints();
+    }
 }
 
 // Draw points on the current drawing
@@ -346,8 +435,11 @@ int TT_DialogMain::drawPoints()
     for (auto i = 0; i < points.size(); i++)
     {
         TT::Point currentPoint = points.at(i);
-        drawPoint(currentPoint);
-        nbPoints++;
+        if (currentPoint.type == TT::PTYPE::POINT)
+        {
+            drawPoint(currentPoint);
+            nbPoints++;
+        }
     }
 
     this->doc->setLayer(currentLayer);
@@ -390,10 +482,11 @@ void TT_DialogMain::on_pbNew_clicked()
 
     writeSettings();
 
-    ui->label->setText(QString("Active file : %1").arg(fileName));
+    ui->label->setText(tr("Active file : %1").arg(fileName));
 
     ui->pbSave->setEnabled(true);
     ui->pbImport->setEnabled(true);
+    ui->pbEdit->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     points.clear();
@@ -418,10 +511,11 @@ void TT_DialogMain::on_pbOpen_clicked()
 
     writeSettings();
 
-    ui->label->setText(QString("Active file : %1").arg(fileName));
+    ui->label->setText(tr("Active file : %1").arg(fileName));
 
     ui->pbSave->setEnabled(true);
     ui->pbImport->setEnabled(true);
+    ui->pbEdit->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     loadPoints();
@@ -433,7 +527,7 @@ void TT_DialogMain::on_pbSave_clicked()
     int nbPointsSaved = TT_DialogMain::savePoints();
     if (nbPointsSaved > -1)
     {
-        ui->label->setText(QString("Active file : %1 | %2 points saved.").arg(fileName).arg(nbPointsSaved));
+        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(fileName).arg(nbPointsSaved));
     }
 }
 
@@ -442,8 +536,16 @@ void TT_DialogMain::on_pbImport_clicked()
     int nbPointsImported = TT_DialogMain::importPoints();
     if (nbPointsImported > -1)
     {
-        ui->label->setText(QString("Active file : %1 | %2 points imported.").arg(fileName).arg(nbPointsImported));
+        ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(fileName).arg(nbPointsImported));
         displayPoints();
+    }
+}
+
+void TT_DialogMain::on_pbEdit_clicked()
+{
+    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size())
+    {
+        editPoint(points[ui->tableWidget->currentRow()]);
     }
 }
 
@@ -452,59 +554,16 @@ void TT_DialogMain::on_pbDraw_clicked()
     int nbPointsDrawn = TT_DialogMain::drawPoints();
     if (nbPointsDrawn > -1)
     {
-        ui->label->setText(QString("Active file : %1 | %2 points drawn.").arg(fileName).arg(nbPointsDrawn));
+        ui->label->setText(tr("Active file : %1 | %2 points drawn.").arg(fileName).arg(nbPointsDrawn));
     }
 }
 
-/*QPointF point;
-point.setX(ui->leX->text().toDouble());
-point.setY(ui->leY->text().toDouble());
-
-// Prepare layers
-QString currentLayer = this->doc->getCurrentLayer();
-int colour;
-DPI::LineWidth lineWidth;
-DPI::LineType lineType;
-
-this->doc->setLayer("TT_ALTI");
-this->doc->getCurrentLayerProperties(&colour, &lineWidth, &lineType);
-colour = 0x00FFFF;
-this->doc->setCurrentLayerProperties(colour, lineWidth, lineType);
-
-this->doc->setLayer("TT_POINTS");
-this->doc->getCurrentLayerProperties(&colour, &lineWidth, &lineType);
-colour = 0x00FF00;
-this->doc->setCurrentLayerProperties(colour, lineWidth, lineType);
-
-QList<Plug_Entity *> selectedEntities;
-QHash<int, QVariant> dataOfAnEntity;
-
-// Ask user a selection
-//this->doc->getSelect(&selectedEntities, tr("Select an entity"));
-this->doc->setLayer(currentLayer);
-
-for (auto i = 0; i < selectedEntities.size(); i++)
+void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
 {
-    selectedEntities.value(i)->getData(&dataOfAnEntity);
+    Q_UNUSED(column);
 
-    // Check if the selectioned entity is a point or not
-    if (dataOfAnEntity.value(DPI::ETYPE) == DPI::POINT)
-    {
-        // If so, get its coordinates...
-        double startX = dataOfAnEntity.value(DPI::STARTX).toDouble();
-        double startY = dataOfAnEntity.value(DPI::STARTY).toDouble();
-
-        // ...and add the z coordinate as a text next to it
-        this->doc->setLayer("TT_POINTS");
-        QPointF textInsertionPoint(startX + 1.0, startY + 4.0);
-        this->doc->addText("123.456", "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
-
-        this->doc->setLayer("TT_ALTI");
-        textInsertionPoint = QPointF(startX + 1.0, startY - 12.0 - 4.0);
-        this->doc->addText("78", "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
-    }
+    editPoint(points[row]);
 }
 
-this->doc->setLayer("TT_POINTS");
-this->doc->addBlockfromFromdisk("tree1.dxf");
-this->doc->addPoint(&point);*/
+
+

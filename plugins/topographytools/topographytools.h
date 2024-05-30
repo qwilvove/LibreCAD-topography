@@ -53,6 +53,7 @@ struct Point
     double z;
     double ih; // Instrument height - for a STATION
     double v0; // Start angle (grades) - for a STATION
+    double ph; // Prism height
     double ha; // Horizontal angle
     double va; // Vertical angle
     double id; // Inclined distance

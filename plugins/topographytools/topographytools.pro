@@ -19,10 +19,12 @@ INCLUDEPATH    += ../../librecad/src/plugins
 
 SOURCES += \
     topographytools.cpp \
+    tt_dialogedit.cpp \
     tt_dialogmain.cpp
 
 HEADERS += \
     topographytools.h \
+    tt_dialogedit.h \
     tt_dialogmain.h
 
 # Installation Directory
@@ -39,6 +41,7 @@ unix {
 }
 
 FORMS += \
+    tt_dialogedit.ui \
     tt_dialogmain.ui
 
 RESOURCES += \
