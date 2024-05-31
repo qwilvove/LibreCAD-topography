@@ -4,6 +4,7 @@
 #include "document_interface.h"
 #include "topographytools.h"
 #include "tt_dialogedit.h"
+#include "tt_dialogadd.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -25,7 +26,11 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 
         ui->pbSave->setEnabled(true);
         ui->pbImport->setEnabled(true);
+        ui->pbAdd->setEnabled(true);
+        ui->pbRemove->setEnabled(true);
         ui->pbEdit->setEnabled(true);
+        ui->pbUp->setEnabled(true);
+        ui->pbDown->setEnabled(true);
         ui->pbDraw->setEnabled(true);
 
         loadPoints();
@@ -395,6 +400,35 @@ void TT_DialogMain::displayPoint(TT::Point &point)
     }
 }
 
+// Add a point to points
+void TT_DialogMain::addPoint()
+{
+    TT::Point newPoint {};
+    TT_DialogAdd addDialog(this, &newPoint);
+    if (addDialog.exec() == QDialog::Accepted)
+    {
+        points.append(newPoint);
+        displayPoints();
+    }
+}
+
+// Remove points according to the list of indexes
+void TT_DialogMain::removePoints(QList<int> indexesToRemove)
+{
+    // Sort the list (ex: 1 2 5 8 9 ...)
+    std::sort(indexesToRemove.begin(), indexesToRemove.end());
+
+    // Remove indexes from the end to the begin
+    // in order to keep indexes correct
+    for (int i = indexesToRemove.size() - 1; i >= 0; i--)
+    {
+        points.remove(indexesToRemove[i]);
+    }
+
+    displayPoints();
+}
+
+// Edit a single point attributes
 void TT_DialogMain::editPoint(TT::Point &point)
 {
     TT_DialogEdit editDialog(this, &point);
@@ -402,6 +436,22 @@ void TT_DialogMain::editPoint(TT::Point &point)
     {
         displayPoints();
     }
+}
+
+// Move points[index] one position up in points QList
+void TT_DialogMain::movePointUp(int index)
+{
+    points.move(index, index - 1);
+
+    displayPoints();
+}
+
+// Move points[index] one position down in points QList
+void TT_DialogMain::movePointDown(int index)
+{
+    points.move(index, index + 1);
+
+    displayPoints();
 }
 
 // Draw points on the current drawing
@@ -486,7 +536,11 @@ void TT_DialogMain::on_pbNew_clicked()
 
     ui->pbSave->setEnabled(true);
     ui->pbImport->setEnabled(true);
+    ui->pbAdd->setEnabled(true);
+    ui->pbRemove->setEnabled(true);
     ui->pbEdit->setEnabled(true);
+    ui->pbUp->setEnabled(true);
+    ui->pbDown->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     points.clear();
@@ -515,7 +569,11 @@ void TT_DialogMain::on_pbOpen_clicked()
 
     ui->pbSave->setEnabled(true);
     ui->pbImport->setEnabled(true);
+    ui->pbAdd->setEnabled(true);
+    ui->pbRemove->setEnabled(true);
     ui->pbEdit->setEnabled(true);
+    ui->pbUp->setEnabled(true);
+    ui->pbDown->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     loadPoints();
@@ -541,11 +599,49 @@ void TT_DialogMain::on_pbImport_clicked()
     }
 }
 
+void TT_DialogMain::on_pbAdd_clicked()
+{
+    addPoint();
+}
+
+void TT_DialogMain::on_pbRemove_clicked()
+{
+    // Only proceed if there are selected items
+    if (!ui->tableWidget->selectedItems().isEmpty())
+    {
+        QList<int> indexesToRemove;
+
+        // For each row
+        for (int i = 0; i < ui->tableWidget->selectedItems().size(); i += ui->tableWidget->columnCount())
+        {
+            QTableWidgetItem *qtwi = ui->tableWidget->selectedItems().at(i);
+            indexesToRemove.append(qtwi->row());
+        }
+        removePoints(indexesToRemove);
+    }
+}
+
 void TT_DialogMain::on_pbEdit_clicked()
 {
     if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size())
     {
         editPoint(points[ui->tableWidget->currentRow()]);
+    }
+}
+
+void TT_DialogMain::on_pbUp_clicked()
+{
+    if (ui->tableWidget->currentRow() >= 1 && ui->tableWidget->currentRow() < points.size())
+    {
+        movePointUp(ui->tableWidget->currentRow());
+    }
+}
+
+void TT_DialogMain::on_pbDown_clicked()
+{
+    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size() - 1)
+    {
+        movePointDown(ui->tableWidget->currentRow());
     }
 }
 

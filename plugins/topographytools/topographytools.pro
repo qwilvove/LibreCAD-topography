@@ -19,11 +19,13 @@ INCLUDEPATH    += ../../librecad/src/plugins
 
 SOURCES += \
     topographytools.cpp \
+    tt_dialogadd.cpp \
     tt_dialogedit.cpp \
     tt_dialogmain.cpp
 
 HEADERS += \
     topographytools.h \
+    tt_dialogadd.h \
     tt_dialogedit.h \
     tt_dialogmain.h
 
@@ -41,6 +43,7 @@ unix {
 }
 
 FORMS += \
+    tt_dialogadd.ui \
     tt_dialogedit.ui \
     tt_dialogmain.ui
 

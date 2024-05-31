@@ -32,7 +32,11 @@ private:
     void displayPoints();
     void displayPoint(TT::Point &point);
 
+    void addPoint();
+    void removePoints(QList<int> indexesToRemove);
     void editPoint(TT::Point &point);
+    void movePointUp(int index);
+    void movePointDown(int index);
 
     int drawPoints();
     void drawPoint(TT::Point &point);
@@ -47,7 +51,11 @@ private slots:
     void on_pbOpen_clicked();
     void on_pbSave_clicked();
     void on_pbImport_clicked();
+    void on_pbAdd_clicked();
+    void on_pbRemove_clicked();
     void on_pbEdit_clicked();
+    void on_pbUp_clicked();
+    void on_pbDown_clicked();
     void on_pbDraw_clicked();
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };

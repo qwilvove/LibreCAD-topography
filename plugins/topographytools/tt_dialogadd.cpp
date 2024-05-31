@@ -1,9 +1,9 @@
-#include "tt_dialogedit.h"
-#include "ui_tt_dialogedit.h"
+#include "tt_dialogadd.h"
+#include "ui_tt_dialogadd.h"
 
-TT_DialogEdit::TT_DialogEdit(QWidget *parent, TT::Point *point) :
+TT_DialogAdd::TT_DialogAdd(QWidget *parent, TT::Point *point) :
     QDialog(parent),
-    ui(new Ui::TT_DialogEdit),
+    ui(new Ui::TT_DialogAdd),
     point(point)
 {
     ui->setupUi(this);
@@ -15,53 +15,14 @@ TT_DialogEdit::TT_DialogEdit(QWidget *parent, TT::Point *point) :
     ui->cbType->addItem("REFERENCE");
     ui->cbType->addItem("MEASURE");
     ui->cbType->setCurrentIndex(-1);
-
-    loadData();
 }
 
-TT_DialogEdit::~TT_DialogEdit()
+TT_DialogAdd::~TT_DialogAdd()
 {
     delete ui;
 }
 
-void TT_DialogEdit::loadData()
-{
-    ui->cbType->setCurrentIndex(point->type);
-
-    if (ui->cbType->currentIndex() == TT::PTYPE::POINT)
-    {
-        ui->leName->setText(point->name);
-        ui->leX->setText(QString("%1").arg(point->x, 0, 'f', 3));
-        ui->leY->setText(QString("%1").arg(point->y, 0, 'f', 3));
-        ui->cbHasZ->setChecked(point->hasZ);
-        if (point->hasZ)
-        {
-            ui->leZ->setText(QString("%1").arg(point->z, 0, 'f', 3));
-        }
-    }
-    else if (ui->cbType->currentIndex() == TT::PTYPE::STATION)
-    {
-        ui->leName->setText(point->name);
-        ui->leIh->setText(QString("%1").arg(point->ih, 0, 'f', 3));
-        if (point->v0 >= 0)
-        {
-            ui->leV0->setText(QString("%1").arg(point->v0, 0, 'f', 4));
-        }
-    }
-    else if (ui->cbType->currentIndex() == TT::PTYPE::REFERENCE ||
-             ui->cbType->currentIndex() == TT::PTYPE::MEASURE)
-    {
-        ui->leName->setText(point->name);
-        ui->lePh->setText(QString("%1").arg(point->ph, 0, 'f', 3));
-        ui->leHa->setText(QString("%1").arg(point->ha, 0, 'f', 4));
-        ui->leVa->setText(QString("%1").arg(point->va, 0, 'f', 4));
-        ui->leId->setText(QString("%1").arg(point->id, 0, 'f', 3));
-    }
-
-    ui->buttonBox->setEnabled(true);
-}
-
-void TT_DialogEdit::saveData()
+void TT_DialogAdd::saveData()
 {
     if (ui->cbType->currentIndex() == TT::PTYPE::POINT)
     {
@@ -109,7 +70,7 @@ void TT_DialogEdit::saveData()
     *point = tempPoint;
 }
 
-void TT_DialogEdit::on_cbType_currentIndexChanged(int index)
+void TT_DialogAdd::on_cbType_currentIndexChanged(int index)
 {
     // Init
     ui->leName->setEnabled(false);
@@ -123,6 +84,7 @@ void TT_DialogEdit::on_cbType_currentIndexChanged(int index)
     ui->leHa->setEnabled(false);
     ui->leVa->setEnabled(false);
     ui->leId->setEnabled(false);
+    ui->buttonBox->setEnabled(false);
 
     if (index == TT::PTYPE::POINT)
     {
@@ -130,12 +92,14 @@ void TT_DialogEdit::on_cbType_currentIndexChanged(int index)
         ui->leX->setEnabled(true);
         ui->leY->setEnabled(true);
         ui->cbHasZ->setEnabled(true);
+        ui->buttonBox->setEnabled(true);
     }
     else if (index == TT::PTYPE::STATION)
     {
         ui->leName->setEnabled(true);
         ui->leIh->setEnabled(true);
         ui->leV0->setEnabled(true);
+        ui->buttonBox->setEnabled(true);
     }
     else if (index == TT::PTYPE::REFERENCE || index == TT::PTYPE::MEASURE)
     {
@@ -144,16 +108,16 @@ void TT_DialogEdit::on_cbType_currentIndexChanged(int index)
         ui->leHa->setEnabled(true);
         ui->leVa->setEnabled(true);
         ui->leId->setEnabled(true);
+        ui->buttonBox->setEnabled(true);
     }
 }
 
-void TT_DialogEdit::on_cbHasZ_stateChanged(int arg1)
+void TT_DialogAdd::on_cbHasZ_stateChanged(int arg1)
 {
     ui->leZ->setEnabled(arg1);
 }
 
-void TT_DialogEdit::on_buttonBox_accepted()
+void TT_DialogAdd::on_buttonBox_accepted()
 {
     saveData();
 }
-
