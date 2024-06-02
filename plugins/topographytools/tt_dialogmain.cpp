@@ -5,6 +5,7 @@
 #include "topographytools.h"
 #include "tt_dialogedit.h"
 #include "tt_dialogadd.h"
+#include "tt_dialogv0.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -31,6 +32,7 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
         ui->pbEdit->setEnabled(true);
         ui->pbUp->setEnabled(true);
         ui->pbDown->setEnabled(true);
+        ui->pbV0->setEnabled(true);
         ui->pbDraw->setEnabled(true);
 
         loadPoints();
@@ -541,6 +543,7 @@ void TT_DialogMain::on_pbNew_clicked()
     ui->pbEdit->setEnabled(true);
     ui->pbUp->setEnabled(true);
     ui->pbDown->setEnabled(true);
+    ui->pbV0->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     points.clear();
@@ -574,6 +577,7 @@ void TT_DialogMain::on_pbOpen_clicked()
     ui->pbEdit->setEnabled(true);
     ui->pbUp->setEnabled(true);
     ui->pbDown->setEnabled(true);
+    ui->pbV0->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     loadPoints();
@@ -645,6 +649,15 @@ void TT_DialogMain::on_pbDown_clicked()
     }
 }
 
+void TT_DialogMain::on_pbV0_clicked()
+{
+    TT_DialogV0 v0Dialog(this, &points);
+    if (v0Dialog.exec() == QDialog::Accepted)
+    {
+        displayPoints();
+    }
+}
+
 void TT_DialogMain::on_pbDraw_clicked()
 {
     int nbPointsDrawn = TT_DialogMain::drawPoints();
@@ -660,6 +673,3 @@ void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
 
     editPoint(points[row]);
 }
-
-
-

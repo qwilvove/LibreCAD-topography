@@ -21,13 +21,15 @@ SOURCES += \
     topographytools.cpp \
     tt_dialogadd.cpp \
     tt_dialogedit.cpp \
-    tt_dialogmain.cpp
+    tt_dialogmain.cpp \
+    tt_dialogv0.cpp
 
 HEADERS += \
     topographytools.h \
     tt_dialogadd.h \
     tt_dialogedit.h \
-    tt_dialogmain.h
+    tt_dialogmain.h \
+    tt_dialogv0.h
 
 # Installation Directory
 win32 {
@@ -45,7 +47,8 @@ unix {
 FORMS += \
     tt_dialogadd.ui \
     tt_dialogedit.ui \
-    tt_dialogmain.ui
+    tt_dialogmain.ui \
+    tt_dialogv0.ui
 
 RESOURCES += \
     icons/icons.qrc

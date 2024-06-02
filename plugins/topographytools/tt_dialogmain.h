@@ -50,13 +50,18 @@ private slots:
     void on_pbNew_clicked();
     void on_pbOpen_clicked();
     void on_pbSave_clicked();
+
     void on_pbImport_clicked();
+
     void on_pbAdd_clicked();
     void on_pbRemove_clicked();
     void on_pbEdit_clicked();
     void on_pbUp_clicked();
     void on_pbDown_clicked();
+
+    void on_pbV0_clicked();
     void on_pbDraw_clicked();
+
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };
 

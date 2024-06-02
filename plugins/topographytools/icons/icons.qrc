@@ -11,5 +11,6 @@
         <file>remove.svg</file>
         <file>down.svg</file>
         <file>up.svg</file>
+        <file>angle_line_to_line.svg</file>
     </qresource>
 </RCC>
