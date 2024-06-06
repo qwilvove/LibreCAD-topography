@@ -415,7 +415,7 @@ void TT_DialogMain::addPoint()
 }
 
 // Remove points according to the list of indexes
-void TT_DialogMain::removePoints(QList<int> indexesToRemove)
+void TT_DialogMain::removePoints(QList<int> &indexesToRemove)
 {
     // Sort the list (ex: 1 2 5 8 9 ...)
     std::sort(indexesToRemove.begin(), indexesToRemove.end());
@@ -651,7 +651,7 @@ void TT_DialogMain::on_pbDown_clicked()
 
 void TT_DialogMain::on_pbV0_clicked()
 {
-    TT_DialogV0 v0Dialog(this, &points);
+    TT_DialogV0 v0Dialog(this, points);
     if (v0Dialog.exec() == QDialog::Accepted)
     {
         displayPoints();

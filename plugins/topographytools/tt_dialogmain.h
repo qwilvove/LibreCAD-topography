@@ -33,7 +33,7 @@ private:
     void displayPoint(TT::Point &point);
 
     void addPoint();
-    void removePoints(QList<int> indexesToRemove);
+    void removePoints(QList<int> &indexesToRemove);
     void editPoint(TT::Point &point);
     void movePointUp(int index);
     void movePointDown(int index);

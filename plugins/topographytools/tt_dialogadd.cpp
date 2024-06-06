@@ -27,7 +27,7 @@ void TT_DialogAdd::saveData()
     if (ui->cbType->currentIndex() == TT::PTYPE::POINT)
     {
         tempPoint.type = TT::PTYPE::POINT;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.x    = ui->leX->text().toDouble();
         tempPoint.y    = ui->leY->text().toDouble();
         tempPoint.hasZ = ui->cbHasZ->isChecked();
@@ -40,7 +40,7 @@ void TT_DialogAdd::saveData()
     {
         bool ok = true;
         tempPoint.type = TT::PTYPE::STATION;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ih   = ui->leIh->text().toDouble();
         tempPoint.v0   = ui->leV0->text().toDouble(&ok);
         if (!ok)
@@ -51,7 +51,7 @@ void TT_DialogAdd::saveData()
     else if (ui->cbType->currentIndex() == TT::PTYPE::REFERENCE)
     {
         tempPoint.type = TT::PTYPE::REFERENCE;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
         tempPoint.va   = ui->leVa->text().toDouble();
@@ -60,7 +60,7 @@ void TT_DialogAdd::saveData()
     else // ui->cbType->currentIndex() == TT::PTYPE::MEASURE
     {
         tempPoint.type = TT::PTYPE::MEASURE;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
         tempPoint.va   = ui->leVa->text().toDouble();
@@ -92,14 +92,14 @@ void TT_DialogAdd::on_cbType_currentIndexChanged(int index)
         ui->leX->setEnabled(true);
         ui->leY->setEnabled(true);
         ui->cbHasZ->setEnabled(true);
-        ui->buttonBox->setEnabled(true);
+        //ui->buttonBox->setEnabled(true);
     }
     else if (index == TT::PTYPE::STATION)
     {
         ui->leName->setEnabled(true);
         ui->leIh->setEnabled(true);
         ui->leV0->setEnabled(true);
-        ui->buttonBox->setEnabled(true);
+        //ui->buttonBox->setEnabled(true);
     }
     else if (index == TT::PTYPE::REFERENCE || index == TT::PTYPE::MEASURE)
     {
@@ -108,6 +108,16 @@ void TT_DialogAdd::on_cbType_currentIndexChanged(int index)
         ui->leHa->setEnabled(true);
         ui->leVa->setEnabled(true);
         ui->leId->setEnabled(true);
+        //ui->buttonBox->setEnabled(true);
+    }
+}
+
+void TT_DialogAdd::on_leName_textChanged(const QString &arg1)
+{
+    ui->buttonBox->setEnabled(false);
+
+    if (!arg1.trimmed().isEmpty())
+    {
         ui->buttonBox->setEnabled(true);
     }
 }
@@ -121,3 +131,4 @@ void TT_DialogAdd::on_buttonBox_accepted()
 {
     saveData();
 }
+

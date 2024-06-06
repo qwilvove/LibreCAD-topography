@@ -66,7 +66,7 @@ void TT_DialogEdit::saveData()
     if (ui->cbType->currentIndex() == TT::PTYPE::POINT)
     {
         tempPoint.type = TT::PTYPE::POINT;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.x    = ui->leX->text().toDouble();
         tempPoint.y    = ui->leY->text().toDouble();
         tempPoint.hasZ = ui->cbHasZ->isChecked();
@@ -79,7 +79,7 @@ void TT_DialogEdit::saveData()
     {
         bool ok = true;
         tempPoint.type = TT::PTYPE::STATION;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ih   = ui->leIh->text().toDouble();
         tempPoint.v0   = ui->leV0->text().toDouble(&ok);
         if (!ok)
@@ -90,7 +90,7 @@ void TT_DialogEdit::saveData()
     else if (ui->cbType->currentIndex() == TT::PTYPE::REFERENCE)
     {
         tempPoint.type = TT::PTYPE::REFERENCE;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
         tempPoint.va   = ui->leVa->text().toDouble();
@@ -99,7 +99,7 @@ void TT_DialogEdit::saveData()
     else // ui->cbType->currentIndex() == TT::PTYPE::MEASURE
     {
         tempPoint.type = TT::PTYPE::MEASURE;
-        tempPoint.name = ui->leName->text();
+        tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
         tempPoint.va   = ui->leVa->text().toDouble();
@@ -144,6 +144,16 @@ void TT_DialogEdit::on_cbType_currentIndexChanged(int index)
         ui->leHa->setEnabled(true);
         ui->leVa->setEnabled(true);
         ui->leId->setEnabled(true);
+    }
+}
+
+void TT_DialogEdit::on_leName_textChanged(const QString &arg1)
+{
+    ui->buttonBox->setEnabled(false);
+
+    if (!arg1.trimmed().isEmpty())
+    {
+        ui->buttonBox->setEnabled(true);
     }
 }
 
