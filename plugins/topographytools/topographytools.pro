@@ -22,6 +22,7 @@ SOURCES += \
     tt_dialogadd.cpp \
     tt_dialogedit.cpp \
     tt_dialogmain.cpp \
+    tt_dialogpolygo.cpp \
     tt_dialogv0.cpp
 
 HEADERS += \
@@ -29,6 +30,7 @@ HEADERS += \
     tt_dialogadd.h \
     tt_dialogedit.h \
     tt_dialogmain.h \
+    tt_dialogpolygo.h \
     tt_dialogv0.h
 
 # Installation Directory
@@ -48,6 +50,7 @@ FORMS += \
     tt_dialogadd.ui \
     tt_dialogedit.ui \
     tt_dialogmain.ui \
+    tt_dialogpolygo.ui \
     tt_dialogv0.ui
 
 RESOURCES += \

@@ -322,6 +322,35 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pbPolygo">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Calculate polygonation</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="icons/icons.qrc">
+         <normaloff>:/icons/total_length_selected_entities.svg</normaloff>:/icons/total_length_selected_entities.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pbDraw">
        <property name="enabled">
         <bool>false</bool>
