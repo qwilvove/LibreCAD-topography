@@ -34,11 +34,10 @@ RS_ActionModifyRevertDirection::RS_ActionModifyRevertDirection(RS_EntityContaine
     actionType = RS2::ActionModifyRevertDirection;
 }
 
-void RS_ActionModifyRevertDirection::trigger() {
+void RS_ActionModifyRevertDirection::doTrigger(bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyRevertDirection::trigger");
-
     RS_Modification m(*container, graphicView);
-    m.revertDirection(selectedEntities);
+    m.revertDirection(selectedEntities, keepSelected);
 }
 
 bool RS_ActionModifyRevertDirection::isShowRefPointsOnHighlight() {
@@ -46,7 +45,7 @@ bool RS_ActionModifyRevertDirection::isShowRefPointsOnHighlight() {
 }
 
 void RS_ActionModifyRevertDirection::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to revert direction"), MOD_CTRL(tr("Revert immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select to revert direction (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Revert immediately after selection")));
 }
 
 bool RS_ActionModifyRevertDirection::isEntityAllowedToSelect(RS_Entity *ent) const {

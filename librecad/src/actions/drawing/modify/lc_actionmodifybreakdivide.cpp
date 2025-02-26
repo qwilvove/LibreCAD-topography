@@ -59,7 +59,8 @@ bool LC_ActionModifyBreakDivide::doCheckMayDrawPreview([[maybe_unused]]QMouseEve
  */
 void LC_ActionModifyBreakDivide::doPreparePreviewEntities(QMouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status){
     if (status == SetLine){
-        RS_Entity *en = catchModifiableEntity(e, enTypeList);
+        deleteSnapper();
+        RS_Entity *en = catchModifiableEntityOnPreview(e, enTypeList);
         if (en != nullptr){
             int rtti = en->rtti();
             switch (rtti) {
@@ -104,11 +105,46 @@ void LC_ActionModifyBreakDivide::doOnLeftMouseButtonRelease(QMouseEvent *e, int 
                     break;
             }
         }
+        invalidateSnapSpot();
     }
 }
 
 bool LC_ActionModifyBreakDivide::doCheckMayTrigger(){
-    return triggerData != nullptr;
+    bool result = false;
+    if (triggerData != nullptr){
+        RS_Entity* en = triggerData->entity;
+        RS_Vector snap = triggerData->snapPoint;
+        if (en != nullptr){
+            int rtti = en->rtti();
+            // do processing of individual entity types
+            switch (rtti) {
+                case RS2::EntityLine: {
+                    auto *line = dynamic_cast<RS_Line *>(en);
+                    createEntitiesForLine(line, snap, triggerData->entitiesToCreate, false);
+                    break;
+                }
+                case RS2::EntityCircle: {
+                    auto *circle = dynamic_cast<RS_Circle *>(en);
+                    createEntitiesForCircle(circle, snap, triggerData->entitiesToCreate, false);
+                    break;
+                }
+                case RS2::EntityArc: {
+                    auto *arc = dynamic_cast<RS_Arc *>(en);
+                    createEntitiesForArc(arc, snap, triggerData->entitiesToCreate, false);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        if (triggerData->entitiesToCreate.isEmpty()){
+            commandMessage(tr("Invalid entity selected - no segments between intersections to break/divide."));
+        }
+        else {
+            result = true;
+        }
+    }
+    return result;
 }
 
 bool LC_ActionModifyBreakDivide::isSetActivePenAndLayerOnTrigger(){
@@ -116,39 +152,16 @@ bool LC_ActionModifyBreakDivide::isSetActivePenAndLayerOnTrigger(){
 }
 
 void LC_ActionModifyBreakDivide::doPrepareTriggerEntities(QList<RS_Entity *> &list){
-    RS_Entity* en = triggerData->entity;
-    RS_Vector snap = triggerData->snapPoint;
-    if (en != nullptr){
-        int rtti = en->rtti();
-        // do processing of individual entity types
-        switch (rtti) {
-            case RS2::EntityLine: {
-                auto *line = dynamic_cast<RS_Line *>(en);
-                createEntitiesForLine(line, snap, list, false);
-                break;
-            }
-            case RS2::EntityCircle: {
-                auto *circle = dynamic_cast<RS_Circle *>(en);
-                createEntitiesForCircle(circle, snap, list, false);
-                break;
-            }
-            case RS2::EntityArc: {
-                auto *arc = dynamic_cast<RS_Arc *>(en);
-                createEntitiesForArc(arc, snap, list, false);
-                break;
-            }
-            default:
-                break;
-        }
-    }
+    list.append(triggerData->entitiesToCreate);
 }
 
 void LC_ActionModifyBreakDivide::performTriggerDeletions(){
     // delete original entity as we'll expand it and create segment entities
-    deleteEntityUndoable(triggerData->entity);
+    undoableDeleteEntity(triggerData->entity);
 }
 
 void LC_ActionModifyBreakDivide::doAfterTrigger(){
+    triggerData->entitiesToCreate.clear();
     delete triggerData;
     triggerData = nullptr;
 }
@@ -175,13 +188,11 @@ void LC_ActionModifyBreakDivide::createEntitiesForLine(RS_Line *line, RS_Vector 
         RS_Vector start = line->getStartpoint();
         RS_Vector end = line->getEndpoint();
 
-
         // create segments only if tick snap point is between of original lines endpoints
         if (nearestPoint != start && nearestPoint != end){
             // calculate segments data
             LineSegmentData *data = calculateLineSegment(line, snap);
             if (data != nullptr){
-
                 if (preview){
                     highlightHover(line);
                 }
@@ -202,7 +213,7 @@ void LC_ActionModifyBreakDivide::createEntitiesForLine(RS_Line *line, RS_Vector 
                 }
 
                 // attributes of original entity
-                RS_Pen pen = line->getPen();
+                RS_Pen pen = line->getPen(false);
                 RS_Layer* layer = line->getLayer(true);
 
                 // creating snap segment (where snap was performed)
@@ -222,9 +233,16 @@ void LC_ActionModifyBreakDivide::createEntitiesForLine(RS_Line *line, RS_Vector 
                     if (segmentDisposition != SEGMENT_TO_END){
                         createRefSelectablePoint(data->snapSegmentEnd, list);
                     }
+
+                    if (isInfoCursorForModificationEnabled()){
+                        LC_InfoMessageBuilder msg(tr("Break/Divide Line"));
+                        msg.add(tr("Point 1:"), formatVector(data->snapSegmentStart));
+                        msg.add(tr("Point 2:"), formatVector(data->snapSegmentEnd));
+                        appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                    }
                 }
 
-                // create segments of line that are outsider of segment selected by the user
+                // create segments of line that are outside of segment selected by the user
                 if (createNonSnapSegments){
                     if (segmentDisposition != SEGMENT_TO_START){
                         // we don't need this segment if snap is between line start point and intersection point
@@ -311,7 +329,7 @@ void LC_ActionModifyBreakDivide::createEntitiesForCircle(RS_Circle *circle, RS_V
             }
 
             // attributes of original circle
-            RS_Pen pen = circle->getPen();
+            RS_Pen pen = circle->getPen(false);
             RS_Layer* layer = circle->getLayer();
 
             // create snap arc segment
@@ -335,6 +353,14 @@ void LC_ActionModifyBreakDivide::createEntitiesForCircle(RS_Circle *circle, RS_V
                  RS_Vector dividePoint2 = center.relative(radius, data->snapSegmentEndAngle);
                  createRefSelectablePoint(dividePoint2, list);
 
+                if (isInfoCursorForModificationEnabled()){
+                    LC_InfoMessageBuilder msg(tr("Break/Divide Circle"));
+                    msg.add(tr("Angle 1:"), formatAngle(data->snapSegmentStartAngle));
+                    msg.add(tr("Point 1:"), formatVector(dividePoint1));
+                    msg.add(tr("Angle 2:"), formatAngle(data->snapSegmentEndAngle));
+                    msg.add(tr("Point 2:"), formatVector(dividePoint2));
+                    appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                }
             }
         }
         // don't need temporary data, so delete it
@@ -380,7 +406,7 @@ void LC_ActionModifyBreakDivide::createEntitiesForArc(RS_Arc *arc, RS_Vector &sn
                 }
 
                 // current arc attributes
-                RS_Pen pen = arc->getPen();
+                RS_Pen pen = arc->getPen(false);
                 RS_Layer* layer = arc->getLayer(true);
 
                 // create segment where arc was selected, if necessary
@@ -414,14 +440,23 @@ void LC_ActionModifyBreakDivide::createEntitiesForArc(RS_Arc *arc, RS_Vector &sn
                 if (preview){
                     double radius = arc->getRadius();
                     RS_Vector center = arc->getCenter();
+                    RS_Vector segmentStart = center.relative(radius, data->snapSegmentStartAngle);
                     if (segmentDisposition != SEGMENT_TO_START){
-                        RS_Vector segmentStart = center.relative(radius, data->snapSegmentStartAngle);
                         createRefSelectablePoint(segmentStart, list);
                     }
 
+                    RS_Vector segmentEnd = center.relative(radius, data->snapSegmentEndAngle);
                     if (segmentDisposition != SEGMENT_TO_END){
-                        RS_Vector segmentEnd = center.relative(radius, data->snapSegmentEndAngle);
                         createRefSelectablePoint(segmentEnd, list);
+                    }
+
+                    if (isInfoCursorForModificationEnabled()){
+                        LC_InfoMessageBuilder msg(tr("Break/Divide Arc"));
+                        msg.add(tr("Angle 1:"), formatAngle(data->snapSegmentStartAngle));
+                        msg.add(tr("Point 1:"), formatVector(segmentStart));
+                        msg.add(tr("Angle 2:"), formatAngle(data->snapSegmentEndAngle));
+                        msg.add(tr("Point 2:"), formatVector(segmentEnd));
+                        appendInfoCursorZoneMessage(msg.toString(), 2, false);
                     }
                 }
             }
@@ -475,7 +510,16 @@ LC_ActionModifyBreakDivide::LineSegmentData *LC_ActionModifyBreakDivide::calcula
     LineSegmentData *result = nullptr;
     // find all intersection points for line
     QVector<RS_Vector> allIntersections = collectAllIntersectionsWithEntity(line);
-    if (!allIntersections.empty()){
+    if (allIntersections.empty()) {
+        if (alternativeActionMode && removeSegments/* && removeSelected*/){ // allow to delete entire line if SHIFT is pressed
+            result = new LineSegmentData();
+            result->segmentDisposition = SEGMENT_INSIDE;
+            result->snapSegmentStart = line->getStartpoint();
+            result->snapSegmentEnd = line->getEndpoint();
+            result->snap = snap;
+        }
+    }
+    else{
         // determine segments of line that was selected by the user
         result = findLineSegmentEdges(line, snap, allIntersections);
     }
@@ -492,7 +536,15 @@ LC_ActionModifyBreakDivide::ArcSegmentData *LC_ActionModifyBreakDivide::calculat
     ArcSegmentData *result = nullptr;
     // detect all intersections
     QVector<RS_Vector> allIntersections = collectAllIntersectionsWithEntity(arc);
-    if (!allIntersections.empty()){
+    if (allIntersections.empty() && removeSegments/* && removeSelected*/) {
+        if (alternativeActionMode){ // allowing deletion of complete arcs
+            result = new ArcSegmentData();
+            result->segmentDisposition = SEGMENT_INSIDE;
+            result->snapSegmentStartAngle = arc->getAngle1();
+            result->snapSegmentEndAngle = arc->getAngle2();
+        }
+    }
+    else{
         // determine selected segment edges
         result = findArcSegmentEdges(arc, snap, allIntersections);
     }
@@ -509,7 +561,14 @@ LC_ActionModifyBreakDivide::CircleSegmentData *LC_ActionModifyBreakDivide::calcu
     CircleSegmentData *result = nullptr;
     // detect all intersections
     QVector<RS_Vector> allIntersections = collectAllIntersectionsWithEntity(circle);
-    if (!allIntersections.empty()){
+    if (allIntersections.empty()) {
+        if (alternativeActionMode && removeSegments/* && removeSelected*/) {
+            result = new CircleSegmentData();
+            result->snapSegmentStartAngle = 0;
+            result->snapSegmentEndAngle = M_PI * 2;
+        }
+    }
+    else{
         // determine selected segment edges
         result = findCircleSegmentEdges(circle, snap, allIntersections);
     }
@@ -698,6 +757,14 @@ LC_ActionModifyBreakDivide::LineSegmentData *LC_ActionModifyBreakDivide::findLin
             }
         }
     }
+    else{ // there are intersections only on edges. We may return the entire line as segment if SHIFT is pressed and the user would like to delete the entire entity
+        if (alternativeActionMode && removeSegments/* && removeSelected*/){
+            result = new LineSegmentData();
+            result->segmentDisposition = SEGMENT_INSIDE;
+            result->snapSegmentStart = line->getStartpoint();
+            result->snapSegmentEnd = line->getEndpoint();
+        }
+    }
     return result;
 }
 /**
@@ -807,7 +874,14 @@ LC_ActionModifyBreakDivide::ArcSegmentData *LC_ActionModifyBreakDivide::findArcS
         if (reversed){
             std::swap(result->snapSegmentEndAngle, result->snapSegmentStartAngle);
         }
-
+    }
+    else { // there are intersections only on edges. We may return the entire line as segment if SHIFT is pressed and the user would like to delete the entire entity
+        if (alternativeActionMode && removeSegments/* && removeSelected*/){
+            result = new ArcSegmentData();
+            result->segmentDisposition = SEGMENT_INSIDE;
+            result->snapSegmentStartAngle = arcStartAngle;
+            result->snapSegmentEndAngle = arcEndAngle;
+        }
     }
     return result;
 }
@@ -842,6 +916,9 @@ LC_ActionModifyBreakDivide::CircleSegmentData* LC_ActionModifyBreakDivide::findC
         // circle) - considering that we rotate circle in such way that snap point is on 0 angle.
         for (int i = 0; i < intersectionsCount; i++) {
             RS_Vector v = intersections.at(i);
+
+//            previewRefPoint(v);
+
             double angleToIntersection = center.angleTo(v);
 
             // use corrected angle and thus actually we've rotated intersection point over center of circle
@@ -924,7 +1001,7 @@ RS2::CursorType LC_ActionModifyBreakDivide::doGetMouseCursor([[maybe_unused]]int
 }
 
 void LC_ActionModifyBreakDivide::updateMouseButtonHints(){
-    updateMouseWidgetTRCancel(tr("Select line, arc or circle"));
+    updateMouseWidgetTRCancel(tr("Select line, arc or circle"), removeSegments ? MOD_SHIFT_LC(tr("Proceed even if no intersections")):MOD_NONE);
 }
 
 LC_ActionOptionsWidget* LC_ActionModifyBreakDivide::createOptionsWidget(){

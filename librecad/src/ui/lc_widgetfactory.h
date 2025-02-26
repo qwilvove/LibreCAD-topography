@@ -6,6 +6,7 @@
 
 #include "lc_penpalettewidget.h"
 #include "lc_quickinfowidget.h"
+#include "lc_namedviewslistwidget.h"
 
 class QMenu;
 class QAction;
@@ -37,7 +38,6 @@ class LC_WidgetFactory : public QObject
 
 public:
     LC_WidgetFactory(QC_ApplicationWindow* main_win,
-                     QMap<QString, QAction*>& action_map,
                      LC_ActionGroupManager* agm);
 
     void createStandardToolbars(QG_ActionHandler* action_handler);
@@ -45,6 +45,7 @@ public:
     void createMenus(QMenuBar* menu_bar);
     void createLeftSidebar(int columns, int icon_size);
     void createRightSidebar(QG_ActionHandler* action_handler);
+    void initStatusBar();
 
     QToolBar* createCategoriesToolbar();
 
@@ -58,6 +59,7 @@ public:
     LC_QuickInfoWidget* quick_info_widget = nullptr;
     LC_LayerTreeWidget* layer_tree_widget = nullptr;
     LC_PenPaletteWidget* pen_palette = nullptr;
+    LC_NamedViewsListWidget* named_views_widget = nullptr;
     QG_BlockWidget* block_widget = nullptr;
     QG_LibraryWidget* library_widget = nullptr;
     QG_CommandWidget* command_widget = nullptr;
@@ -68,13 +70,15 @@ public:
 
 private:
     QC_ApplicationWindow* main_window = nullptr;
-    QMap<QString, QAction*>& a_map;
     LC_ActionGroupManager* ag_manager = nullptr;
 
     QList<QAction*> file_actions;
     QList<QAction*> line_actions;
+    QList<QAction*> point_actions;
+    QList<QAction*> shape_actions;
     QList<QAction*> circle_actions;
     QList<QAction*> curve_actions;
+    QList<QAction*> spline_actions;
     QList<QAction*> ellipse_actions;
     QList<QAction*> polyline_actions;
     QList<QAction*> select_actions;
@@ -86,6 +90,8 @@ private:
     QList<QAction*> layer_actions;
     QList<QAction*> block_actions;
     QList<QAction*> pen_actions;
+
+    bool allowTearOffMenus = true;
 
     LC_DockWidget *leftDocWidget(const QString& title, const char* name, const QList<QAction *> &actions, int columns, int iconSize);
     QToolBar *createGenericToolbar(const QString& title, const QString &name, QSizePolicy toolBarPolicy, const std::vector<QString> &actionNames);
@@ -103,6 +109,13 @@ private:
     QMenu *subMenu(QMenu *parent, const QString& title, const QString& name, const char *icon, const std::vector<QString> &actionNames);
     QAction* urlActionTR(const QString& title, const char *url);
     void addAction(QMenu *menu, const char *actionName);
+    void addAction(QToolBar* toolbar, const char* actionName);
+    void sortToolbarsByByGroupAndTitle(QList<QToolBar *> &list);
+    QToolBar *createNamedViewsToolbar(const QString &title, const QString &name, QSizePolicy toolBarPolicy);
+    void makeActionsInvisible(const std::vector<QString> &actionNames);
+    QToolBar *doCreateToolBar(const QString title, const QString &name, const QSizePolicy &toolBarPolicy) const;
+    void createInfoCursorToolbar(QSizePolicy &tbPolicy);
+    void addInfoCursorOptionAction(QMenu *menu, const char *name, int tag);
 };
 
 #endif // LC_WIDGETFACTORY_H

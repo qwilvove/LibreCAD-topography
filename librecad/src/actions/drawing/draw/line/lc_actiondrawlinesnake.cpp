@@ -105,26 +105,32 @@ bool LC_ActionDrawLineSnake::doCheckMayDrawPreview([[maybe_unused]]QMouseEvent *
 
 void LC_ActionDrawLineSnake::doPreparePreviewEntities([[maybe_unused]]QMouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status){
     RS_Vector possibleEndPoint;
-
+    QString directionName = "";
     switch (status) {
         case SetDirection:
+            possibleEndPoint = snap;
+            break;
         case SetPoint:
             possibleEndPoint = snap;
+            directionName = tr("Point");
             break;
         case SetAngle: // draw line in direction specified by angle
             possibleEndPoint = calculateAngleEndpoint(snap);
+            directionName = tr("Angle");
             break;
-        case SetDistance:
+        case SetDistance: {
             switch (direction) {
                 case DIRECTION_X: // draw horizontal line, y-axis is fixed
                     possibleEndPoint = RS_Vector(snap);
                     possibleEndPoint.y = pPoints->data.startpoint.y;
                     possibleEndPoint.x = snap.x;
+                    directionName = tr("X");
                     break;
                 case DIRECTION_Y: // draw vertical line segment, x-axis is fixed
                     possibleEndPoint = RS_Vector(snap);
                     possibleEndPoint.x = pPoints->data.startpoint.x;
                     possibleEndPoint.y = snap.y;
+                    directionName = tr("Y");
                     break;
                 case DIRECTION_POINT: // free draw mode
                     possibleEndPoint = snap;
@@ -134,15 +140,18 @@ void LC_ActionDrawLineSnake::doPreparePreviewEntities([[maybe_unused]]QMouseEven
                     break;
             }
             break;
+        }
         default:
             break;
     }
     createEntities(possibleEndPoint, list);
+    if (!directionName.isEmpty()){
+        appendInfoCursorEntityCreationMessage(tr("Direction:") + directionName);
+    }
     if (showRefEntitiesOnPreview) {
         createRefPoint(pPoints->data.startpoint, list);
         createRefSelectablePoint(possibleEndPoint, list);
     }
-
 }
 
 RS_Vector LC_ActionDrawLineSnake::doGetRelativeZeroAfterTrigger(){
@@ -477,7 +486,7 @@ void LC_ActionDrawLineSnake::updateMouseButtonHints(){
             msg += command("angle");
             msg += "/";
             msg += command("anglerel");
-            updateMouseWidgetTRBack(tr("Specify angle or [%2]").arg(msg));
+            updateMouseWidgetTRBack(tr("Specify angle or [%1]").arg(msg));
             break;
         }
         case SetPoint: {
@@ -639,8 +648,7 @@ double LC_ActionDrawLineSnake::defineActualSegmentAngle(double realAngle){
         if (currentIndex > 0){
             History h(pPoints->history.at(currentIndex));
 
-            if (h.histAct == HA_SetEndpoint) // this is start of previous line segment
-            {
+            if (h.histAct == HA_SetEndpoint){ // this is start of previous line segment
               RS_Vector previousSegmentStart = h.prevPt;
               RS_Vector previousSegmentEnd = h.currPt;
 

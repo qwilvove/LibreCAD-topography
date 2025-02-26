@@ -26,7 +26,6 @@
 #ifndef QG_SNAPTOOLBAR_H
 #define QG_SNAPTOOLBAR_H
 
-class QG_CadToolBar;
 class QG_ActionHandler;
 class LC_ActionGroupManager;
 
@@ -83,7 +82,6 @@ private:
     QAction *restrictHorizontal;
     QAction *restrictVertical;
     QAction *restrictOrthogonal;
-    // fixme - it seems that this action is fully redundant... all restrict actions are toggled, the logic is corrected - why it is present in ui?
     QAction *restrictNothing;
     QAction *bRelZero;
     QAction *bLockRelZero;

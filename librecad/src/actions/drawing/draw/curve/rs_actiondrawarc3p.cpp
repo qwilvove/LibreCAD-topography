@@ -36,6 +36,10 @@
 #include "rs_graphicview.h"
 #include "rs_preview.h"
 
+
+/**
+ * Arc data defined so far.
+ */
 struct RS_ActionDrawArc3P::Points {
     RS_ArcData data;
     /**
@@ -55,14 +59,14 @@ struct RS_ActionDrawArc3P::Points {
 RS_ActionDrawArc3P::RS_ActionDrawArc3P(
     RS_EntityContainer &container,
     RS_GraphicView &graphicView)
-    :LC_ActionDrawCircleBase("Draw arcs 3P", container, graphicView), pPoints(std::make_unique<Points>()){
+    :LC_ActionDrawCircleBase("Draw arcs 3P", container, graphicView)
+, m_pPoints{std::make_unique<RS_ActionDrawArc3P::Points>()}{
     actionType = RS2::ActionDrawArc3P;
 }
 
 RS_ActionDrawArc3P::~RS_ActionDrawArc3P() = default;
 
 void RS_ActionDrawArc3P::reset() {
-    pPoints = std::make_unique<Points>();
 }
 
 void RS_ActionDrawArc3P::init(int status) {
@@ -70,25 +74,22 @@ void RS_ActionDrawArc3P::init(int status) {
     //reset();
 }
 
-void RS_ActionDrawArc3P::trigger(){
-    RS_PreviewActionInterface::trigger();
+void RS_ActionDrawArc3P::doTrigger() {
+    preparePreview(alternatedPoints);
+    if (m_pPoints->data.isValid()){
+        auto *arc = new RS_Arc{container, m_pPoints->data};
 
-    preparePreview();
-    if (pPoints->data.isValid()){
-        auto *arc = new RS_Arc{container, pPoints->data};
-        arc->setLayerToActive();
-        arc->setPenToActive();
-        container->addEntity(arc);
+        setPenAndLayerToActive(arc);
 
-        addToDocumentUndoable(arc);
-
-        graphicView->redraw(RS2::RedrawDrawing);
         RS_Vector rz = arc->getEndpoint();
         if (moveRelPointAtCenterAfterTrigger){
             rz = arc->getCenter();
         }
         moveRelativeZero(rz);
 
+        undoCycleAdd(arc);
+
+        alternatedPoints = false;
         setStatus(SetPoint1);
         reset();
     } else {
@@ -97,71 +98,87 @@ void RS_ActionDrawArc3P::trigger(){
     }
 }
 
-void RS_ActionDrawArc3P::preparePreview(){
-    pPoints->data = {};
-    if (pPoints->point1.valid && pPoints->point2.valid && pPoints->point3.valid){
-        RS_Arc arc(nullptr, pPoints->data);
-        bool suc = arc.createFrom3P(pPoints->point1, pPoints->point2, pPoints->point3);
+void RS_ActionDrawArc3P::preparePreview(bool alternatePoints){
+    if (m_pPoints->point1.valid && m_pPoints->point2.valid && m_pPoints->point3.valid){
+        RS_Arc arc(nullptr, m_pPoints->data);
+        RS_Vector &middlePoint = m_pPoints->point2;
+        RS_Vector &startPoint = m_pPoints->point1;
+        RS_Vector &endPoint = m_pPoints->point3;
+        bool suc;
+        if (alternatePoints){
+            suc = arc.createFrom3P(startPoint, endPoint, middlePoint);
+        }
+        else {
+            suc = arc.createFrom3P(startPoint, middlePoint, endPoint);
+        }
         if (suc){
-            pPoints->data = arc.getData();
+            m_pPoints->data = arc.getData();
         }
     }
 }
 
 void RS_ActionDrawArc3P::mouseMoveEvent(QMouseEvent *e){
+    deletePreview();
     RS_Vector mouse = snapPoint(e);
 
     switch (getStatus()) {
         case SetPoint1: {
-            pPoints->point1 = mouse;
+            m_pPoints->point1 = mouse;
             trySnapToRelZeroCoordinateEvent(e);
             break;
         }
-        case SetPoint2:
-            deletePreview();
-            mouse = getSnapAngleAwarePoint(e, pPoints->point1, mouse, true);
-            pPoints->point2 = mouse;
-            if (pPoints->point1.valid){ // todo - redundant check
-                previewLine(pPoints->point1, pPoints->point2);
-
+        case SetPoint2: {
+            mouse = getSnapAngleAwarePoint(e, m_pPoints->point1, mouse, true);
+            m_pPoints->point2 = mouse;
+            if (m_pPoints->point1.valid) { // todo - redundant check
+                previewLine(m_pPoints->point1, m_pPoints->point2);
                 if (showRefEntitiesOnPreview) {
-                    previewRefPoint(pPoints->point1);
-                    previewRefSelectablePoint(pPoints->point2);
+                    previewRefPoint(m_pPoints->point1);
+                    previewRefSelectablePoint(m_pPoints->point2);
                 }
             }
-            drawPreview();
             break;
-
+        }
         case SetPoint3: {
-            deletePreview();
             // todo - which point (1 or 2) is more suitable there for snap?
-            mouse = getSnapAngleAwarePoint(e,pPoints->point1, mouse, true);
-            pPoints->point3 = mouse;
-            preparePreview();
-            if (pPoints->data.isValid()){
-                previewArc(pPoints->data);
+            mouse = getSnapAngleAwarePoint(e,m_pPoints->point1, mouse, true);
+            m_pPoints->point3 = mouse;
+            bool alternatePoints = isControl(e) || alternatedPoints;
+            preparePreview(alternatePoints);
+            if (m_pPoints->data.isValid()){
+                previewToCreateArc(m_pPoints->data);
 
                 if (showRefEntitiesOnPreview) {
-                    previewRefPoint(pPoints->data.center);
-                    previewRefPoint(pPoints->point1);
-                    previewRefPoint(pPoints->point2);
-                    previewRefSelectablePoint(pPoints->point3);
+                    previewRefPoint(m_pPoints->data.center);
+                    previewRefPoint(m_pPoints->point1);
+                    previewRefPoint(m_pPoints->point2);
+                    previewRefSelectablePoint(m_pPoints->point3);
+
+                    if (alternatePoints){
+                        previewRefLine(m_pPoints->point1, m_pPoints->point2);
+                    }
                 }
             }
-            drawPreview();
             break;
         }
         default:
             break;
     }
+    drawPreview();
 }
 
 void RS_ActionDrawArc3P::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
     RS_Vector snap = snapPoint(e);
     switch (status) {
-        case SetPoint2:
-        case SetPoint3: {
-            snap = getSnapAngleAwarePoint(e, pPoints->point1, snap);
+        case SetPoint2:{
+            snap = getSnapAngleAwarePoint(e, m_pPoints->point1, snap);
+            break;
+        }
+        case SetPoint3:{
+            snap = getSnapAngleAwarePoint(e, m_pPoints->point1, snap);
+            if (isControl(e)){
+               alternatedPoints = true;
+            }
             break;
         }
         default:
@@ -172,25 +189,25 @@ void RS_ActionDrawArc3P::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
 
 void RS_ActionDrawArc3P::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
     deletePreview();
-    initPrevious(status);
+    setStatus(status-1);
 }
 
 void RS_ActionDrawArc3P::onCoordinateEvent(int status, [[maybe_unused]] bool isZero, const RS_Vector &mouse) {
     switch (status) {
         case SetPoint1: {
-            pPoints->point1 = mouse;
+            m_pPoints->point1 = mouse;
             moveRelativeZero(mouse);
             setStatus(SetPoint2);
             break;
         }
         case SetPoint2: {
-            pPoints->point2 = mouse;
+            m_pPoints->point2 = mouse;
             moveRelativeZero(mouse);
             setStatus(SetPoint3);
             break;
         }
         case SetPoint3: {
-            pPoints->point3 = mouse;
+            m_pPoints->point3 = mouse;
             trigger();
             break;
         }
@@ -204,14 +221,23 @@ bool RS_ActionDrawArc3P::doProcessCommand([[maybe_unused]]int status, const QStr
     if (checkCommand("center", c, rtti())) {
         accept = true;
         finish(false);
-        // fixme - review why this action is called ther
-        graphicView->setCurrentAction(new RS_ActionDrawArc(*container, *graphicView));
+        // fixme - review why this action is called there
+        graphicView->setCurrentAction(new RS_ActionDrawArc(*container, *graphicView, RS2::ActionDrawArc));
+    }
+    // fixme - sand - add these to commands
+    else if (checkCommand("altpoint", c, rtti())){
+        accept = true;
+        alternatedPoints = true;
+    }
+    else if (checkCommand("normpoint", c, rtti())){
+        accept = true;
+        alternatedPoints = false;
     }
     return accept;
 }
 
 QStringList RS_ActionDrawArc3P::getAvailableCommands() {
-    return {{"center"}};
+    return {{"center", "altpoint", "normpoint"}};
 }
 
 void RS_ActionDrawArc3P::updateMouseButtonHints() {
@@ -223,7 +249,7 @@ void RS_ActionDrawArc3P::updateMouseButtonHints() {
         updateMouseWidgetTRBack(tr("Specify second point"), MOD_SHIFT_ANGLE_SNAP);
         break;
     case SetPoint3:
-        updateMouseWidgetTRBack(tr("Specify endpoint"), MOD_SHIFT_ANGLE_SNAP);
+        updateMouseWidgetTRBack(tr("Specify third point"), MOD_SHIFT_AND_CTRL_ANGLE("Second point was endpoint"));
         break;
     default:
         updateMouseWidget();

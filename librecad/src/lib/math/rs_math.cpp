@@ -140,16 +140,6 @@ unsigned RS_Math::findGCD(unsigned a, unsigned b) {
     return std::gcd(a, b);
 }
 
-
-
-/**
- * Tests if angle a is between a1 and a2. a, a1 and a2 must be in the
- * range between 0 and 2*PI.
- * All angles in rad.
- *
- * @param reversed true for clockwise testing. false for ccw testing.
- * @return true if the angle a is between a1 and a2.
- */
 bool RS_Math::isAngleBetween(double a,
                              double a1, double a2,
                              bool reversed) {
@@ -169,6 +159,23 @@ bool RS_Math::isAngleBetween(double a,
  */
 double RS_Math::correctAngle(double a) {
     return std::fmod(M_PI + std::remainder(a - M_PI, g_twoPi), g_twoPi);
+}
+/**
+ * returns amount of periods between given angles
+ * @param a1
+ * @param a2
+ * @return 0 if angles are the same or not periodic, number of periods if angles are periodic
+ */
+int RS_Math::getPeriodsCount(double a1, double a2, bool reversed){
+    if (reversed)
+        std::swap(a1,a2);
+   double dif = std::abs(a2-a1) + g_twoPi;
+   double remainder = std::remainder(dif, g_twoPi);
+   int result = 0;
+   if (remainder < RS_TOLERANCE_ANGLE){
+       result =  dif / g_twoPi - 1;
+   }
+   return result;
 }
 
 /**
@@ -192,7 +199,7 @@ double RS_Math::correctAngle0ToPi(double a) {
  */
 double RS_Math::getAngleDifference(double a1, double a2, bool reversed) {
     if (reversed)
-        std::swap(a1, a2);
+        std::swap(a1,a2);
     return correctAngle(a2 - a1);
 }
 
@@ -283,7 +290,7 @@ double RS_Math::eval(const QString& expr, double def) {
 double RS_Math::convert_unit(const QRegularExpressionMatch& match, const QString& name, double factor, double defval) {
     if (!match.captured(name).isNull())
         LC_ERR <<"name="<<name<<": "<<  match.captured(name);
-    QString input = (!match.captured(name).isNull()) ? match.captured(name) : QString("%1").arg(defval);
+    QString input = (!match.captured(name).isNull()) ? match.captured(name) : QString::number(defval, 'g', 16);
     return input.toDouble() * factor;
 }
 
@@ -316,7 +323,7 @@ QString RS_Math::derationalize(const QString& expr) {
         total *= sign;
 
         RS_DEBUG->print("RS_Math::derationalize: total = '%f'", total);
-        return QString("%1").arg(total);
+        return QString::number(total, 'g', 16);
     }
     else {
         return expr;

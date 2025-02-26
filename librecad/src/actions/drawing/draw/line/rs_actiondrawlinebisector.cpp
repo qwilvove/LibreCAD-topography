@@ -82,30 +82,16 @@ int RS_ActionDrawLineBisector::getNumber() const{
 void RS_ActionDrawLineBisector::init(int status){
     RS_PreviewActionInterface::init(status);
     if (status >= 0){
-        RS_Snapper::suspend();
-    }
-
-    if (status < SetLine2){
-        if (line2 && line2->isHighlighted()){
-            line2->setHighlighted(false);
-        }
-        if (status < 0 && line1 && line1->isHighlighted()){
-            line1->setHighlighted(false);
-        }
-        graphicView->redraw(RS2::RedrawDrawing);
+        invalidateSnapSpot();
     }
 }
 
-void RS_ActionDrawLineBisector::trigger(){
-    RS_PreviewActionInterface::trigger();
+void RS_ActionDrawLineBisector::setStatus(int status) {
+    RS_ActionInterface::setStatus(status);
+    invalidateSnapSpot();
+}
 
-    for (auto p: {line1, line2}) {
-        if (p && p->isHighlighted()){
-            p->setHighlighted(false);
-        }
-    }
-    graphicView->redraw(RS2::RedrawDrawing);
-
+void RS_ActionDrawLineBisector::doTrigger() {
     RS_Creation creation(container, graphicView);
     creation.createBisector(pPoints->coord1,
                             pPoints->coord2,
@@ -117,15 +103,16 @@ void RS_ActionDrawLineBisector::trigger(){
 
 
 void RS_ActionDrawLineBisector::mouseMoveEvent(QMouseEvent *e){
+    deletePreview();
+    deleteHighlights();
     RS_DEBUG->print("RS_ActionDrawLineBisector::mouseMoveEvent begin");
 
     snapPoint(e); // update coordinates widget
     RS_Vector mouse = toGraph(e);
-
-    deleteHighlights();
+    deleteSnapper();
     switch (getStatus()) {
         case SetLine1: {
-            RS_Entity *en = catchEntity(e, enTypeList, RS2::ResolveAll);
+            RS_Entity *en = catchEntityOnPreview(e, enTypeList, RS2::ResolveAll);
             if (en != nullptr){
                 highlightHover(en);
             }
@@ -134,8 +121,7 @@ void RS_ActionDrawLineBisector::mouseMoveEvent(QMouseEvent *e){
         case SetLine2: {
             highlightSelected(line1);
             pPoints->coord2 = mouse;
-            RS_Entity *en = catchEntity(e, enTypeList, RS2::ResolveAll);
-            deletePreview();
+            RS_Entity *en = catchEntityOnPreview(e, enTypeList, RS2::ResolveAll);
             if (en == line1){
                 line2 = nullptr;
             } else if (en != nullptr){
@@ -149,6 +135,7 @@ void RS_ActionDrawLineBisector::mouseMoveEvent(QMouseEvent *e){
                                                    line1,
                                                    line2);
                 if (ent != nullptr){
+                    // fixme sand - more than one mya be created, but if only one - it's good to show description
                     highlightHover(line2);
                     if (showRefEntitiesOnPreview) {
                         previewRefPoint(line1->getNearestPointOnEntity(pPoints->coord1));
@@ -157,7 +144,6 @@ void RS_ActionDrawLineBisector::mouseMoveEvent(QMouseEvent *e){
                         previewRefSelectablePoint(nearest);
                     }
                 }
-                drawPreview();
             }
             break;
         }
@@ -172,6 +158,7 @@ void RS_ActionDrawLineBisector::mouseMoveEvent(QMouseEvent *e){
             break;
     }
     drawHighlights();
+    drawPreview();
 
     RS_DEBUG->print("RS_ActionDrawLineBisector::mouseMoveEvent end");
 }
@@ -181,7 +168,7 @@ void RS_ActionDrawLineBisector::onMouseLeftButtonRelease(int status, QMouseEvent
     switch (status) {
         case SetLine1: {
             pPoints->coord1 = mouse;
-            RS_Entity *en = catchEntity(e,enTypeList,RS2::ResolveAll);
+            RS_Entity *en = catchEntity(mouse,enTypeList,RS2::ResolveAll);
             if (isLine(en)){
                 line1 = dynamic_cast<RS_Line *>(en);
                 line2 = nullptr;

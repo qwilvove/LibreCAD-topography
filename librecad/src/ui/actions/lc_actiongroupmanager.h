@@ -14,15 +14,13 @@ class QC_ApplicationWindow;
 class LC_ActionGroupManager : public QObject
 {
     Q_OBJECT
-
-
-
 public:
     explicit LC_ActionGroupManager(QC_ApplicationWindow *parent);
 
     LC_ActionGroup* block;
     LC_ActionGroup* circle;
     LC_ActionGroup* curve;
+    LC_ActionGroup* spline;
     LC_ActionGroup* edit;
     LC_ActionGroup* ellipse;
     LC_ActionGroup* file;
@@ -30,17 +28,22 @@ public:
     LC_ActionGroup* info;
     LC_ActionGroup* layer;
     LC_ActionGroup* line;
+    LC_ActionGroup* point;
+    LC_ActionGroup* shape;
     LC_ActionGroup* modify;
     LC_ActionGroup* options;
     LC_ActionGroup* other;
+    LC_ActionGroup* relZero;
     LC_ActionGroup* polyline;
     LC_ActionGroup* restriction;
     LC_ActionGroup* select;
     LC_ActionGroup* snap;
     LC_ActionGroup* snap_extras;
     LC_ActionGroup* view;
+    LC_ActionGroup* namedViews;
     LC_ActionGroup* widgets;
     LC_ActionGroup* pen;
+    LC_ActionGroup* infoCursor;
 
     QList<LC_ActionGroup*> toolGroups();
     QMap<QString, LC_ActionGroup*> allGroups();
@@ -52,16 +55,20 @@ public:
     int saveShortcuts(QMap<QString, LC_ShortcutInfo *> map);
     int saveShortcuts(const QList<LC_ShortcutInfo *> &shortcutsList, const QString &fileName);
     const QString getShortcutsMappingsFolder();
+    QMap<QString, QAction *> &getActionsMap();
+    QAction *getActionByName(const QString &name);
+    bool hasActionGroup(QString categoryName);
+    LC_ActionGroup* getActionGroup(QString groupName);
 public slots:
     void toggleExclusiveSnapMode(bool state);
     void toggleTools(bool state);
+
     void onOptionsChanged();
+
 private:
     QMap<QString, QAction*> a_map; // should be initialized by action factory by call of loadShortcuts()
     LC_ShortcutsManager shortcutsManager;
     QList<bool> snap_memory;
-
-
 };
 
 #endif // LC_ACTIONGROUPMANAGER_H

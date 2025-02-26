@@ -62,6 +62,9 @@
 #ifdef DWGSUPPORT
 #include "libdwgr.h"
 #include "rs_debug.h"
+#include "lc_view.h"
+#include "lc_ucs.h"
+
 #endif
 
 /**
@@ -303,7 +306,7 @@ void RS_FilterDXFRW::addVport(const DRW_Vport &data) {
     if (name.toLower() == "*active") {
         data.grid == 1? graphic->setGridOn(true):graphic->setGridOn(false);
         graphic->setIsometricGrid(data.snapStyle);
-        graphic->setCrosshairType( (RS2::CrosshairType)data.snapIsopair);
+        graphic->setIsoView( (RS2::IsoGridViewType)data.snapIsopair);
         RS_GraphicView *gv = graphic->getGraphicView();
         if (gv ) {
             double width = data.height * data.ratio;
@@ -318,6 +321,64 @@ void RS_FilterDXFRW::addVport(const DRW_Vport &data) {
         }
     }
 }
+
+void RS_FilterDXFRW::addView(const DRW_View &data) {
+    RS_DEBUG->print("RS_FilterDXF::addView");
+    RS_DEBUG->print("  adding view: %s", data.name.c_str());
+
+    RS_DEBUG->print("RS_FilterDXF::addView: creating view");
+
+    QString name = QString::fromUtf8(data.name.c_str());
+    if (!name.isEmpty() && graphic->findNamedView(name) != nullptr) {
+        return;
+    }
+    LC_View* view = new LC_View(name);
+    RS_Vector center = RS_Vector(data.center.x, data.center.y, data.center.z);
+    view->setCenter(center);
+
+    RS_Vector size = RS_Vector(data.size.x, data.size.y, data.size.z);
+    view->setSize(size);
+
+    RS_Vector targetPoint = RS_Vector(data.targetPoint.x, data.targetPoint.y, data.targetPoint.z);
+    view->setTargetPoint(targetPoint);
+
+    RS_Vector viewDirection = RS_Vector(data.viewDirectionFromTarget.x, data.viewDirectionFromTarget.y, data.viewDirectionFromTarget.z);
+    view->setViewDirection(viewDirection);
+
+    view->setLensLen(data.lensLen);
+    view->setCameraPlottable(data.cameraPlottable);
+
+    view->setRenderMode(data.renderMode);
+    view->setBackClippingPlaneOffset(data.backClippingPlaneOffset);
+    view->setFrontClippingPlaneOffset(data.frontClippingPlaneOffset);
+    view->setTwistAngle(data.twistAngle);
+    view->setFlags(data.flags); // todo - review, use differ properties?
+    view->setViewMode(data.viewMode); // todo - probably it might be simpler than long?
+
+    if (data.hasUCS){
+        LC_UCS* ucs = new LC_UCS();
+
+        RS_Vector ucsOrigin = RS_Vector(data.ucsOrigin.x, data.ucsOrigin.y, data.ucsOrigin.z);
+        RS_Vector ucsXAxis = RS_Vector(data.ucsXAxis.x, data.ucsXAxis.y, data.ucsXAxis.z);
+        RS_Vector ucsYAxis = RS_Vector(data.ucsYAxis.x, data.ucsYAxis.y, data.ucsYAxis.z);
+
+        ucs->setOrigin(ucsOrigin);
+        ucs->setXAxis(ucsXAxis);
+        ucs->setYAxis(ucsYAxis);
+        ucs->setElevation(data.ucsElevation);
+        ucs->setOrthoType(data.ucsOrthoType);
+
+        view->setUCS(ucs);
+    }
+
+    RS_DEBUG->print("RS_FilterDXF::addView: set pen");
+
+    RS_DEBUG->print("RS_FilterDXF::addView: add view to graphic");
+    graphic->addNamedView(view);
+    RS_DEBUG->print("RS_FilterDXF::addView: OK");
+
+}
+
 
 /**
  * Implementation of the method which handles blocks.
@@ -623,35 +684,43 @@ void RS_FilterDXFRW::addPolyline(const DRW_Polyline& data) {
 void RS_FilterDXFRW::addSpline(const DRW_Spline* data) {
     RS_DEBUG->print("RS_FilterDXFRW::addSpline: degree: %d", data->degree);
 
-	if(data->degree == 2)
-	{
-        if (data->controllist.size() == 3) {
+    // todo - sand - review this, quite a strange logic there... why spline points can't be with degree 3, for example?
+    if(data->degree == 2)
+    {
+        if (data->controllist.size() == 3) { // parabola
             auto toRs = [](const std::shared_ptr<DRW_Coord>& coord) -> RS_Vector {
                 return coord ? RS_Vector{coord->x, coord->y} : RS_Vector{};
             };
             LC_ParabolaData d{{toRs(data->controllist.at(0)),
-                            toRs(data->controllist.at(1)),
-                             toRs(data->controllist.at(2))}};
+                               toRs(data->controllist.at(1)),
+                               toRs(data->controllist.at(2))}};
             auto* parabola = new LC_Parabola(currentContainer, d);
             setEntityAttributes(parabola, data);
             parabola->update();
             currentContainer->addEntity(parabola);
             return;
         }
-		LC_SplinePoints* splinePoints;
-		LC_SplinePointsData d(((data->flags&0x1)==0x1), true);
-		splinePoints = new LC_SplinePoints(currentContainer, d);
-		setEntityAttributes(splinePoints, data);
-		currentContainer->addEntity(splinePoints);
+        else { // spline points
+            LC_SplinePoints *splinePoints;
+            LC_SplinePointsData d(((data->flags & 0x1) == 0x1), data->nfit == 0);
+            splinePoints = new LC_SplinePoints(currentContainer, d);
+            setEntityAttributes(splinePoints, data);
+            currentContainer->addEntity(splinePoints);
 
-        for(auto const& vert: data->controllist) {
-            splinePoints->addControlPoint({vert->x, vert->y});
-		}
+            for (auto const &vert: data->controllist) {
+                splinePoints->addControlPoint({vert->x, vert->y});
+            }
 
-		splinePoints->update();
-		return;
-	}
+            for (auto const &vert: data->fitlist) {
+                splinePoints->addPoint({vert->x, vert->y});
+            }
 
+            splinePoints->update();
+            return;
+        }
+    }
+
+    // ordinary spline
     RS_Spline* spline = nullptr;
     if (data->degree >= 1 && data->degree <= 3) {
         RS_SplineData d(data->degree, ((data->flags&0x1)==0x1));
@@ -670,8 +739,8 @@ void RS_FilterDXFRW::addSpline(const DRW_Spline* data) {
                         "RS_FilterDXF::addSpline: Invalid degree for spline: %d. "
                         "Accepted values are 1..3.", data->degree);
         return;
-	}
-	for (auto const& vert: data->controllist)
+    }
+    for (auto const& vert: data->controllist)
         spline->addControlPoint({vert->x, vert->y});
 
     if (data->ncontrol== 0 && data->degree != 2){
@@ -1378,6 +1447,12 @@ void RS_FilterDXFRW::addHeader(const DRW_Header* data){
 	if( graphic->getVariableDouble("$PDSIZE", -999.9) < -100.0)
 		graphic->addVariable("$PDSIZE", LC_DEFAULTS_PDSize, DXF_FORMAT_GC_VarName);
 
+  if( graphic->getVariableDouble("$JOINSTYLE", -999.9) < -100.0)
+       graphic->addVariable("$JOINSTYLE", 1, DXF_FORMAT_GC_JoinStyle);
+
+  if( graphic->getVariableDouble("$ENDCAPS", -999.9) < -100.0)
+      graphic->addVariable("$ENDCAPS", 1, DXF_FORMAT_GC_Endcaps);
+
     QString acadver = versionStr = graphic->getVariableString("$ACADVER", "");
     acadver.replace(QRegularExpression("[a-zA-Z]"), "");
     bool ok;
@@ -1468,8 +1543,11 @@ bool RS_FilterDXFRW::fileExport(RS_Graphic& g, const QString& file, RS2::FormatT
     }
 
     dxfW = new dxfRW(QFile::encodeName(file));
-    bool success = dxfW->write(this, exportVersion, false); //ascii
-//    bool success = dxf->write(this, exportVersion, true); //binary
+    // fixme - sand - save to binary format enabling/disabling!!
+    bool binary = false;
+
+//    bool success = dxfW->write(this, exportVersion, false); //ascii
+    bool success = dxfW->write(this, exportVersion, binary); //binary
     delete dxfW;
 
     if (!success) {
@@ -1963,6 +2041,68 @@ void RS_FilterDXFRW::writeLayers(){
     }
 }
 
+void RS_FilterDXFRW::writeViews() {
+    LC_ViewList* vl = graphic->getViewList();
+    DRW_View vie;
+    for (unsigned int i = 0; i < vl->count(); i++) {
+        vie.reset();
+        LC_View* view = vl->at(i);
+        vie.name = view->getName().toUtf8().data();
+        vie.center.x = view->getCenter().x; 
+        vie.center.y = view->getCenter().y; 
+        vie.center.z = view->getCenter().z;
+
+        vie.targetPoint.x = view->getTargetPoint().x;
+        vie.targetPoint.y = view->getTargetPoint().y;
+        vie.targetPoint.z = view->getTargetPoint().z;
+        
+        vie.size.x = view->getSize().x;
+        vie.size.y = view->getSize().y;
+        vie.size.z = view->getSize().z;        
+        
+        vie.frontClippingPlaneOffset = view->getFrontClippingPlaneOffset();
+        vie.backClippingPlaneOffset = view->getBackClippingPlaneOffset();
+        vie.lensLen = view->getLensLen();
+        vie.flags = view->getFlags();
+        vie.viewMode = view->getViewMode();
+                
+        vie.viewDirectionFromTarget.x = view->getViewDirection().x;
+        vie.viewDirectionFromTarget.y = view->getViewDirection().y;
+        vie.viewDirectionFromTarget.z = view->getViewDirection().z;
+        
+        vie.cameraPlottable = view->isCameraPlottable();
+        vie.renderMode = view->getRenderMode();
+        
+        vie.twistAngle = view->getTwistAngle();        
+        
+        if (view->isHasUCS()){
+            vie.hasUCS = true;
+            LC_UCS *ucs = view->getUCS();
+            vie.ucsOrigin.x = ucs->getOrigin().x;
+            vie.ucsOrigin.y = ucs->getOrigin().y;
+            vie.ucsOrigin.z = ucs->getOrigin().z;
+            
+            vie.ucsOrthoType = ucs->getOrthoType();
+            vie.ucsElevation = ucs->getElevataion();
+
+            vie.ucsXAxis.x = ucs->getXAxis().x;
+            vie.ucsXAxis.y = ucs->getXAxis().y;
+            vie.ucsXAxis.z = ucs->getXAxis().z;
+
+            vie.ucsYAxis.x = ucs->getYAxis().x;
+            vie.ucsYAxis.y = ucs->getYAxis().y;
+            vie.ucsYAxis.z = ucs->getYAxis().z;
+
+            // fixme - complete - base UCS_ID and Named UCS_ID support. That's might be necessary to support views/UCS
+            // created outside of LibreCAD.
+            // Return to this after normal support of UCS.
+//            vie.namedUCS_ID = ucs.
+//            vie.baseUCS_ID = ucs.
+        }
+        dxfW->writeView(&vie);
+    }
+}
+
 void RS_FilterDXFRW::writeTextstyles(){
     QHash<QString, QString> styles;
     QString sty;
@@ -2029,7 +2169,7 @@ void RS_FilterDXFRW::writeVports(){
     vp.gridSpacing.x = spacing.x;
     vp.gridSpacing.y = spacing.y;
     vp.snapStyle = graphic->isIsometricGrid();
-    vp.snapIsopair = graphic->getCrosshairType();
+    vp.snapIsopair = graphic->getIsoView();
     if (vp.snapIsopair > 2)
         vp.snapIsopair = 0;
     if (fabs(spacing.x) < 1.0e-6) {
@@ -2388,15 +2528,12 @@ void RS_FilterDXFRW::writeSpline(RS_Spline *s) {
 /**
  * Writes the given spline entity to the file.
  */
-void RS_FilterDXFRW::writeSplinePoints(LC_SplinePoints *s)
-{
+void RS_FilterDXFRW::writeSplinePoints(LC_SplinePoints *s){
 	int nCtrls = s->getNumberOfControlPoints();
 	auto const& cp = s->getControlPoints();
 
-	if(nCtrls < 3)
-	{
-        if(nCtrls > 1)
-		{
+	if(nCtrls < 3){
+        if(nCtrls > 1){
 			DRW_Line line;
 			line.basePoint.x = cp.at(0).x;
 			line.basePoint.y = cp.at(0).y;
@@ -2409,17 +2546,17 @@ void RS_FilterDXFRW::writeSplinePoints(LC_SplinePoints *s)
 	}
 
 	// version 12 do not support Spline write as polyline
-	if(version == 1009)
-	{
+	if(version == 1009){
 		DRW_Polyline pol;
 		auto const& sp = s->getStrokePoints();
 
-		for(size_t i = 0; i < sp.size(); i++)
-		{
+		for(size_t i = 0; i < sp.size(); i++){
 			pol.addVertex(DRW_Vertex(sp.at(i).x, sp.at(i).y, 0.0, 0.0));
 		}
 
-		if(s->isClosed()) pol.flags = 1;
+		if(s->isClosed()){
+      pol.flags = 1;
+  }
 
 		getEntityAttributes(&pol, s);
 		dxfW->writePolyline(&pol);
@@ -2428,33 +2565,44 @@ void RS_FilterDXFRW::writeSplinePoints(LC_SplinePoints *s)
 
 	DRW_Spline sp;
 
-	if(s->isClosed()) sp.flags = 11;
-	else sp.flags = 8;
+	if(s->isClosed()) {
+     sp.flags = 11;
+ }
+	else{
+     sp.flags = 8;   
+ }
 
 	sp.ncontrol = nCtrls;
 	sp.degree = 2;
 	sp.nknots = nCtrls + 3;
 
+    LC_SplinePointsData &data = s->getData();
+    sp.nfit = data.splinePoints.size();
+
+    auto const& fitPoints = data.splinePoints;
+    
 	// write spline knots:
-	for(int i = 1; i <= sp.nknots; i++) 
-	{
-		if(i <= 3)
-		{
+	for(int i = 1; i <= sp.nknots; i++){
+		if(i <= 3){
 			sp.knotslist.push_back(0.0);
 		}
-		else if(i <= nCtrls)
-		{
+		else if(i <= nCtrls){
 			sp.knotslist.push_back((i - 3.0)/(nCtrls - 2.0));
 		}
-		else
-		{
+		else{
 			sp.knotslist.push_back(1.0);
 		}
 	}
 
 	// write spline control points:
-	for (auto const& v: cp)
-        sp.controllist.push_back(std::make_shared<DRW_Coord>(v.x, v.y));
+	for (auto const& v: cp) {
+     sp.controllist.push_back(std::make_shared<DRW_Coord>(v.x, v.y));
+ }
+
+ // fit points
+ for (auto const& v: fitPoints) {
+     sp.fitlist.push_back(std::make_shared<DRW_Coord>(v.x, v.y));
+ }
 
 	getEntityAttributes(&sp, s);
 	dxfW->writeSpline(&sp);
@@ -4094,4 +4242,5 @@ void RS_FilterDXFRW::printDwgError(int le){
         break;
     }
 }
+
 #endif

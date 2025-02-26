@@ -39,11 +39,11 @@ class RS_ActionDrawArc:public LC_ActionDrawCircleBase {
 public:
     RS_ActionDrawArc(
         RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+        RS_GraphicView &graphicView,
+        RS2::ActionType actionType);
     ~RS_ActionDrawArc() override;
     void reset() override;
     void init(int status) override;
-    void trigger() override;
     void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     bool isReversed() const override;
@@ -65,6 +65,7 @@ protected:
      * Arc data defined so far.
      */
     std::unique_ptr<RS_ArcData> data;
+    bool alternateArcDirection = false;
     void snapMouseToDiameter(RS_Vector &mouse, RS_Vector &arcStart, RS_Vector &halfCircleArcEnd) const;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     RS2::CursorType doGetMouseCursor(int status) override;
@@ -73,5 +74,6 @@ protected:
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
+    void doTrigger() override;
 };
 #endif

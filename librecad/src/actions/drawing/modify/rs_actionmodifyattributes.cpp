@@ -38,7 +38,7 @@ RS_ActionModifyAttributes::RS_ActionModifyAttributes(
     actionType=RS2::ActionModifyAttributes;
 }
 
-void RS_ActionModifyAttributes::trigger() {
+void RS_ActionModifyAttributes::doTrigger(bool keepSelected){
     RS_DEBUG->print("RS_ActionModifyAttributes::trigger()");
 
     RS_AttributesData data;
@@ -50,14 +50,16 @@ void RS_ActionModifyAttributes::trigger() {
     data.changeLayer = false;
 
     if (graphic) {
+        graphicView->setForcedActionKillAllowed(false);
         if (RS_DIALOGFACTORY->requestAttributesDialog(data,*graphic->getLayerList())) {
             RS_Modification m(*container, graphicView);
-            m.changeAttributes(data, selectedEntities, container);
+            m.changeAttributes(data, selectedEntities, container, keepSelected);
         }
+        graphicView->setForcedActionKillAllowed(true);
     }
 //    graphicView->killSelectActions();
 }
 
 void RS_ActionModifyAttributes::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to modify attributes"), MOD_CTRL(tr("Modify attributes immediately after selecting")));
+    updateMouseWidgetTRCancel(tr("Select to modify attributes (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Modify attributes immediately after selecting")));
 }

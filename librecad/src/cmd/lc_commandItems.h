@@ -174,11 +174,26 @@ const LC_CommandItem g_commandList[] = {
             {{"cx", QObject::tr("cx", "draw cross for circle")}},
             RS2::ActionDrawCross
         },
+        {
+            {{"bbox", QObject::tr("bbox", "draw bound box")}},
+            {{"bb", QObject::tr("bb", "draw bound box")}},
+            RS2::ActionDrawBoundingBox
+        },
+        {
+            {{"midline", QObject::tr("midline", "draw middle line")}},
+            {{"ml", QObject::tr("ml", "draw mid line")}},
+            RS2::ActionDrawLineMiddle
+        },
         // draw line of points
         {
             {{"linepoints", QObject::tr("linepoints", "draw line of points")}},
             {{"lpoints", QObject::tr("lpoints", "draw line of points")}},
             RS2::ActionDrawLinePoints
+        },
+        {
+            {{"midpoint", QObject::tr("midpoint", "draw middle points")}},
+            {{"mpoint", QObject::tr("mpoint", "draw middle of points")}},
+            RS2::ActionDrawPointsMiddle
         },
         // draw circle by arc
         {
@@ -186,11 +201,28 @@ const LC_CommandItem g_commandList[] = {
             {{"cba", QObject::tr("cba", "draw circle by arc")}},
             RS2::ActionDrawCircleByArc
         },
-        // draw circle by arc
+        // modify - duplicate
         {
             {{"duplicate", QObject::tr("duplicate", "duplicate entity")}},
             {{"dup", QObject::tr("dup", "duplicate entity")}},
             RS2::ActionModifyDuplicate
+        },
+        //  modify - align
+        {
+            {{"align", QObject::tr("align", "align entities")}},
+            {{"al", QObject::tr("al", "align entities")}},
+            RS2::ActionModifyAlign
+        },
+        //  modify - align one
+        {
+            {{"align1", QObject::tr("align1", "align entities")}},
+            {{"al1", QObject::tr("al1", "align entities")}},
+            RS2::ActionModifyAlignOne
+        },
+        {
+            {{"alignref", QObject::tr("alignref", "align references")}},
+            {{"alr", QObject::tr("alr", "align references")}},
+            RS2::ActionModifyAlignRef
         },
         // line join
         {
@@ -279,6 +311,12 @@ const LC_CommandItem g_commandList[] = {
             {{"pv", QObject::tr("pv", "polygon centre vertex")},   // - v2.2.0r2
              {"polyct", QObject::tr("polyct", "polygon centre vertex")}},
             RS2::ActionDrawLinePolygonCenTan
+        },
+    // draw polygon by vertex and vertex - or side and side
+        {
+            {{"polygonvv", QObject::tr("polygonvv", "polygon vertex vertex")}},
+            {{"pvv", QObject::tr("pvv", "polygon vertex vertex")}},   // - v2.2.0r2
+            RS2::ActionDrawLinePolygonSideSide
         },
         // draw polygon by 2 vertices
         {
@@ -372,6 +410,31 @@ const LC_CommandItem g_commandList[] = {
             {{"at", QObject::tr("at", "arc tangent")}},
             RS2::ActionDrawArcTangential
         },
+        // draw 2 points arc - Radius
+        {
+            {{"arc2pr", QObject::tr("arc2p3", "draw 2pt arc radius")}},
+            {{"a2r", QObject::tr("a2r", "draw 2pt arc radius")}},
+            RS2::ActionDrawArc2PRadius
+        },
+        // draw 2 points arc - Length
+        {
+            {{"arc2pl", QObject::tr("arc2pl", "draw 2pt arc length")}},
+            {{"a2l", QObject::tr("a2l", "draw 2pt arc length")}},
+            RS2::ActionDrawArc2PLength
+        },
+        // draw 2 points arc - Height
+        {
+            {{"arc2ph", QObject::tr("arc2ph", "draw 2pt arc height")}},
+            {{"a2h", QObject::tr("a2h", "draw 2pt arc height")}},
+            RS2::ActionDrawArc2PHeight
+        },
+        // draw 2 points arc - Angle
+        {
+            {{"arc2pa", QObject::tr("arc2pa", "draw 2pt arc angle")}},
+            {{"a2a", QObject::tr("a2a", "draw 2pt arc angle")}},
+            RS2::ActionDrawArc2PAngle
+        },
+
         // draw spline with degrees freedom
         {
             {{"spline", QObject::tr("spline", "draw spline")}},
@@ -789,7 +852,7 @@ const LC_CommandItem g_commandList[] = {
         {
             {{"hatch", QObject::tr("hatch", "draw hatch")}},
             {{"ha", QObject::tr("ha", "draw hatch")}},
-            RS2::ActionDrawHatchNoSelect
+            RS2::ActionDrawHatch
         },
         // draw point
         {

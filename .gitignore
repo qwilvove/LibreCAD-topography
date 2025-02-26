@@ -1,6 +1,7 @@
 # LibreCAD root folder
 /*.dxf
 /*.sh
+!/CMakeLists.txt
 /*.txt
 /\.*
 
@@ -106,3 +107,7 @@ core.*
 *.vcxproj.filters
 *.sln
 /cmake-build-debug/
+
+# pixi environments
+.pixi
+*.egg-info

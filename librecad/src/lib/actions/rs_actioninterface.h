@@ -28,15 +28,15 @@
 #ifndef RS_ACTIONINTERFACE_H
 #define RS_ACTIONINTERFACE_H
 
-#include <QObject>
 #include <QtCore/QtContainerFwd>
-#include <QKeyEvent>
-#include <QInputEvent>
-#include <QMouseEvent>
 
 #include "rs.h"
 #include "rs_snapper.h"
 #include "lc_modifiersinfo.h"
+
+class QInputEvent;
+class QKeyEvent;
+class QMouseEvent;
 
 class RS_CommandEvent;
 class RS_CoordinateEvent;
@@ -57,8 +57,7 @@ class LC_ActionOptionsWidget; // todo - think about depencency - options in in u
  */
 //fixme - actually, inheritance from snapper is rather bad design... not all actions (say, file open or print-preview) should be
 // inherited from snapper - only ones that really work with drawing should be snap-aware
-class RS_ActionInterface : public QObject, public RS_Snapper {
-    Q_OBJECT
+class RS_ActionInterface : public RS_Snapper {
 public:
     RS_ActionInterface(const char* name,
                        RS_EntityContainer& container,
@@ -157,7 +156,7 @@ protected:
     void updateMouseWidgetTRBack(const QString &msg,const LC_ModifiersInfo& modifiers = LC_ModifiersInfo::NONE());
     void updateMouseWidgetTRCancel(const QString &msg,const LC_ModifiersInfo& modifiers = LC_ModifiersInfo::NONE());
     void updateMouseWidget(const QString& = QString(),const QString& = QString(), const LC_ModifiersInfo& modifiers = LC_ModifiersInfo::NONE());
-
+    void clearMouseWidgetIcon();
 
     static bool isControl(const QInputEvent *e);
     static bool isShift(const QInputEvent *e);
@@ -187,5 +186,15 @@ protected:
 
     virtual void onCoordinateEvent(int status, bool isZero, const RS_Vector& pos);
     void initPrevious(int status);
+    void preparePromptForInfoCursorOverlay(const QString &msg, const LC_ModifiersInfo &modifiers);
+
+    void undoableDeleteEntity(RS_Entity *entity);
+    void undoableAdd(RS_Undoable *e) const;
+    bool undoCycleAdd(RS_Entity *entity, bool addToContainer = true) const;
+    void undoCycleReplace(RS_Entity *entityToReplace, RS_Entity* entityReplacing);
+    void undoCycleEnd() const;
+    void undoCycleStart() const;
+
+    void setPenAndLayerToActive(RS_Entity* e);
 };
 #endif

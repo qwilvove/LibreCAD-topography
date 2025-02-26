@@ -19,10 +19,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
-#include "rs_math.h"
-#include "rs_graphic.h"
-#include "rs_units.h"
+#include <QMouseEvent>
+
 #include "lc_actioninfo3pointsangle.h"
+#include "rs_graphic.h"
+#include "rs_math.h"
+#include "rs_units.h"
 
 LC_ActionInfo3PointsAngle::LC_ActionInfo3PointsAngle(RS_EntityContainer &container, RS_GraphicView &graphicView)
     :RS_PreviewActionInterface("InfoAngle3Points", container, graphicView) {
@@ -31,31 +33,21 @@ LC_ActionInfo3PointsAngle::LC_ActionInfo3PointsAngle(RS_EntityContainer &contain
 
 LC_ActionInfo3PointsAngle::~LC_ActionInfo3PointsAngle() = default;
 
-void LC_ActionInfo3PointsAngle::trigger() {
-
+void LC_ActionInfo3PointsAngle::doTrigger() {
     double angle1 = point2.angleTo(point1);
     double angle2 = point2.angleTo(point3);
 
     double angle = RS_Math::correctAngle(angle1-angle2);
+    QString angleStr = formatAngle(angle);
 
-    RS2::AngleFormat angleFormat = graphic->getAngleFormat();
-    int anglePrec = graphic->getAnglePrecision();
-    QString angleStr = RS_Units::formatAngle(angle, angleFormat, anglePrec);
+    QString p1X = formatLinear(point1.x);
+    QString p1Y = formatLinear(point1.y);
+    QString p2X = formatLinear(point2.x);
+    QString p2Y = formatLinear(point2.y);
+    QString p3X = formatLinear(point3.x);
+    QString p3Y = formatLinear(point3.y);
 
-    RS2::LinearFormat linearFormat = graphic->getLinearFormat();
-    RS2::Unit linearUnit = graphic->getUnit();
-    int linearPrecision = graphic->getLinearPrecision();
-
-    QString p1X = RS_Units::formatLinear(point1.x, linearUnit,linearFormat, linearPrecision);
-    QString p1Y = RS_Units::formatLinear(point1.y, linearUnit,linearFormat, linearPrecision);
-    QString p2X = RS_Units::formatLinear(point2.x, linearUnit,linearFormat, linearPrecision);
-    QString p2Y = RS_Units::formatLinear(point2.y, linearUnit,linearFormat, linearPrecision);
-    QString p3X = RS_Units::formatLinear(point3.x, linearUnit,linearFormat, linearPrecision);
-    QString p3Y = RS_Units::formatLinear(point3.y, linearUnit,linearFormat, linearPrecision);
-
-
-    QString altAngleStr = RS_Units::formatAngle(RS_Math::correctAngle(2 * M_PI - angle), angleFormat, anglePrec);
-
+    QString altAngleStr = formatAngle(RS_Math::correctAngle(2 * M_PI - angle));
 
     const QString &msgTemplate = tr("Angle: %1 (%2)\n Start Edge Point: (%3 , %4)\n Intersection Point :(%5, %6)\n End Edge Point: (%7 , %8)");
     const QString &msg = msgTemplate.arg(angleStr, altAngleStr, p1X, p1Y, p2X, p2Y, p3X, p3Y);
@@ -78,6 +70,7 @@ void LC_ActionInfo3PointsAngle::mouseMoveEvent(QMouseEvent *e) {
             if (!trySnapToRelZeroCoordinateEvent(e)) {
                 mouse = getSnapAngleAwarePoint(e, point1, mouse, true, isControl(e));
                 previewRefPoint(point1);
+                updateInfoCursor(mouse, point1);
                 if (showRefEntitiesOnPreview) {
                     previewRefSelectablePoint(mouse);
                     previewRefLine(point1, mouse);
@@ -92,7 +85,7 @@ void LC_ActionInfo3PointsAngle::mouseMoveEvent(QMouseEvent *e) {
                 previewRefPoint(point1);
                 previewRefPoint(point2);
                 previewRefSelectablePoint(mouse);
-
+                updateInfoCursor(mouse, point2, point1);
                 if (showRefEntitiesOnPreview) {
                     previewRefLine(point1, point2);
                     previewRefLine(point2, mouse);
@@ -144,11 +137,11 @@ void LC_ActionInfo3PointsAngle::updateMouseButtonHints() {
             break;
         }
         case SetPoint2:{
-            updateMouseWidgetTRCancel(tr("Select second (intersection) point of angle"), MOD_SHIFT_AND_CTRL(LC_ModifiersInfo::MSG_REL_ZERO, LC_ModifiersInfo::MSG_ANGLE_SNAP));
+            updateMouseWidgetTRCancel(tr("Select second (intersection) point of angle"), MOD_SHIFT_AND_CTRL(MSG_REL_ZERO, MSG_ANGLE_SNAP));
             break;
         }
         case SetPoint3:{
-            updateMouseWidgetTRCancel(tr("Select second edge point of angle"), MOD_SHIFT_AND_CTRL(LC_ModifiersInfo::MSG_REL_ZERO, LC_ModifiersInfo::MSG_ANGLE_SNAP));
+            updateMouseWidgetTRCancel(tr("Select second edge point of angle"), MOD_SHIFT_AND_CTRL(MSG_REL_ZERO, MSG_ANGLE_SNAP));
             break;
         }
         default:
@@ -182,4 +175,40 @@ void LC_ActionInfo3PointsAngle::onMouseRightButtonRelease([[maybe_unused]]int st
 
 RS2::CursorType LC_ActionInfo3PointsAngle::doGetMouseCursor([[maybe_unused]] int status) {
     return RS2::CadCursor;
+}
+
+void LC_ActionInfo3PointsAngle::updateInfoCursor(const RS_Vector &mouse, const RS_Vector &startPoint) {
+    if (infoCursorOverlayPrefs->enabled){
+        double distance = startPoint.distanceTo(mouse);
+        LC_InfoMessageBuilder msg(tr("Info"));
+        msg.add(tr("Distance:"),formatLinear(distance));
+        msg.add(tr("Angle:"),formatAngle(startPoint.angleTo(mouse)));
+        msg.add(tr("From:"),formatVector(startPoint));
+        msg.add(tr("To:"),formatVector(mouse));
+        appendInfoCursorZoneMessage(msg.toString(), 2, false);
+    }
+}
+
+void LC_ActionInfo3PointsAngle::updateInfoCursor(const RS_Vector &mouse, const RS_Vector &point2, const RS_Vector &startPoint) {
+    if (infoCursorOverlayPrefs->enabled) {
+
+        double angle1 = point2.angleTo(point1);
+        double angle2 = point2.angleTo(mouse);
+
+        double angle = RS_Math::correctAngle(angle1 - angle2);
+
+        double distance = point2.distanceTo(startPoint);
+        double distance2 = point2.distanceTo(mouse);
+        LC_InfoMessageBuilder msg(tr("Info"));
+        msg.add(tr("Angle:"), formatAngle(angle));
+        msg.add(tr("Angle (Alt):"), formatAngle(RS_Math::correctAngle(2 * M_PI - angle)));
+        msg.add(tr("From:"), formatVector(startPoint));
+        msg.add(tr("Intersection:"), formatVector(point2));
+        msg.add(tr("To:"), formatVector(mouse));
+        msg.add(tr("Distance1:"), formatLinear(distance));
+        msg.add(tr("Distance2:"), formatLinear(distance2));
+        msg.add(tr("Angle 1:"), formatAngle(point2.angleTo(startPoint)));
+        msg.add(tr("Angle 2:"), formatAngle(point2.angleTo(mouse)));
+        appendInfoCursorZoneMessage(msg.toString(), 2, false);
+    }
 }

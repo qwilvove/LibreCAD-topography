@@ -82,7 +82,8 @@ namespace RS2 {
         FlagSelected2   = 1<<13,
         /** Entity is highlighted temporarily (as a user action feedback) */
         FlagHighlighted = 1<<14,
-        FlagTransparent = 1<<15
+        FlagTransparent = 1<<15,
+        FlagHatchChild = 1<<16
     };
 
     /**
@@ -164,6 +165,7 @@ namespace RS2 {
         EntityOverlayLine,
         EntityRefPoint,
         EntityRefLine,
+        EntityRefConstructionLine,
         EntityRefArc,
         EntityRefCircle,
         EntityRefEllipse,
@@ -248,8 +250,16 @@ namespace RS2 {
         ActionSelectDouble,
         ActionGetSelect,
 
+        ActionEntityInfoSelectSingle,
+
         ActionDrawArc,
+        ActionDrawArcChord,
+        ActionDrawArcAngleLen,
         ActionDrawArc3P,
+        ActionDrawArc2PAngle,
+        ActionDrawArc2PRadius,
+        ActionDrawArc2PLength,
+        ActionDrawArc2PHeight,
         ActionDrawArcParallel,
         ActionDrawArcTangential,
         ActionDrawCircle,
@@ -278,7 +288,6 @@ namespace RS2 {
         ActionDrawParabolaFD,
 
         ActionDrawHatch,
-        ActionDrawHatchNoSelect,
         ActionDrawImage,
         ActionDrawLine,
         ActionDrawLineAngle,
@@ -293,17 +302,26 @@ namespace RS2 {
         ActionDrawLinePolygonCenCor,
         ActionDrawLinePolygonCenTan,//add by txmy
         ActionDrawLinePolygonCorCor,
+        ActionDrawLinePolygonSideSide,
         ActionDrawLineRectangle,
         ActionDrawLineRelAngle,
         ActionDrawLineTangent1,
         ActionDrawLineTangent2,
         ActionDrawLineVertical,
+        ActionDrawLineMiddle,
         ActionDrawMText,
         ActionDrawPoint,
         ActionDrawSpline,
         ActionDrawSplinePoints, //interpolation spline
+        ActionDrawSplinePointRemove,
+        ActionDrawSplinePointDelTwo,
+        ActionDrawSplinePointAppend,
+        ActionDrawSplinePointAdd,
+        ActionDrawSplineExplode,
+        ActionDrawSplineFromPolyline,
         ActionDrawPolyline,
         ActionDrawText,
+        ActionDrawBoundingBox,
 
         ActionDrawRectangle3Points,
         ActionDrawRectangle1Point,
@@ -318,6 +336,11 @@ namespace RS2 {
         ActionDrawSliceDivideLine,
         ActionDrawSliceDivideCircle,
         ActionDrawLinePoints,
+        ActionDrawPointsMiddle,
+        ActionDrawPointsLattice,
+        ActionSelectPoints,
+        ActionPasteToPoints,
+
         ActionDrawStar,
 
         ActionPolylineAdd,
@@ -327,6 +350,8 @@ namespace RS2 {
         ActionPolylineTrim,
         ActionPolylineEquidistant,
         ActionPolylineSegment,
+        ActionPolylineArcsToLines,
+        ActionPolylineChangeSegmentType,
 
         ActionDimAligned,
         ActionDimLinear,
@@ -364,6 +389,9 @@ namespace RS2 {
         ActionModifyDuplicate,
         ActionModifyBreakDivide,
         ActionModifyLineGap,
+        ActionModifyAlign,
+        ActionModifyAlignOne,
+        ActionModifyAlignRef,
 
         ActionSnapFree,
         ActionSnapGrid,
@@ -391,7 +419,6 @@ namespace RS2 {
         ActionInfoDistPoint2Entity,
         ActionInfoAngle,
         ActionInfoTotalLength,
-        ActionInfoTotalLengthNoSelect,
         ActionInfoArea,
         ActionInfoProperties,
         ActionInfoPickCoordinates,
@@ -430,6 +457,7 @@ namespace RS2 {
 
         ActionOptionsGeneral,
         ActionOptionsDrawing,
+        ActionOptionsDrawingGrid,
 
         ActionToolRegenerateDimensions,
 
@@ -662,13 +690,17 @@ namespace RS2 {
     };
 
     /**
-     * Crosshair type
+     * Grid View type
      */
-    enum CrosshairType {
-        LeftCrosshair,         /**< Left type isometric Crosshair */
-        TopCrosshair,         /**< Top type isometric Crosshair */
-        RightCrosshair,         /**< Right type isometric Crosshair */
-        OrthogonalCrosshair         /**< Orthogonal Crosshair */
+    enum IsoGridViewType {
+        IsoLeft,         /**< Left type isometric view */
+        IsoTop,         /**< Top type isometric view */
+        IsoRight         /**< Right type isometric view */
+    };
+
+    enum CrossHairType{
+        GridCrosshair,
+        SpiderWebCrosshair,
     };
 
     /**
@@ -738,6 +770,7 @@ namespace RS2 {
         LineTypeUnchanged=26,      /**< Line type defined by block not entity */
         LineSelected=27      /**< Line type for selected */
     };
+
 
     /**
      * Enum of line widths:
@@ -845,6 +878,7 @@ namespace RS2 {
      * Wrapper for Qt
      */
     LineWidth intToLineWidth(int w);
+    int lineWidthToInt(LineWidth lw);
 
     /**
      * Enum of cursor types.
@@ -973,7 +1007,8 @@ namespace RS2 {
         enum OverlayGraphics: short {
                 ActionPreviewEntity = 1, // Action Entities
                 Snapper = 2, // Snapper
-                OverlayEffects =0 // special effects, like glowing on hover
+                InfoCursor = 3, // Info Cursor
+                OverlayEffects = 0 // special effects, like glowing on hover
         };
 
         //Different re-draw methods to speed up rendering of the screen
@@ -993,6 +1028,13 @@ namespace RS2 {
             locRightToLeft      /** Right to Left **/
         };
 
+
+        enum EntityDescriptionLevel{
+            DescriptionCatched,
+            DescriptionLong,
+            DescriptionCreating,
+            DescriptionModifying
+        };
 };
 
 #endif

@@ -22,8 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_LINEMATH_H
 #define LC_LINEMATH_H
 
-#include "rs_vector.h"
 #include "rs_line.h"
+#include "rs_vector.h"
 
 namespace LC_LineMath {
 
@@ -65,9 +65,21 @@ namespace LC_LineMath {
     bool areLinesOnSameRay(const RS_Vector &line1Start, const RS_Vector &line1End, const RS_Vector &line2Start, const RS_Vector &line2End);
 
     RS_Vector getIntersectionLineLine(const RS_Vector& s1, const RS_Vector& e1, const RS_Vector& s2, const RS_Vector& e2);
+    RS_Vector getIntersectionLineLineFast(const RS_Vector& s1, const RS_Vector& e1, const RS_Vector& s2, const RS_Vector& e2);
+    RS_Vector getIntersectionInfiniteLineLineFast(const RS_Vector& infs1, const RS_Vector& infe1, const RS_Vector& s2, const RS_Vector& e2, double offsetX, double offsetY);
+    bool hasIntersectionLineRect(const RS_Vector& s1, const RS_Vector& e1, const RS_Vector& s2, const RS_Vector& e2);
 
     RS_LineData createParallel(const RS_Vector& start, const RS_Vector& end, double distance);
     bool isMeaningfulDistance(const RS_Vector &v1, const RS_Vector &v2);
     bool isNotMeaningfulDistance(const RS_Vector &v1, const RS_Vector &v2);
+
+    bool hasLineIntersection(RS_Vector p0, RS_Vector direction, RS_Vector p2, RS_Vector p3);
+
+    /**
+     * @brief convexHull - find the convex hull of a point cloud
+     * @param points - input points
+     * @return - the convex hull
+     */
+    RS_VectorSolutions convexHull(const RS_VectorSolutions& points);
 }
 #endif // LC_LINEMATH_H

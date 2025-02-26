@@ -51,22 +51,18 @@ RS_ActionModifyMoveRotate::RS_ActionModifyMoveRotate(RS_EntityContainer& contain
 
 RS_ActionModifyMoveRotate::~RS_ActionModifyMoveRotate() = default;
 
-void RS_ActionModifyMoveRotate::trigger() {
-
+void RS_ActionModifyMoveRotate::doTrigger(bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyMoveRotate::trigger()");
-
     RS_Modification m(*container, graphicView);
-	   m.moveRotate(pPoints->data, selectedEntities, false);
+	   m.moveRotate(pPoints->data, selectedEntities, false, keepSelected);
     pPoints->targetPoint = RS_Vector(false);
     finish(false);
-    updateSelectionWidget();
 }
 
 void RS_ActionModifyMoveRotate::mouseMoveEventSelected(QMouseEvent *e) {
-    RS_DEBUG->print("RS_ActionModifyMoveRotate::mouseMoveEvent begin");
-
-    RS_Vector mouse = snapPoint(e);
     deletePreview();
+    RS_Vector mouse = snapPoint(e);
+    RS_DEBUG->print("RS_ActionModifyMoveRotate::mouseMoveEvent begin");
     switch (getStatus()) {
         case SetReferencePoint: {
             pPoints->data.referencePoint = mouse;
@@ -78,12 +74,21 @@ void RS_ActionModifyMoveRotate::mouseMoveEventSelected(QMouseEvent *e) {
                 mouse = getSnapAngleAwarePoint(e, pPoints->data.referencePoint, mouse, true);
                 pPoints->data.offset = mouse - pPoints->data.referencePoint;
                 RS_Modification m(*preview, graphicView);
-                m.moveRotate(pPoints->data, selectedEntities, true);
+                m.moveRotate(pPoints->data, selectedEntities, true, false);
                 if (showRefEntitiesOnPreview) {
                     previewRefPoint(pPoints->data.referencePoint);
                     previewRefSelectablePoint(mouse);
                     previewRefLine(pPoints->data.referencePoint, mouse);
                     previewRefPointsForMultipleCopies();
+                }
+                if (isInfoCursorForModificationEnabled()){
+                    LC_InfoMessageBuilder msg(tr("Moving with rotation"));
+                    msg.add(tr("Source:"), formatVector(pPoints->data.referencePoint));
+                    msg.add(tr("Target:"), formatVector(mouse));
+                    msg.add(tr("Offset:"));
+                    msg.add(formatRelative(pPoints->data.offset));
+                    msg.add(formatRelativePolar(pPoints->data.offset));
+                    appendInfoCursorZoneMessage(msg.toString(), 2, false);
                 }
             }
             break;
@@ -103,6 +108,16 @@ void RS_ActionModifyMoveRotate::mouseMoveEventSelected(QMouseEvent *e) {
                     previewRefLine(pPoints->data.referencePoint, pPoints->targetPoint);
                     previewRefPointsForMultipleCopies();
                 }
+                if (isInfoCursorForModificationEnabled()){
+                    LC_InfoMessageBuilder msg(tr("Moving with rotation"));
+                    msg.add(tr("Source:"), formatVector(pPoints->data.referencePoint));
+                    msg.add(tr("Target:"), formatVector(mouse));
+                    msg.add(tr("Offset:"));
+                    msg.add(formatRelative(pPoints->data.offset));
+                    msg.add(formatRelativePolar(pPoints->data.offset));
+                    msg.add(tr("Angle:"), formatAngle(pPoints->data.angle));
+                    appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                }
                 updateOptions();
             }
             break;
@@ -110,8 +125,8 @@ void RS_ActionModifyMoveRotate::mouseMoveEventSelected(QMouseEvent *e) {
         default:
             break;
     }
-    drawPreview();
     RS_DEBUG->print("RS_ActionModifyMoveRotate::mouseMoveEvent end");
+    drawPreview();
 }
 
 void RS_ActionModifyMoveRotate::previewRefPointsForMultipleCopies() {
@@ -190,7 +205,7 @@ void RS_ActionModifyMoveRotate::onCoordinateEvent(int status, [[maybe_unused]]bo
             setStatus(ShowDialog);
             pPoints->data.offset = pos - pPoints->data.referencePoint;
             if (angleIsFixed) {
-                doTrigger();
+                doPerformTrigger();
             }
             else{
                 moveRelativeZero(pos);
@@ -203,7 +218,7 @@ void RS_ActionModifyMoveRotate::onCoordinateEvent(int status, [[maybe_unused]]bo
             if (pPoints->targetPoint.valid){
                 double angle = pPoints->targetPoint.angleTo(pos);
                 pPoints->data.angle = angle;
-                doTrigger();
+                doPerformTrigger();
             }
             break;
         }
@@ -212,7 +227,7 @@ void RS_ActionModifyMoveRotate::onCoordinateEvent(int status, [[maybe_unused]]bo
     }
 }
 
-void RS_ActionModifyMoveRotate::doTrigger() {
+void RS_ActionModifyMoveRotate::doPerformTrigger() {
     if (isShowModifyActionDialog()) {
         if (RS_DIALOGFACTORY->requestMoveRotateDialog(pPoints->data)) {
             updateOptions();
@@ -253,7 +268,7 @@ bool RS_ActionModifyMoveRotate::doProcessCommand(int status, const QString &c) {
                 }
                 else if (pPoints->targetPoint.valid){
                     updateOptions();
-                    doTrigger();
+                    doPerformTrigger();
                 } else {
                     angleIsFixed = true;
                     updateOptions();
@@ -315,7 +330,7 @@ RS2::CursorType RS_ActionModifyMoveRotate::doGetMouseCursorSelected([[maybe_unus
 }
 
 void RS_ActionModifyMoveRotate::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to move and rotate"), MOD_CTRL(tr("Move and rotate immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select to move and rotate  (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Move and rotate immediately after selection")));
 }
 
 LC_ModifyOperationFlags *RS_ActionModifyMoveRotate::getModifyOperationFlags() {

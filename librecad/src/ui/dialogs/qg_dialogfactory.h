@@ -4,6 +4,8 @@
 
  Copyright (C) 2024 LibreCAD.org
  Copyright (C) 2024 sand1024
+ Copyright (C) 2010 R. van Twisk (librecad@rvt.dds.nl)
+ Copyright (C) 2001-2003 RibbonSoft. All rights reserved.
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -28,6 +30,7 @@
 #include "lc_optionswidgetsholder.h"
 #include "qg_snaptoolbar.h"
 #include "lc_snapoptionswidgetsholder.h"
+#include "lc_qtstatusbarmanager.h"
 
 class QG_SnapMiddleOptions;
 class QG_SnapDistOptions;
@@ -64,6 +67,11 @@ public:
         coordinateWidget = cw;
     }
 
+    void setRelativeZeroCoordinatesWidget(LC_RelZeroCoordinatesWidget *widget) override {
+        relZeroCoordinatesWidget = widget;
+    }
+
+
 /**
  * Links this dialog factory to a mouse widget.
  */
@@ -92,6 +100,7 @@ public:
         return commandWidget;
     }
 
+    void setStatusBarManager(LC_QTStatusbarManager *statusBarManager) override;
 
 
 /**
@@ -131,9 +140,6 @@ public:
     void requestSnapDistOptions(double* dist, bool on) override;
     void requestSnapMiddleOptions(int* middlePoints, bool on) override;
     void hideSnapOptions() override;
-
-public:
-
     bool requestAttributesDialog(RS_AttributesData& data,
                                  RS_LayerList& layerList) override;
     bool requestMoveDialog(RS_MoveData& data) override;
@@ -149,7 +155,7 @@ public:
     bool requestHatchDialog(RS_Hatch* hatch) override;
     int requestOptionsGeneralDialog() override;
     void requestKeyboardShortcutsDialog(LC_ActionGroupManager *pManager) override;
-    int requestOptionsDrawingDialog(RS_Graphic& graphic) override;
+    int requestOptionsDrawingDialog(RS_Graphic& graphic, int tabIndex) override;
     bool requestOptionsMakerCamDialog() override;
 
     QString requestFileSaveAsDialog(const QString& caption = QString(),
@@ -165,12 +171,14 @@ public:
  */
     void updateMouseWidget(const QString& left=QString(),
                            const QString& right=QString(), const LC_ModifiersInfo& modifiers = LC_ModifiersInfo::NONE()) override;
+    void clearMouseWidgetIcon() override;
     void updateSelectionWidget(int num, double length) override;//updated for total number of selected, and total length of selected
     void commandMessage(const QString& message) override;
     void command(const QString& message) override;
 
     static QString extToFormat(const QString& ext);
     void displayBlockName(const QString& blockName, const bool& display) override;
+    void setCurrentQAction(QAction *action) override;
 
 protected:
 //! Pointer to the widget which can host dialogs
@@ -189,8 +197,12 @@ protected:
     QG_SelectionWidget* selectionWidget = nullptr;
 //! Pointer to the command line widget
     QG_CommandWidget* commandWidget = nullptr;
+    LC_QTStatusbarManager* statusBarManager = nullptr;
+    LC_RelZeroCoordinatesWidget *relZeroCoordinatesWidget;
     QG_SnapToolBar* snapToolbar = nullptr;
     LC_SnapOptionsWidgetsHolder *getSnapOptionsHolder();
+
+
 };
 
 #endif

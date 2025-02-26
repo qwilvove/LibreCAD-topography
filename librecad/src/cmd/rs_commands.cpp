@@ -52,44 +52,64 @@ struct LC_CommandItem {
 
 // helper function to check and report command collision
 template<typename T1, typename T2>
-bool isCollisionFree(std::map<T1, T2> const& lookUp, T1 const& key, T2 const& value)
+bool isCollisionFree(std::map<T1, T2> const& lookUp, T1 const& key, T2 const& value, QString cmd = {})
 {
-    if(!lookUp.count(key)) return true;
+    if (key == cmd)
+        return false;
+
+    if(!lookUp.count(key) || lookUp.at(key) == value)
+        return true;
 
     //report command string collision
-    QString msg=__FILE__+QObject::tr(": duplicated command: %1 is already taken by %2")
-                                 .arg(key).arg(value);
+    QString msg = __FILE__ + QObject::tr(": duplicated command: %1 is already taken by %2");
+    if constexpr (std::is_same_v<T2, RS2::ActionType>)
+        msg = msg.arg(key).arg(cmd);
+    else
+        msg = msg.arg(key).arg(value);
 
     RS_DEBUG->print(RS_Debug::D_ERROR, "%s\n", msg.toStdString().c_str());
     return false;
 }
 
 // write alias file
-void writeAliasFile(QFile& file,
-                    const std::map<QString, RS2::ActionType>& shortCommands,
-                    const std::map<QString, RS2::ActionType>& mainCommands
+void writeAliasFile(QFile& aliasFile,
+                    const std::map<QString, RS2::ActionType>& m_shortCommands,
+                    const std::map<QString, RS2::ActionType>& m_mainCommands
                     )
 {
-    QFile f{QFileInfo{file}.absoluteFilePath()};
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    LC_LOG<<__func__<<"(): begin";
+    LC_LOG<<"Creating "<<QFileInfo(aliasFile.fileName()).absoluteFilePath();
+
+    if (!aliasFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        LC_ERR<<__func__<<"(): line "<<__LINE__<<": failed to create "<<QFileInfo(aliasFile.fileName()).absoluteFilePath();
         return;
-    QTextStream ts(&f);
+    }
+    QTextStream ts(&aliasFile);
     ts << "#LibreCAD alias v1\n\n";
     ts << "# lines starting with # are comments\n";
     ts << "# format are:\n";
     ts << R"(# <alias>\t<command-untranslated>)" "\n";
+    ts << "# the alias cannot be an existing command";
     ts << "# example\n";
     ts << "# l\tline\n\n";
 
     // the reverse look up from action type to avoid quadratic time complexity
     std::map<RS2::ActionType, QString> actionToMain;
-    for(auto const& [cmd, action]: mainCommands)
+
+    // full commands should be used first
+    for(const auto& item: g_commandList) {
+        for(const auto& [fullCmd, translation]: item.fullCmdList)
+            actionToMain.emplace(item.actionType, fullCmd);
+    }
+
+    for(auto const& [cmd, action]: m_mainCommands)
         if (actionToMain.count(action) == 0)
             actionToMain.emplace(action, cmd);
-    for(auto const& [alias, action]: shortCommands) {
+    for(auto const& [alias, action]: m_shortCommands) {
         if (actionToMain.count(action) == 1)
             ts<<alias<<'\t'<<actionToMain.at(action)<<Qt::endl;
     }
+    LC_LOG<<__func__<<"(): end";
 }
 }
 
@@ -103,13 +123,13 @@ RS_Commands* RS_Commands::instance() {
  * Constructor. Initiates main command dictionary.
  * mainCommand keeps a map from translated commands to actionType
  * shortCommand keeps a list of translated short commands
- * cmdTranslation contains both ways of mapping between translated and English
+ * m_cmdTranslation contains both ways of mapping between translated and English
  * Command order:
  *      mainCommand (long form): Category (long) + Parameter(s)
  *      shortCommand: 2 letter keycode followed by legacy commands
  * Commands form:
  *    list all <main (full) command and translation string> pairs (category+parameters, i.e "line2p")
- *    Category: (long form for mainCommands, also appear is alias file as "command-untranslated")
+ *    Category: (long form for m_mainCommands, also appear is alias file as "command-untranslated")
  *        line - lin / li / l
  *        ...
  *        (others as req'd)
@@ -133,37 +153,57 @@ RS_Commands* RS_Commands::instance() {
 RS_Commands::RS_Commands() {
 
     for(auto const& c0: g_commandList){
-        auto const act=c0.actionType;
+        const RS2::ActionType act=c0.actionType;
         //add full commands
         for(auto const& p0: c0.fullCmdList){
-            if(isCollisionFree(cmdTranslation, p0.first, p0.second))
-                cmdTranslation[p0.first]=p0.second;
-            if(isCollisionFree(mainCommands, p0.second, act))
-                mainCommands[p0.second]=act;
+            if (isCollisionFree(m_cmdTranslation, p0.first, p0.second))
+                m_cmdTranslation[p0.first] = p0.second;
+            if (isCollisionFree(m_mainCommands, p0.second, act, m_actionToCommand.count(act) ? m_actionToCommand[act] : QString{})) {
+                m_mainCommands[p0.second] = act;
+                m_actionToCommand.emplace(act, p0.second);
+            }
+        }
+        for(auto const& p0: c0.fullCmdList){
+            if(isCollisionFree(m_mainCommands, p0.first, act, m_actionToCommand.count(act) ? m_actionToCommand[act] : QString{})) {
+                // enable english commands, if no conflict is found
+                m_mainCommands[p0.first]=act;
+                m_actionToCommand.emplace(act, p0.first);
+            }
         }
         //add short commands
         for(auto const& p1: c0.shortCmdList){
-            if(isCollisionFree(cmdTranslation, p1.first, p1.second))
-                cmdTranslation[p1.first]=p1.second;
-            if(isCollisionFree(shortCommands, p1.second, act))
-                shortCommands[p1.second]=act;
+            if(isCollisionFree(m_cmdTranslation, p1.first, p1.second))
+                m_cmdTranslation[p1.first]=p1.second;
+            if(isCollisionFree(m_shortCommands, p1.second, act, m_actionToCommand.count(act) ? m_actionToCommand[act] : QString{})) {
+                m_shortCommands[p1.second]=act;
+                if (m_actionToCommand.count(act) == 0)
+                    m_actionToCommand.emplace(act, p1.second);
+            }
+        }
+        for(auto const& p1: c0.shortCmdList){
+            if(isCollisionFree(m_shortCommands, p1.first, act, m_actionToCommand.count(act) ? m_actionToCommand[act] : QString{})) {
+                // enable english short commands, if no conflict is found
+                m_shortCommands[p1.first]=act;
+                if (m_actionToCommand.count(act) == 0)
+                    m_actionToCommand.emplace(act, p1.second);
+            }
         }
     }
 
     // translations
     for(auto const& [command, translation]: g_transList) {
-        cmdTranslation[command] = translation;
+        m_cmdTranslation[command] = translation;
     }
 
-    for (const auto& [command, translation]: cmdTranslation) {
+    for (const auto& [command, translation]: m_cmdTranslation) {
         m_revTranslation[translation] = command;
-        if (mainCommands.count(translation) == 1)
-            mainCommands[command] = mainCommands[translation];
-        else if (shortCommands.count(translation) == 1)
-            shortCommands[command] = shortCommands[translation];
+        if (m_mainCommands.count(translation) == 1)
+            m_mainCommands[command] = m_mainCommands[translation];
+        else if (m_shortCommands.count(translation) == 1)
+            m_shortCommands[command] = m_shortCommands[translation];
     }
 
-    for(const auto& [command, action]: mainCommands) {
+    for(const auto& [command, action]: m_mainCommands) {
         m_actionToCommand[action] = command;
     }
 }
@@ -176,90 +216,101 @@ RS_Commands::RS_Commands() {
  */
 void RS_Commands::updateAlias()
 {
+    LC_LOG << __func__ << "(): begin";
+
     QString aliasName = RS_SYSTEM->getAppDataDir();
-    if (aliasName.isEmpty())
+    if (aliasName.isEmpty()) {
+        LC_ERR << __func__ << "(): line "<<__LINE__<<": empty alias folder name: aborting";
         return;
+    }
     aliasName += "/librecad.alias";
-    if (!QFileInfo::exists(aliasName))
-        return;
 
-    QFile f(aliasName);
-    LC_LOG<<__func__<<"(): Command alias file: "<<aliasName;
-    auto validateCmd = [this](QString cmd) {
-        return mainCommands.count(cmd) == 1 || shortCommands.count(cmd) == 1
-               || cmdTranslation.count(cmd) == 1;
-    };
-    std::map<QString, QString> aliasList;
-    if (f.exists() && f.open(QIODevice::ReadOnly)) {
-
-        //alias file exists, read user defined alias
-        QTextStream ts(&f);
-        //check if is empty file or not alias file
-        while(!ts.atEnd())
-        {
-            QString line=ts.readLine().trimmed();
-            if (line.isEmpty() || line.at(0)=='#' )
-                continue;
-            // Read alias
-            static QRegularExpression re(R"(\s)");
-            QStringList txtList = line.split(re,Qt::SkipEmptyParts);
-            if (txtList.size() < 2 || txtList[0].startsWith('#'))
-                continue;
-
-            const QString& alias = txtList[0];
-            const QString& cmd = txtList[1];
-            if (validateCmd(cmd)) {
-                const RS2::ActionType action = commandToAction(cmd);
-                if (action == RS2::ActionNone) {
-                    LC_ERR<<__func__<<"(): requesting alias("<<alias<<") for unknown command: "<<cmd;
-                    continue;
-                }
-                if (m_actionToCommand.count(action) == 0)
-                    m_actionToCommand[action] = cmd;
-                const RS2::ActionType actionAlias = commandToAction(alias);
-                if (actionAlias != action &&  actionAlias != RS2::ActionNone) {
-                    LC_ERR<<__func__<<"(): cannot overwrite existing alias: "<<alias<<"="<<m_actionToCommand.at(action)<<": with "<<alias<<"=" << cmd;
-                } else {
-                    aliasList[alias] = m_actionToCommand[commandToAction(cmd)];
-                }
-            } else {
-                LC_ERR<<__func__<<"(): invalid alias, command not found: "<<line;
-            }
-        }
-        f.close();
-    } else {
-        //alias file does no exist, create one with translated shortCommands
-        writeAliasFile(f, shortCommands, mainCommands);
+    QFile aliasFile{aliasName};
+    std::map<QString, QString> aliasList = readAliasFile(aliasFile);
+    if (aliasList.empty()) {
+        //alias file does no exist, create one with translated m_shortCommands
+        LC_ERR<<"Writing alias file";
+        writeAliasFile(aliasFile, m_shortCommands, m_mainCommands);
     }
+
     //update alias file with non present commands
-    //RLZ: to be written
 
-    //add alias to shortCommands
+    //add alias to m_shortCommands
     for(auto const& [alias, cmd]: aliasList){
-        if(shortCommands.count(alias) == 1 || mainCommands.count(alias) == 1)
+        // Do not override commands, but reusing aliases is allowed
+        if(m_mainCommands.count(alias) == 1) {
+            LC_ERR<<__func__<<"(): "<<QObject::tr("cannot change meaning of commands. Refused to reuse command %1 to mean %2").arg(alias, cmd);
             continue;
-        if(mainCommands.count(cmd)){
+        }
+
+        if(m_mainCommands.count(cmd) == 1){
             RS_DEBUG->print("adding command alias: %s\t%s\n", alias.toStdString().c_str(), cmd.toStdString().c_str());
-            shortCommands[alias]=mainCommands[cmd];
-        }else if(cmdTranslation.count(cmd)){
-            RS_DEBUG->print("adding command alias: %s\t%s\n", alias.toStdString().c_str(), cmdTranslation[cmd].toStdString().c_str());
-            shortCommands[alias]=mainCommands[cmdTranslation[cmd]];
+            m_shortCommands[alias]=m_mainCommands[cmd];
+        }else if(m_cmdTranslation.count(cmd) == 1){
+            RS_DEBUG->print("adding command alias: %s\t%s\n", alias.toStdString().c_str(), m_cmdTranslation[cmd].toStdString().c_str());
+            m_shortCommands[alias]=m_mainCommands[m_cmdTranslation[cmd]];
         }
     }
+    LC_LOG << __func__ << "(): done";
+}
+
+std::map<QString, QString> RS_Commands::readAliasFile(QFile& aliasFile)
+{
+    LC_ERR<<__func__<<"(): Command alias file: "<<aliasFile.fileName();
+    std::map<QString, QString> aliasList;
+
+    if (!aliasFile.exists() || !aliasFile.open(QIODevice::ReadOnly))
+        return aliasList;
+
+    //alias file exists, read user defined alias
+    QTextStream ts(&aliasFile);
+    //check if is empty file or not alias file
+    while(!ts.atEnd())
+    {
+        // Read alias
+        static QRegularExpression re(R"(\s)");
+        QStringList txtList=ts.readLine().trimmed().split(re, Qt::SkipEmptyParts);
+        if (txtList.size() < 2 || txtList.front().startsWith('#') || txtList[0] == txtList[1])
+            continue;
+
+        const QString& alias = txtList[0];
+        const QString& cmd = txtList[1];
+        const RS2::ActionType action = commandToAction(cmd);
+        if (action == RS2::ActionNone) {
+            LC_ERR<<__func__<<"(): "<<QObject::tr("requesting alias(%1) for unknown command(%2): ignored").arg(alias, cmd);
+            continue;
+        }
+
+        // just in case
+        if (m_actionToCommand.count(action) == 0)
+            m_actionToCommand[action] = cmd;
+        // Logging aliases changed by the alias file
+        const RS2::ActionType actionAlias = commandToAction(alias);
+        if (actionAlias != action &&  actionAlias != RS2::ActionNone) {
+            LC_ERR<<__func__<<"(): "<<QObject::tr("reusing an existing alias: was %1=%2, changed to %1=%3").arg(alias, m_actionToCommand.at(actionAlias), m_actionToCommand[action]);
+        }
+        if (alias != m_actionToCommand[action]) {
+            aliasList.emplace(alias, cmd);
+        } else {
+            // Do not override commands, but reusing aliases is allowed
+            LC_ERR<<__func__<<"(): "<<QObject::tr("cannot change meaning of commands. Refused to reuse command %1 to mean %2").arg(alias, cmd);
+        }
+    }
+    return aliasList;
 }
 
 RS2::ActionType RS_Commands::commandToAction(const QString& command) const
 {
-    if (mainCommands.count(command)==1)
-        return mainCommands.at(command);
-    if (shortCommands.count(command)==1)
-        return shortCommands.at(command);
-    if (cmdTranslation.count(command) == 1) {
-        QString translated = cmdTranslation.at(command);
-        if (mainCommands.count(translated) == 1)
-            return mainCommands.at(translated);
-        if (shortCommands.count(translated) == 1)
-            return shortCommands.at(translated);
+    if (m_mainCommands.count(command)==1)
+        return m_mainCommands.at(command);
+    if (m_shortCommands.count(command)==1)
+        return m_shortCommands.at(command);
+    if (m_cmdTranslation.count(command) == 1) {
+        QString translated = m_cmdTranslation.at(command);
+        if (m_mainCommands.count(translated) == 1)
+            return m_mainCommands.at(translated);
+        if (m_shortCommands.count(translated) == 1)
+            return m_shortCommands.at(translated);
     }
     return RS2::ActionNone;
 }
@@ -269,7 +320,7 @@ RS2::ActionType RS_Commands::commandToAction(const QString& command) const
  */
 QStringList RS_Commands::complete(const QString& cmd) const {
     QStringList ret;
-    for(auto const& p: mainCommands){
+    for(auto const& p: m_mainCommands){
         if(p.first.startsWith(cmd, Qt::CaseInsensitive)){
             ret << p.first;
         }
@@ -294,7 +345,7 @@ RS2::ActionType RS_Commands::cmdToAction(const QString& cmd, bool verbose) const
     RS2::ActionType ret = RS2::ActionNone;
 
     // find command:
-    for(const auto& table: {mainCommands, shortCommands})
+    for(const auto& table: {m_mainCommands, m_shortCommands})
     {
         if (table.count(cmd)) {
             ret = table.at(cmd);
@@ -306,7 +357,7 @@ RS2::ActionType RS_Commands::cmdToAction(const QString& cmd, bool verbose) const
 
     if (!verbose) return ret;
     // find full command to confirm to user:
-    for(auto const& p: mainCommands){
+    for(auto const& p: m_mainCommands){
         if(p.second==ret){
             RS_DEBUG->print("RS_Commands::cmdToAction: commandMessage");
             RS_DIALOGFACTORY->commandMessage(QObject::tr("Command: %1 (%2)").arg(full).arg(p.first));
@@ -353,9 +404,9 @@ RS2::ActionType RS_Commands::keycodeToAction(const QString& code) const {
  * @return translated command for the given English command.
  */
 QString RS_Commands::command(const QString& cmd) {
-    auto it= instance()->cmdTranslation.find(cmd);
-    if(it != instance()->cmdTranslation.end()){
-        return instance()->cmdTranslation[cmd];
+    auto it= instance()->m_cmdTranslation.find(cmd);
+    if(it != instance()->m_cmdTranslation.end()){
+        return instance()->m_cmdTranslation[cmd];
     }
     RS_DIALOGFACTORY->commandMessage(QObject::tr("Command not found: %1").arg(cmd));
     RS_DEBUG->print(RS_Debug::D_WARNING,
@@ -378,16 +429,16 @@ bool RS_Commands::checkCommand(const QString& cmd, const QString& str,
 
     QString const& strl = str.toLower();
     QString const& cmdLower = cmd.toLower();
-    auto it = instance()->cmdTranslation.find(cmdLower);
-    if(it != instance()->cmdTranslation.end()){
+    auto it = instance()->m_cmdTranslation.find(cmdLower);
+    if(it != instance()->m_cmdTranslation.end()){
         RS2::ActionType type0=instance()->cmdToAction(it->second, false);
         if( type0  != RS2::ActionNone ) {
             return  type0 ==instance()->cmdToAction(strl);
         }
     }
 
-    it =  instance()->cmdTranslation.find(strl);
-    if(it !=  instance()->cmdTranslation.end()) return it->second == cmdLower;
+    it =  instance()->m_cmdTranslation.find(strl);
+    if(it !=  instance()->m_cmdTranslation.end()) return it->second == cmdLower;
     return false;
 }
 

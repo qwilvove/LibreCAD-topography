@@ -50,8 +50,8 @@ namespace {
 // Whether the point is on an endPoint of the entity
     bool atEndPoint(RS_Entity &entity, const RS_Vector &point){
         double distance = 1.;
-        entity.getNearestEndpoint(point, &distance);
-        return distance < RS_TOLERANCE;
+        RS_Vector nearestPoint = entity.getNearestEndpoint(point, &distance);
+        return nearestPoint.valid && distance < RS_TOLERANCE;
     }
 
     bool atEndPoint(RS_Entity &entity1, RS_Entity &entity2, const RS_Vector &point){
@@ -112,14 +112,15 @@ bool RS_ActionModifyRound::removeOldFillet(RS_Entity *e, const bool &isPolyline)
     return true;
 }
 
-void RS_ActionModifyRound::trigger(){
+void RS_ActionModifyRound::drawSnapper() {
+    // disable snapper for action   
+}
 
+void RS_ActionModifyRound::doTrigger() {
     RS_DEBUG->print("RS_ActionModifyRound::trigger()");
 
     if (entity1 && entity1->isAtomic() &&
         entity2 && entity2->isAtomic()){
-
-        deletePreview();
 
         bool foundPolyline = false;
 
@@ -164,18 +165,15 @@ void RS_ActionModifyRound::trigger(){
         entity2 = nullptr;
         // fixme - decide to which state go after trigger - probably it's more convenient to say in SetEntity2?
         setStatus(SetEntity1);
-        graphicView->redraw();
-        updateSelectionWidget();
     }
 }
 
 void RS_ActionModifyRound::mouseMoveEvent(QMouseEvent *e){
-    RS_DEBUG->print("RS_ActionModifyRound::mouseMoveEvent begin");
-
-    RS_Vector mouse = toGraph(e);
-    RS_Entity *se = catchEntity(e, eType, RS2::ResolveAllButTextImage);
     deleteHighlights();
     deletePreview();
+    RS_Vector mouse = toGraph(e);
+    RS_DEBUG->print("RS_ActionModifyRound::mouseMoveEvent begin");
+    RS_Entity *se = catchEntityOnPreview(e, eType, RS2::ResolveAllButTextImage);
 
     switch (getStatus()) {
         case SetEntity1: {
@@ -232,6 +230,13 @@ void RS_ActionModifyRound::mouseMoveEvent(QMouseEvent *e){
                                 preview->removeEntity(roundResult->trimmed1);
                                 preview->removeEntity(roundResult->trimmed2);
                             }
+
+                            if (isInfoCursorForModificationEnabled()){
+                                LC_InfoMessageBuilder msg(tr("Round"));
+                                msg.add(tr("Point 1:"), formatVector(arcStartPoint));
+                                msg.add(tr("Point 2:"), formatVector(arcEndPoint));
+                                appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                            }
                         }
                     }
 
@@ -247,10 +252,10 @@ void RS_ActionModifyRound::mouseMoveEvent(QMouseEvent *e){
         default:
             break;
     }
+    RS_DEBUG->print("RS_ActionModifyRound::mouseMoveEvent end");
     drawPreview();
     drawHighlights();
 
-    RS_DEBUG->print("RS_ActionModifyRound::mouseMoveEvent end");
 }
 
 void RS_ActionModifyRound::previewEntityModifications(const RS_Entity *original, RS_Entity *modified, RS_Vector& roundPoint, int mode){

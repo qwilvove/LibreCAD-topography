@@ -47,7 +47,6 @@ public:
     ~RS_ActionDrawArcTangential() override;
     void reset();
     void init(int status) override;
-    void trigger() override;
     void preparePreview();
     void mouseMoveEvent(QMouseEvent *e) override;
     void setRadius(double r);
@@ -86,6 +85,8 @@ protected:
 
     double angleLength = 0.;
     bool byRadius = false;
+    bool alternateArc = false;
+
     RS_Vector forecastArcCenter() const;
     void updateOptionsRadius(double radius);
     void updateOptionsAngle(double angle);
@@ -95,5 +96,6 @@ protected:
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     void updateMouseButtonHints() override;
+    void doTrigger() override;
 };
 #endif

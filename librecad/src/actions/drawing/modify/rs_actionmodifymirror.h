@@ -43,7 +43,6 @@ public:
         RS_EntityContainer &container,
         RS_GraphicView &graphicView);
     ~RS_ActionModifyMirror() override;
-    void trigger() override;
     bool isMirrorToExistingLine() const {return mirrorToExistingLine;};
     void setMirrorToExistingLine(bool value);
 protected:
@@ -67,8 +66,10 @@ protected:
     void updateMouseButtonHintsForSelection() override;
     void updateMouseButtonHintsForSelected(int status) override;
     LC_ModifyOperationFlags *getModifyOperationFlags() override;
-    void doTrigger();
+    void doPerformTrigger();
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
+    void doTrigger(bool keepSelected) override;
+    void obtainFlipLineCoordinates(RS_Vector *start, RS_Vector *end, bool verticalLine);
 };
 #endif

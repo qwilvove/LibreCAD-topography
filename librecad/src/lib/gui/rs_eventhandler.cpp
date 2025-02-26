@@ -41,6 +41,10 @@ namespace {
         return action != nullptr && !action->isFinished();
     }
 
+    bool isInactive(const std::shared_ptr<RS_ActionInterface>& action) {
+        return action == nullptr || action->isFinished();
+    }
+
     QString evaluateFraction(QString input, QRegularExpression rx, int index, int tailI) {
         QString copy = input;
         QString tail = QString{R"(\)"} + QString::number(tailI);
@@ -189,11 +193,16 @@ void RS_EventHandler::checkLastActionCompletedAndUncheckQAction(const std::share
  * Called by QG_GraphicView
  */
 void RS_EventHandler::mouseMoveEvent(QMouseEvent* e){
-    if(hasAction())
-        currentActions.last()->mouseMoveEvent(e);
-
-    else if (defaultAction)
+    if(hasAction()) {
+        std::shared_ptr<RS_ActionInterface> &lastAction = currentActions.last();
+        lastAction->mouseMoveEvent(e);
+        checkLastActionCompletedAndUncheckQAction(lastAction);
+        cleanUp();
+        e->accept();
+    }
+    else if (defaultAction) {
         defaultAction->mouseMoveEvent(e);
+    }
 }
 
 /**
@@ -446,8 +455,15 @@ void RS_EventHandler::setCurrentAction(RS_ActionInterface* action) {
     if (action==nullptr) {
         return;
     }
+    // Do not initialize action if it's already the last one.
+    // This is attempt to fix crashes of dialogs (like properties) which are called from actions
+    // todo - check again, either remove or uncomment
+//    if (hasAction() && currentActions.last().get() == action){
+//        return;
+//    }
+    std::shared_ptr<RS_ActionInterface> actionHolder{action};
 
-    RS_DEBUG->print("RS_EventHandler::setCurrentAction %s", action->getName().toLatin1().data());
+    RS_DEBUG->print("RS_EventHandler::setCurrentAction %s", actionHolder->getName().toLatin1().data());
     // Predecessor of the new action or NULL:
     auto& predecessor = hasAction() ? currentActions.last() : defaultAction;
     // Suspend current action:
@@ -471,20 +487,20 @@ void RS_EventHandler::setCurrentAction(RS_ActionInterface* action) {
     //    }
 
     // Set current action:
-    currentActions.push_back(std::shared_ptr<RS_ActionInterface>(action));
+    currentActions.push_back(actionHolder);
     //    RS_DEBUG->print("RS_EventHandler::setCurrentAction: current action is: %s -> %s",
     //                    predecessor->getName().toLatin1().data(),
     //                    currentActions.last()->getName().toLatin1().data());
 
     // Initialisation of our new action:
     RS_DEBUG->print("RS_EventHandler::setCurrentAction: init current action");
-    action->init(0);
+    actionHolder->init(0);
     // ## new:
-    if (!action->isFinished()) {
+    if (!actionHolder->isFinished()) {
         RS_DEBUG->print("RS_EventHandler::setCurrentAction: show options");
-        action->showOptions();
+        actionHolder->showOptions();
         RS_DEBUG->print("RS_EventHandler::setCurrentAction: set predecessor");
-        action->setPredecessor(predecessor.get());
+        actionHolder->setPredecessor(predecessor.get());
     }
 
     RS_DEBUG->print("RS_EventHandler::setCurrentAction: cleaning up..");
@@ -565,7 +581,9 @@ bool RS_EventHandler::isValid(RS_ActionInterface* action) const{
  * @return true if there is at least one action in the action stack.
  */
 bool RS_EventHandler::hasAction(){
-    return std::any_of(currentActions.begin(), currentActions.end(), isActive);
+    auto it = std::remove_if(currentActions.begin(), currentActions.end(), isInactive);
+    currentActions.erase(it, currentActions.end());
+    return !currentActions.empty();
 }
 
 /**
@@ -574,13 +592,6 @@ bool RS_EventHandler::hasAction(){
 void RS_EventHandler::cleanUp() {
     RS_DEBUG->print("RS_EventHandler::cleanUp");
 
-    for (auto it = currentActions.begin(); it != currentActions.end();) {
-        if (isActive(*it)) {
-            ++it;
-        } else {
-            it = currentActions.erase(it);
-        }
-    }
     if (hasAction()) {
         currentActions.last()->resume();
         currentActions.last()->showOptions();
@@ -635,6 +646,10 @@ void RS_EventHandler::debugActions() const{
                         i, currentActions.at(i)->getName().toLatin1().data(),
                         currentActions.at(i)->isFinished() ? "finished" : "active");
     }
+}
+
+QAction* RS_EventHandler::getQAction(){
+  return q_action;
 }
 
 void RS_EventHandler::setQAction(QAction *action) {

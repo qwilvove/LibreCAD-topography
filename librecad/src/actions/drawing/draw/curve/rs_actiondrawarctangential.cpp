@@ -55,6 +55,7 @@ void RS_ActionDrawArcTangential::reset() {
     isStartPoint = false;
     point = RS_Vector(false);
     data = std::make_unique<RS_ArcData>();
+    alternateArc = false;
 }
 
 void RS_ActionDrawArcTangential::init(int status) {
@@ -62,25 +63,22 @@ void RS_ActionDrawArcTangential::init(int status) {
     //reset();
 }
 
-void RS_ActionDrawArcTangential::trigger() {
-    RS_PreviewActionInterface::trigger();
-
+void RS_ActionDrawArcTangential::doTrigger() {
     if (!(point.valid && baseEntity)) {
-        RS_DEBUG->print("RS_ActionDrawArcTangential::trigger: "
-                        "conditions not met");
+        RS_DEBUG->print("RS_ActionDrawArcTangential::trigger: conditions not met");
         return;
     }
 
     preparePreview();
+    if (alternateArc){
+        data->reversed = !data->reversed;
+    }
     auto* arc = new RS_Arc(container, *data);
-    container->addEntity(arc);
-    arc->setLayerToActive();
-    arc->setPenToActive();
 
-    addToDocumentUndoable(arc);
-
-    graphicView->redraw(RS2::RedrawDrawing);
+    setPenAndLayerToActive(arc);
     moveRelativeZero(arc->getCenter());
+
+    undoCycleAdd(arc);
 
     setStatus(SetBaseEntity);
     reset();
@@ -118,12 +116,14 @@ void RS_ActionDrawArcTangential::preparePreview() {
 }
 
 void RS_ActionDrawArcTangential::mouseMoveEvent(QMouseEvent* e) {
+    deletePreview();
+    deleteHighlights();
     int status = getStatus();
     point = snapPoint(e);
-    deleteHighlights();
     switch (status){
         case SetBaseEntity: {
-            RS_Entity *entity = catchEntity(e, RS2::ResolveAll);
+            deleteSnapper();
+            RS_Entity *entity = catchEntityOnPreview(e, RS2::ResolveAll);
             if (entity != nullptr){
                 if (entity->isAtomic()){
                     highlightHover(entity);
@@ -133,7 +133,6 @@ void RS_ActionDrawArcTangential::mouseMoveEvent(QMouseEvent* e) {
         }
         case SetEndAngle: {
             highlightSelected(baseEntity);
-            deletePreview();
             RS_Vector center;
             if (byRadius){
                 if (isShift(e)){ // double check for efficiency, eliminate center forecasting calculations if not needed
@@ -143,7 +142,16 @@ void RS_ActionDrawArcTangential::mouseMoveEvent(QMouseEvent* e) {
             }
             preparePreview();
             if (data->isValid()){
-                auto arc = previewArc(*data);
+                RS_Arc* arc;
+                bool alternateArcMode = isControl(e);
+                if (alternateArcMode) {
+                    RS_ArcData tmpArcData = *data;
+                    tmpArcData.reversed = !data->reversed;
+                    arc = previewToCreateArc(tmpArcData);
+                }
+                else{
+                    arc = previewToCreateArc(*data);
+                }
                 if (showRefEntitiesOnPreview) {
                     previewRefPoint(data->center);
                     previewRefPoint(arc->getStartpoint());
@@ -163,12 +171,12 @@ void RS_ActionDrawArcTangential::mouseMoveEvent(QMouseEvent* e) {
                     }
                 }
             }
-            drawPreview();
             break;
         }
         default:
             break;
     }
+    drawPreview();
     drawHighlights();
 }
 
@@ -215,6 +223,7 @@ void RS_ActionDrawArcTangential::onMouseLeftButtonRelease(int status, QMouseEven
                     updateMouseButtonHints();
                 }
             }
+            invalidateSnapSpot();
             break;
         }
         case SetEndAngle: {// set angle (point that defines the angle)
@@ -226,6 +235,7 @@ void RS_ActionDrawArcTangential::onMouseLeftButtonRelease(int status, QMouseEven
             }else {
                 point = getSnapAngleAwarePoint(e, arcStartPoint, point);
             }
+            alternateArc = isControl(e);
             fireCoordinateEvent(point);
             break;
         }
@@ -260,9 +270,9 @@ void RS_ActionDrawArcTangential::updateMouseButtonHints() {
         break;
     case SetEndAngle:
         if(byRadius) {
-            updateMouseWidgetTRBack(tr("Specify end angle"), MOD_SHIFT_ANGLE_SNAP);
+            updateMouseWidgetTRBack(tr("Specify end angle"), MOD_SHIFT_AND_CTRL_ANGLE(tr("Alternate arc")));
         } else {
-            updateMouseWidgetTRBack(tr("Specify end point"));
+            updateMouseWidgetTRBack(tr("Specify end point"), MOD_CTRL(tr("Alternate Arc")));
         }
         break;
     default:

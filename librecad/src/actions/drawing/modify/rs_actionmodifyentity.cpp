@@ -34,20 +34,20 @@
 #include "rs_graphicview.h"
 
 RS_ActionModifyEntity::RS_ActionModifyEntity(RS_EntityContainer& container,
-        RS_GraphicView& graphicView)
+        RS_GraphicView& graphicView, bool changeCursor)
 		:RS_PreviewActionInterface("Modify Entity", container, graphicView)
 		,en(nullptr){
-	actionType=RS2::ActionModifyEntity;
+	  actionType=RS2::ActionModifyEntity;
+   modifyCursor = changeCursor;
 }
 
 void RS_ActionModifyEntity::setDisplaySelected(bool highlighted){
     if (en != nullptr) {
         en->setSelected(highlighted);
-        graphicView->drawEntity(en);
     }
 }
 
-void RS_ActionModifyEntity::trigger() {
+void RS_ActionModifyEntity::doTrigger() {
     if (en != nullptr) {
         std::unique_ptr<RS_Entity> clone{en->clone()};
         bool selected = en->isSelected();
@@ -61,19 +61,15 @@ void RS_ActionModifyEntity::trigger() {
 
         unsigned long originalEntityId = en->getId();
 
+        graphicView->setForcedActionKillAllowed(false);
         if (RS_DIALOGFACTORY->requestModifyEntityDialog(clone.get())) {
             container->addEntity(clone.get());
 
             en->setSelected(false);
-
             clone->setSelected(false);
-            graphicView->drawEntity(clone.get());
 
             if (document) {
-                document->startUndoCycle();
-                document->addUndoable(clone.get());
-                deleteEntityUndoable(en);
-                document->endUndoCycle();
+                undoCycleReplace(en, clone.get());
             }
 
             unsigned long cloneEntityId = clone->getId();
@@ -85,16 +81,17 @@ void RS_ActionModifyEntity::trigger() {
             }
 
             clone.release();
-            updateSelectionWidget();
         }
+        graphicView->setForcedActionKillAllowed(true);
     } else {
         RS_DEBUG->print("RS_ActionModifyEntity::trigger: Entity is NULL\n");
     }
 }
 
 void RS_ActionModifyEntity::mouseMoveEvent(QMouseEvent *e) {
-    RS_Entity* entity = catchEntity(e);
     deleteHighlights();
+    snapPoint(e);
+    RS_Entity* entity = catchEntityOnPreview(e);
     if (entity != nullptr){
         highlightHoverWithRefPoints(entity, true);
     }
@@ -113,7 +110,12 @@ void RS_ActionModifyEntity::onMouseRightButtonRelease(int status, [[maybe_unused
 }
 
 RS2::CursorType RS_ActionModifyEntity::doGetMouseCursor([[maybe_unused]] int status){
-    return RS2::SelectCursor;
+    if (modifyCursor) {
+        return RS2::SelectCursor;
+    }
+    else{
+        return RS2::NoCursorChange;
+    }
 }
 
 void RS_ActionModifyEntity::updateMouseButtonHints() {

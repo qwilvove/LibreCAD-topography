@@ -72,24 +72,23 @@ void RS_ActionModifyScale::init(int status) {
     LC_ActionPreSelectionAwareBase::init(status);
 }
 
-void RS_ActionModifyScale::trigger() {
+void RS_ActionModifyScale::doTrigger(bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyScale::trigger()");
     deletePreview();
     if (pPoints->data.isotropicScaling){
         pPoints->data.factor.y = pPoints->data.factor.x;
     }
     RS_Modification m(*container, graphicView);
-    m.scale(pPoints->data, selectedEntities, false);
-    updateSelectionWidget();
+    m.scale(pPoints->data, selectedEntities, false, keepSelected);
 }
 
 #define DRAW_TRIANGLES_ON_PREVIEW_NO
 
 void RS_ActionModifyScale::mouseMoveEventSelected(QMouseEvent* e) {
-    RS_DEBUG->print("RS_ActionModifyScale::mouseMoveEvent begin");
+    deletePreview();
     RS_Vector mouse = snapPoint(e);
     int status = getStatus();
-    deletePreview();
+    RS_DEBUG->print("RS_ActionModifyScale::mouseMoveEvent begin");
     switch (status) {
         case SetReferencePoint: {
             pPoints->data.referencePoint = mouse;
@@ -170,13 +169,28 @@ void RS_ActionModifyScale::mouseMoveEventSelected(QMouseEvent* e) {
             pPoints->targetPoint = mouse;
 
             showPreview();
+
+            if (isInfoCursorForModificationEnabled()) {
+                RS_Vector centerPoint =  pPoints->data.referencePoint;
+                RS_Vector offset = pPoints->sourcePoint - mouse;
+                LC_InfoMessageBuilder msg(tr("Scale"));
+                msg.add(tr("Center:"),formatVector(centerPoint));
+                msg.add(tr("Source Point:"), formatVector(pPoints->sourcePoint));
+                msg.add(tr("Target Point:"), formatVector(mouse));
+                msg.add(tr("Offset:"));
+                msg.add(formatRelative(offset));
+                msg.add(formatRelativePolar(offset));
+                msg.add(tr("Scale by X:"),formatLinear(pPoints->data.factor.x));
+                msg.add(tr("Scale by Y:"),formatLinear(pPoints->data.factor.y));
+                appendInfoCursorZoneMessage(msg.toString(), 2, false);
+            }
             break;
         }
         default:
             break;
     }
-    drawPreview();
     RS_DEBUG->print("RS_ActionModifyScale::mouseMoveEvent end");
+    drawPreview();
 }
 
 RS_Vector RS_ActionModifyScale::getTargetPoint(QMouseEvent* e){
@@ -204,7 +218,7 @@ void RS_ActionModifyScale::showPreview(){
 
 void RS_ActionModifyScale::showPreview(RS_ScaleData &previewData) {
     RS_Modification m(*preview, graphicView, false);
-    m.scale(previewData, selectedEntities, true);
+    m.scale(previewData, selectedEntities, true, false);
 
     if (showRefEntitiesOnPreview) {
         int numberOfCopies = previewData.obtainNumberOfCopies();
@@ -300,7 +314,7 @@ void RS_ActionModifyScale::onCoordinateEvent(int status, [[maybe_unused]]bool is
     switch(status) {
         case SetReferencePoint: {
             pPoints->data.referencePoint = mouse;
-            graphicView->setRelativeZero(mouse);
+            moveRelativeZero(mouse);
             if (isShowModifyActionDialog()) {
                 if (RS_DIALOGFACTORY->requestScaleDialog(pPoints->data)) {
                     tryTrigger();
@@ -354,7 +368,7 @@ void RS_ActionModifyScale::determineScaleFactor(RS_ScaleData& data,
 void RS_ActionModifyScale::updateMouseButtonHintsForSelected(int status) {
     switch (status) {
         case SetReferencePoint:
-            updateMouseWidgetTRCancel(tr( "Specify scale center"), MOD_SHIFT_AND_CTRL(LC_ModifiersInfo::MSG_REL_ZERO, tr("Snap to center of selection")));
+            updateMouseWidgetTRCancel(tr( "Specify scale center"), MOD_SHIFT_AND_CTRL(MSG_REL_ZERO, tr("Snap to center of selection")));
             break;
             // Find the scale factors to scale the pPoints->sourcePoint to pPoints->targetPoint
         case SetSourcePoint:
@@ -370,7 +384,7 @@ void RS_ActionModifyScale::updateMouseButtonHintsForSelected(int status) {
 }
 
 void RS_ActionModifyScale::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to scale"), MOD_CTRL(tr("Scale immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select to scale  (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Scale immediately after selection")));
 }
 
 RS2::CursorType RS_ActionModifyScale::doGetMouseCursorSelected([[maybe_unused]] int status){

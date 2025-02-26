@@ -66,7 +66,9 @@ public:
     void setLine2EdgeMode(int index);
 
     void setAttributesSource(int value);
-    int getAttributesSource() const{return attributesSource;};
+    int getAttributesSource() const{return attributesSource;}
+
+    void drawSnapper() override;;
 protected:
     LC_ActionOptionsWidget* createOptionsWidget() override;
     void doBack(QMouseEvent *pEvent, int status) override;
@@ -194,7 +196,7 @@ private:
         const RS_Vector &line2Start, const RS_Vector &line2End);
 
     void applyAttributes(RS_Entity *entity, bool forLine1);
-    RS_Line *catchLine(QMouseEvent *e);
+    RS_Line *catchLine(QMouseEvent *e, bool forPreview);
 };
 
 #endif // LC_ACTIONMODIFYLINEJOIN_H

@@ -201,6 +201,27 @@
 #include "lc_actioninfo3pointsangle.h"
 #include "lc_actiondrawellipse1point.h"
 #include "lc_actiondrawdimbaseline.h"
+#include "lc_actionpolylinearcstolines.h"
+#include "lc_actionpolylinechangesegmenttype.h"
+#include "lc_actionremovesplinepoints.h"
+#include "lc_actionsplineappendpoint.h"
+#include "lc_actionsplineaddpoint.h"
+#include "lc_actionsplineexplode.h"
+#include "lc_actionsplinefrompolyline.h"
+#include "lc_actionsplineremovebetween.h"
+#include "lc_actiondrawarc2pointsradius.h"
+#include "lc_actiondrawarc2pointsangle.h"
+#include "lc_actiondrawarc2pointsheight.h"
+#include "lc_actiondrawarc2pointslength.h"
+#include "lc_actionselectpoints.h"
+#include "lc_actiondrawpointslattice.h"
+#include "lc_actionpastetopoints.h"
+#include "lc_actiondrawmidline.h"
+#include "lc_actionmodifyalign.h"
+#include "lc_actionmodifyalignsingle.h"
+#include "lc_actiondrawlinepolygon4.h"
+#include "lc_actionmodifyalignref.h"
+#include "lc_actiondrawboundingbox.h"
 
 /**
  * Constructor
@@ -351,36 +372,23 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionEditPasteTransform:
             a = new LC_ActionEditPasteTransform(*document, *view);
             break;
+        case RS2::ActionPasteToPoints:
+            a = new LC_ActionPasteToPoints(*document, *view);
+            break;
         case RS2::ActionOrderBottom:
-            orderType = RS2::ActionOrderBottom;
-            if(!document->countSelected()){
-                a = new RS_ActionSelect(this, *document, *view, RS2::ActionOrderNoSelect);
-            }
-            else {
-                a = new RS_ActionOrder(*document, *view, orderType);
-            }
+            a = new RS_ActionOrder(*document, *view, RS2::ActionOrderBottom);
             break;
         case RS2::ActionOrderLower:
             orderType = RS2::ActionOrderLower;
-            a = new RS_ActionSelect(this, *document, *view, RS2::ActionOrderNoSelect);
+            a = new RS_ActionOrder(*document, *view, RS2::ActionOrderLower);
             break;
         case RS2::ActionOrderRaise:
-            orderType = RS2::ActionOrderRaise;
-            a = new RS_ActionSelect(this, *document, *view, RS2::ActionOrderNoSelect);
+            a = new RS_ActionOrder(*document, *view, RS2::ActionOrderRaise);
             break;
         case RS2::ActionOrderTop:
             orderType = RS2::ActionOrderTop;
-            if(!document->countSelected()){
-                a = new RS_ActionSelect(this, *document, *view, RS2::ActionOrderNoSelect);
-            }
-            else {
-                a = new RS_ActionOrder(*document, *view, orderType);
-            }
+            a = new RS_ActionOrder(*document, *view, RS2::ActionOrderTop);
             break;
-        case RS2::ActionOrderNoSelect:
-            a = new RS_ActionOrder(*document, *view, orderType);
-            break;
-
             // Selecting actions:
             //
         case RS2::ActionSelectSingle:
@@ -405,6 +413,10 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             view->killSelectActions();
             a = new RS_ActionSelectWindow(view->getTypeToSelect(),*document, *view, true);
             break;
+        case RS2::ActionSelectPoints:
+            view->killSelectActions();
+            a = new LC_ActionSelectPoints(*document, *view);
+            break;
         case RS2::ActionDeselectWindow:
             view->killSelectActions();
             a = new RS_ActionSelectWindow(*document, *view, false);
@@ -424,13 +436,11 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             view->killSelectActions();
             a = new RS_ActionSelectLayer(*document, *view);
             break;
-
             // Tool actions:
             //
         case RS2::ActionToolRegenerateDimensions:
             a = new RS_ActionToolRegenerateDimensions(*document, *view);
             break;
-
             // Zooming actions:
             //
         case RS2::ActionZoomIn:
@@ -454,7 +464,6 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionZoomRedraw:
             a = new RS_ActionZoomRedraw(*document, *view);
             break;
-
             // Drawing actions:
             //
         case RS2::ActionDrawPoint:
@@ -497,12 +506,14 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionDrawRectangle2Points:
             a = new LC_ActionDrawRectangle2Points(*document, *view);
             break;
-
         case RS2::ActionDrawRectangle1Point:
             a = new LC_ActionDrawRectangle1Point(*document, *view);
             break;
         case RS2::ActionDrawCross:
             a = new LC_ActionDrawCross(*document, *view);
+            break;
+        case RS2::ActionDrawBoundingBox:
+            a = new LC_ActionDrawBoundingBox(*document, *view);
             break;
         case RS2::ActionDrawSnakeLine:
             a = new LC_ActionDrawLineSnake(*document, *view, LC_ActionDrawLineSnake::DIRECTION_POINT);
@@ -520,7 +531,13 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new LC_ActionDrawSliceDivide(*document, *view, true);
             break;
         case RS2::ActionDrawLinePoints:
-            a = new LC_ActionDrawLinePoints(*document, *view);
+            a = new LC_ActionDrawLinePoints(*document, *view,  false);
+            break;
+        case RS2::ActionDrawPointsMiddle:
+            a = new LC_ActionDrawLinePoints(*document, *view, true);
+            break;
+        case RS2::ActionDrawPointsLattice:
+            a = new LC_ActionDrawPointsLattice(*document, *view);
             break;
         case RS2::ActionDrawLineBisector:
             a = new RS_ActionDrawLineBisector(*document, *view);
@@ -553,6 +570,10 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new LC_ActionDrawLineFromPointToLine(this, *document, *view);
             break;
         }
+        case RS2::ActionDrawLineMiddle:{
+            a = new LC_ActionDrawMidLine(*document, *view);
+            break;
+        }
         case RS2::ActionDrawStar:{
             a = new LC_ActionDrawStar(*document, *view);
             break;
@@ -578,11 +599,20 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionPolylineSegment:
             a = new RS_ActionPolylineSegment(*document, *view);
             break;
+        case RS2::ActionPolylineArcsToLines:
+            a = new LC_ActionPolylineArcsToLines(*document, *view);
+            break;
+        case RS2::ActionPolylineChangeSegmentType:
+            a = new LC_ActionPolylineChangeSegmentType(*document, *view);
+            break;
         case RS2::ActionDrawLinePolygonCenCor:
             a = new RS_ActionDrawLinePolygonCenCor(*document, *view);
             break;
         case RS2::ActionDrawLinePolygonCenTan:                      //20161223 added by txmy
             a = new LC_ActionDrawLinePolygonCenTan(*document, *view);
+            break;
+        case RS2::ActionDrawLinePolygonSideSide:
+            a = new LC_ActionDrawLinePolygon4(*document, *view);
             break;
         case RS2::ActionDrawLinePolygonCorCor:
             a = new RS_ActionDrawLinePolygonCorCor(*document, *view);
@@ -621,12 +651,31 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new RS_ActionDrawCircleTan3(*document, *view);
             break;
         case RS2::ActionDrawArc:
-            a = new RS_ActionDrawArc(*document, *view);
+            a = new RS_ActionDrawArc(*document, *view, RS2::ActionDrawArc);
+            break;
+        case RS2::ActionDrawArcChord:
+            a = new RS_ActionDrawArc(*document, *view, RS2::ActionDrawArcChord);
+            break;
+        case RS2::ActionDrawArcAngleLen:
+            a = new RS_ActionDrawArc(*document, *view,RS2::ActionDrawArcAngleLen);
             break;
         case RS2::ActionDrawArc3P:
             a = new RS_ActionDrawArc3P(*document, *view);
-            break;    case RS2::ActionDrawArcTangential:
+            break;
+        case RS2::ActionDrawArcTangential:
             a = new RS_ActionDrawArcTangential(*document, *view);
+            break;
+        case RS2::ActionDrawArc2PRadius:
+            a = new LC_ActionDrawArc2PointsRadius(*document, *view);
+            break;
+        case RS2::ActionDrawArc2PAngle:
+            a = new LC_ActionDrawArc2PointsAngle(*document, *view);
+            break;
+        case RS2::ActionDrawArc2PHeight:
+            a = new LC_ActionDrawArc2PointsHeight(*document, *view);
+            break;
+        case RS2::ActionDrawArc2PLength:
+            a = new LC_ActionDrawArc2PointsLength(*document, *view);
             break;
         case RS2::ActionDrawEllipseAxis:
             a = new RS_ActionDrawEllipseAxis(*document, *view, false);
@@ -664,6 +713,24 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionDrawSplinePoints:
             a = new LC_ActionDrawSplinePoints(*document, *view);
             break;
+        case RS2::ActionDrawSplinePointRemove:
+            a = new LC_ActionRemoveSplinePoints(*document, *view);
+            break;
+        case RS2::ActionDrawSplinePointDelTwo:
+            a = new LC_ActionSplineRemoveBetween(*document, *view);
+            break;
+        case RS2::ActionDrawSplinePointAppend:
+            a = new LC_ActionSplineAppendPoint(*document, *view);
+            break;
+        case RS2::ActionDrawSplinePointAdd:
+            a = new LC_ActionSplineAddPoint(*document, *view);
+            break;
+        case RS2::ActionDrawSplineExplode:
+            a = new LC_ActionSplineExplode(*document, *view);
+            break;
+        case RS2::ActionDrawSplineFromPolyline:
+            a = new LC_ActionSplineFromPolyline(*document, *view);
+            break;
         case RS2::ActionDrawMText:
             a = new RS_ActionDrawMText(*document, *view);
             break;
@@ -671,19 +738,11 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new RS_ActionDrawText(*document, *view);
             break;
         case RS2::ActionDrawHatch:
-            if(!document->countSelected())
-            {
-                a = new RS_ActionSelect(this, *document, *view, RS2::ActionDrawHatchNoSelect);
-                break;
-            }
-            // fall-through
-        case RS2::ActionDrawHatchNoSelect:
             a = new RS_ActionDrawHatch(*document, *view);
             break;
         case RS2::ActionDrawImage:
             a = new RS_ActionDrawImage(*document, *view);
             break;
-
             // Dimensioning actions:
             //
         case RS2::ActionDimAligned:
@@ -772,7 +831,7 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new RS_ActionModifyRotate2(*document, *view);
             break;
         case RS2::ActionModifyEntity:
-            a = new RS_ActionModifyEntity(*document, *view);
+            a = new RS_ActionModifyEntity(*document, *view, true);
             break;
         case RS2::ActionModifyTrim:
             a = new RS_ActionModifyTrim(*document, *view, false);
@@ -807,7 +866,15 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
 */
             a = new RS_ActionModifyExplodeText(*document, *view);
             break;
-
+        case RS2::ActionModifyAlign:
+            a = new LC_ActionModifyAlign(*document, *view);
+            break;
+        case RS2::ActionModifyAlignOne:
+            a = new LC_ActionModifyAlignSingle(*document, *view);
+            break;
+        case RS2::ActionModifyAlignRef:
+            a = new LC_ActionModifyAlignRef(*document, *view);
+            break;
             // Snapping actions:
             //
         case RS2::ActionSnapFree:
@@ -876,9 +943,7 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
         case RS2::ActionUnlockRelativeZero:
             a = new RS_ActionLockRelativeZero(*document, *view, false);
             break;
-
             // pen actions
-
         case RS2::ActionPenPick:
             a = new LC_ActionPenPick(*document, *view,  false);
             break;
@@ -916,12 +981,6 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
             a = new LC_ActionInfo3PointsAngle(*document, *view);
             break;
         case RS2::ActionInfoTotalLength:
-            if(!document->countSelected()){
-                a = new RS_ActionSelect(this, *document, *view, RS2::ActionInfoTotalLengthNoSelect);
-                break;
-            }
-            // fall-through
-        case RS2::ActionInfoTotalLengthNoSelect:
             a = new RS_ActionInfoTotalLength(*document, *view);
             break;
         case RS2::ActionInfoArea:
@@ -1036,6 +1095,9 @@ RS_ActionInterface* QG_ActionHandler::setCurrentAction(RS2::ActionType id) {
 
         case RS2::ActionOptionsDrawing:
             a = new RS_ActionOptionsDrawing(*document, *view);
+            break;
+        case RS2::ActionOptionsDrawingGrid:
+            a = new RS_ActionOptionsDrawing(*document, *view, 2);
             break;
         default:
             RS_DEBUG->print(RS_Debug::D_WARNING,
@@ -1952,16 +2014,17 @@ void QG_ActionHandler::slotSetRelativeZero() {
     setCurrentAction(RS2::ActionSetRelativeZero);
 }
 
-void QG_ActionHandler::slotLockRelativeZero(bool on)
-{
-	if (snap_toolbar) {
+void QG_ActionHandler::slotLockRelativeZero(bool on){
+	   if (snap_toolbar) {
         snap_toolbar->setLockedRelativeZero(on);
     }
-    if (on) {
-        setCurrentAction(RS2::ActionLockRelativeZero);
-    } else {
-        setCurrentAction(RS2::ActionUnlockRelativeZero);
-    }
+//    if (on) {
+    // calling view directly instead of action to ensure that button for action will not be unchecked after anction init/finish
+    view->lockRelativeZero(on);
+//        setCurrentAction(RS2::ActionLockRelativeZero);
+//    } else {
+//        setCurrentAction(RS2::ActionUnlockRelativeZero);
+//    }
 }
 
 void QG_ActionHandler::slotInfoInside() {

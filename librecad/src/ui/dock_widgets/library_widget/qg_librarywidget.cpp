@@ -43,7 +43,7 @@
 #include "qg_actionhandler.h"
 #include "rs_actionlibraryinsert.h"
 #include "rs_debug.h"
-#include "rs_painterqt.h"
+#include "rs_painter.h"
 #include "rs_settings.h"
 #include "rs_staticgraphicview.h"
 #include "rs_system.h"
@@ -430,7 +430,7 @@ QString QG_LibraryWidget::getPathToPixmap(const QString& dir,
     QString pngPath = iconCacheLocation + dir + QDir::separator() + fiDxf.baseName() + ".png";
 
     QPixmap buffer(128,128);
-    RS_PainterQt painter(&buffer);
+    RS_Painter painter(&buffer);
     painter.setBackground(RS_Color(255,255,255));
     painter.eraseRect(0,0, 128,128);
 
@@ -444,6 +444,8 @@ QString QG_LibraryWidget::getPathToPixmap(const QString& dir,
     }
     gv.setContainer(&graphic);
     gv.zoomAuto(false);
+
+    gv.updateSettings(&graphic);
 
     for (RS_Entity *e = graphic.firstEntity(RS2::ResolveAll); e;
          e = graphic.nextEntity(RS2::ResolveAll)) {

@@ -24,18 +24,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_QUICKINFOBASEDATA_H
 #define LC_QUICKINFOBASEDATA_H
 
-#include <QString>
 #include <QCoreApplication>
-#include "rs_vector.h"
+
 #include "rs_document.h"
+#include "rs_vector.h"
 #include "qg_graphicview.h"
 
-class LC_QuickInfoBaseData
-{
-    Q_DECLARE_TR_FUNCTIONS(LC_QuickInfoBaseData)
+class QString;
 
+class LC_QuickInfoBaseData{
+    Q_DECLARE_TR_FUNCTIONS(LC_QuickInfoBaseData)
 public:
     LC_QuickInfoBaseData();
+    virtual ~LC_QuickInfoBaseData() = default;
     QString getFormattedVectorForIndex(int index) const;
     virtual RS_Vector getVectorForIndex(int index) const = 0;
     virtual bool updateForCoordinateViewMode(int mode) = 0;
@@ -43,8 +44,12 @@ public:
     virtual bool hasData() const = 0;
     void setDocumentAndView(RS_Document *document, QG_GraphicView* view);
 
-    int getCoordinatesMode() const{return coordinatesMode;};
-    void setCoordinatesMode(int value){coordinatesMode = value;};
+    int getCoordinatesMode() const {
+        return coordinatesMode;
+    }
+    void setCoordinatesMode(int value) {
+        coordinatesMode = value;
+    }
 
     /**
      * Defines the mode for displaying coordinates
@@ -64,7 +69,7 @@ protected:
     QString formatVector(const RS_Vector &vector) const;
     QString formatAngle(double angle);
     QString formatLinear(double length);
-    QString createLink(QString &data, const QString &path, int index, const char *title, QString &value);
+    QString createLink(QString &data, const QString &path, int index, QString title, QString &value);
 };
 
 #endif // LC_QUICKINFOBASEDATA_H
