@@ -57,14 +57,16 @@ struct RS_ActionDrawCircleTan3::Points {
 RS_ActionDrawCircleTan3::RS_ActionDrawCircleTan3(
 		RS_EntityContainer& container,
 		RS_GraphicView& graphicView)
-	:LC_ActionDrawCircleBase("Draw circle inscribed",
-                               container, graphicView)
-    , pPoints(std::make_unique<Points>())
-{
+	:LC_ActionDrawCircleBase("Draw circle tan 3 circles",container, graphicView)
+    , pPoints(std::make_unique<Points>()){
 	actionType=RS2::ActionDrawCircleTan3;
 }
 
 RS_ActionDrawCircleTan3::~RS_ActionDrawCircleTan3() = default;
+
+void RS_ActionDrawCircleTan3::drawSnapper() {
+    // disable snapper
+}
 
 void RS_ActionDrawCircleTan3::init(int status){
     LC_ActionDrawCircleBase::init(status);
@@ -85,33 +87,25 @@ void RS_ActionDrawCircleTan3::finish(bool updateTB){
     RS_PreviewActionInterface::finish(updateTB);
 }
 
-void RS_ActionDrawCircleTan3::trigger(){
-
-    RS_PreviewActionInterface::trigger();
-
+void RS_ActionDrawCircleTan3::doTrigger() {
     auto circle = new RS_Circle(container, *pPoints->cData);
 
-    container->addEntity(circle);
-
-    addToDocumentUndoable(circle);
-
-    graphicView->redraw(RS2::RedrawDrawing);
     if (moveRelPointAtCenterAfterTrigger){
         moveRelativeZero(circle->getCenter());
     }
 
-//    drawSnapper();
+    undoCycleAdd(circle);
 
     pPoints->circles.clear();
     setStatus(SetCircle1);
 
-    RS_DEBUG->print("RS_ActionDrawCircleTan3::trigger():"
-                    " entity added: %lu", circle->getId());
+    RS_DEBUG->print("RS_ActionDrawCircleTan3::trigger(): entity added: %lu", circle->getId());
 }
 
 void RS_ActionDrawCircleTan3::mouseMoveEvent(QMouseEvent *e){
     RS_DEBUG->print("RS_ActionDrawCircleTan3::mouseMoveEvent begin");
     deleteHighlights();
+    deletePreview();
     snapPoint(e);
     for(RS_AtomicEntity* const pc: pPoints->circles) { // highlight already selected
         highlightSelected(pc);
@@ -119,14 +113,14 @@ void RS_ActionDrawCircleTan3::mouseMoveEvent(QMouseEvent *e){
     switch (getStatus()) {
         case SetCircle1:
         case SetCircle2: {
-            auto *c = catchCircle(e);
+            auto *c = catchCircle(e, true); // fixme - sand - CHECK! Modifiable catch for preview?
             if (c != nullptr){
                 highlightHover(c);
             }
             break;
         }
         case SetCircle3: {
-            auto *c = catchCircle(e);
+            auto *c = catchCircle(e, true);
             if (c != nullptr){
                 bool canBuildCircle = getData(c);
                 if (canBuildCircle){
@@ -137,10 +131,9 @@ void RS_ActionDrawCircleTan3::mouseMoveEvent(QMouseEvent *e){
         }
         case SetCenter: {
             pPoints->coord = toGraph(e);
-            deletePreview();
-            if (preparePreview()){
-                previewCircle(*pPoints->cData);
 
+            if (preparePreview()){
+                previewToCreateCircle(*pPoints->cData);
                 for (auto &c: pPoints->candidates) {
                     previewRefSelectablePoint(c->center);
                 }
@@ -155,15 +148,15 @@ void RS_ActionDrawCircleTan3::mouseMoveEvent(QMouseEvent *e){
                         }
                     }
                 }
-                drawPreview();
             }
             break;
         }
         default:
             break;
     }
-    drawHighlights();
     RS_DEBUG->print("RS_ActionDrawCircleTan3::mouseMoveEvent end");
+    drawPreview();
+    drawHighlights();
 }
 
 bool RS_ActionDrawCircleTan3::getData(RS_Entity *testThirdEntity){
@@ -203,11 +196,14 @@ bool RS_ActionDrawCircleTan3::getData(RS_Entity *testThirdEntity){
             case 1:
 //1 line, two circles
             {
+            auto cc = LC_Quadratic(circlesList[i1], circlesList[i2]);
                 for (unsigned k = 0; k < 4; ++k) {
                     //loop through all mirroring cases
                     lc1 = LC_Quadratic(circlesList[i], circlesList[i1], k & 1u);
                     LC_Quadratic lc2 = LC_Quadratic(circlesList[i], circlesList[i2], k & 2u);
                     sol.push_back(LC_Quadratic::getIntersection(lc1, lc2));
+                    sol.push_back(LC_Quadratic::getIntersection(cc, lc1));
+                    sol.push_back(LC_Quadratic::getIntersection(cc, lc2));
                 }
 
             }
@@ -288,7 +284,7 @@ bool RS_ActionDrawCircleTan3::getData(RS_Entity *testThirdEntity){
                 double d = RS_MAXDOUBLE;
                 circlesList[i]->getNearestPointOnEntity(circlesList[(i + j) % 3]->getCenter(),
                                                         false, &d);
-                if (d < RS_TOLERANCE){
+                if (d < 200.*RS_TOLERANCE){
                     LC_Quadratic lc2(circlesList[i], circlesList[(i + j) % 3], true);
                     sol.push_back(LC_Quadratic::getIntersection(lc2, lc1));
                 }
@@ -306,10 +302,18 @@ bool RS_ActionDrawCircleTan3::getData(RS_Entity *testThirdEntity){
         for (auto const &v: sol1) {
             double d = RS_MAXDOUBLE;
             circlesList[i]->getNearestPointOnEntity(v, false, &d);
-            auto data = std::make_shared<RS_CircleData>(v, d);
-            if (circlesList[(i + 1) % 3]->isTangent(*data) == false) continue;
-            if (circlesList[(i + 2) % 3]->isTangent(*data) == false) continue;
-            pPoints->candidates.push_back(data);
+            std::vector<std::shared_ptr<RS_CircleData>> data;
+            data.push_back(std::make_shared<RS_CircleData>(v, d));
+            if (circlesList[i]->rtti() == RS2::EntityCircle) {
+                auto* circle = static_cast<RS_Circle*>(circlesList[i]);
+                if (circle->getCenter().distanceTo(v) > circle->getRadius() * (1. + RS_TOLERANCE))
+                    data.push_back(std::make_shared<RS_CircleData>(v, d + 2. * circle->getRadius()));
+            }
+            for (const auto& circleData: data) {
+                if (circlesList[(i + 1) % 3]->isTangent(*circleData)
+                        && circlesList[(i + 2) % 3]->isTangent(*circleData))
+                    pPoints->candidates.push_back(circleData);
+            }
         }
 
     } else {
@@ -352,9 +356,16 @@ bool RS_ActionDrawCircleTan3::preparePreview(){
     return pPoints->valid;
 }
 
-RS_Entity *RS_ActionDrawCircleTan3::catchCircle(QMouseEvent *e){
+RS_Entity *RS_ActionDrawCircleTan3::catchCircle(QMouseEvent *e, bool forPreview) {
     RS_Entity *ret = nullptr;
-    RS_Entity *en = catchModifiableEntity(e, enTypeList);
+    RS_Entity *en;
+    if (forPreview){
+        en = catchModifiableEntityOnPreview(e, enTypeList);
+    }
+    else{
+        en = catchModifiableEntity(e, enTypeList);
+    }
+
     if (!en) return ret;
     if (!en->isVisible()) return ret;
     for (int i = 0; i < getStatus(); ++i) {
@@ -367,7 +378,7 @@ void RS_ActionDrawCircleTan3::onMouseLeftButtonRelease(int status, QMouseEvent *
     switch (status) {
         case SetCircle1:
         case SetCircle2:{
-            RS_Entity *en = catchCircle(e);
+            RS_Entity *en = catchCircle(e, false);
             if (en != nullptr){
                 pPoints->circles.resize(status);// todo - what for? Why not have fixes size
                 for (const RS_AtomicEntity *const pc: pPoints->circles) {
@@ -381,7 +392,7 @@ void RS_ActionDrawCircleTan3::onMouseLeftButtonRelease(int status, QMouseEvent *
             break;
         }
         case SetCircle3: {
-            RS_Entity *en = catchCircle(e);
+            RS_Entity *en = catchCircle(e,false);
             if (en != nullptr){
                 pPoints->circles.resize(getStatus());// todo - what for? Why not have fixes size
                 for (const RS_AtomicEntity *const pc: pPoints->circles) {

@@ -23,7 +23,7 @@
 ** This copyright notice MUST APPEAR in all copies of the script!
 **
 **********************************************************************/
-
+#include<QMouseEvent>
 
 #include "rs.h"
 #include "rs_actioninterface.h"
@@ -58,8 +58,7 @@ RS_ActionInterface::RS_ActionInterface(const char *name,
                                        RS_EntityContainer &container,
                                        RS_GraphicView &graphicView,
                                        RS2::ActionType actionType)
-    :
-    RS_Snapper(container, graphicView)
+    :RS_Snapper(container, graphicView)
     , status{0}
     , name{name}
     , finished{false}
@@ -74,10 +73,10 @@ RS_ActionInterface::RS_ActionInterface(const char *name,
     // graphic provides a pointer to the graphic if the
     // entity container is a graphic (i.e. can also hold
     // layers).
-    graphic = container.getGraphic();
+    // graphic = container.getGraphic();
 
     // document pointer will be used for undo / redo
-    document = container.getDocument();
+    // document = container.getDocument();
 
     updateSnapAngleStep();
 
@@ -127,7 +126,6 @@ void RS_ActionInterface::init(int status){
     }else{
         //delete snapper when finished, bug#3416878
         deleteSnapper();
-
     }
 }
 /**
@@ -481,7 +479,6 @@ int RS_ActionInterface::getGraphicVariableInt(const QString& key, int def) const
 void RS_ActionInterface::updateSelectionWidget() const{
     const RS_EntityContainer::LC_SelectionInfo &info = container->getSelectionInfo();
     updateSelectionWidget(info.count, info.length);
-//    updateSelectionWidget(container->countSelected(), container->totalSelectedLength());
 }
 
 void RS_ActionInterface::updateSelectionWidget(int countSelected, double selectedLength) const{
@@ -500,7 +497,46 @@ void RS_ActionInterface::setMouseCursor(const RS2::CursorType &cursor){
  * @param right right string (key for tr())
  */
 void RS_ActionInterface::updateMouseWidgetTRBack(const QString &msg, const LC_ModifiersInfo& modifiers){
+    if  (infoCursorOverlayPrefs != nullptr && infoCursorOverlayPrefs->enabled) {
+        preparePromptForInfoCursorOverlay(msg, modifiers);
+    }
     RS_DIALOGFACTORY->updateMouseWidget(msg,tr("Back"), modifiers);
+}
+
+void RS_ActionInterface::preparePromptForInfoCursorOverlay(const QString &msg, const LC_ModifiersInfo &modifiers) {
+    QString prompt = "";
+    LC_InfoCursorOverlayPrefs* prefs = getInfoCursorOverlayPrefs();
+    if (prefs->showCommandPrompt){
+        if (prefs->showCurrentActionName) {
+            QString actionName = graphicView->getCurrentActionName();
+            if (!actionName.isEmpty()){
+                prompt = actionName + ": " + msg;
+            }
+            else {
+                prompt = msg;
+            }
+        }
+        else{
+            prompt = msg;
+        }
+        QString modifiersStr = "";
+        const QString &shiftMessage = modifiers.getShiftMessage();
+        if (!shiftMessage.isEmpty()){
+            modifiersStr = modifiersStr + tr("SHIFT:") + shiftMessage;
+        }
+        const QString &ctrlMessage = modifiers.getCtrlMessage();
+        if (!ctrlMessage.isEmpty()){
+            if (!modifiersStr.isEmpty()){
+                modifiersStr = modifiersStr + " | ";
+            }
+            modifiersStr = modifiersStr + tr("CTRL:") + ctrlMessage;
+        }
+
+        if (!modifiersStr.isEmpty()){
+            prompt = prompt + "\n" + modifiersStr;
+        }
+    }
+    infoCursorOverlayData.setZone4(prompt);
 }
 
 /**
@@ -509,6 +545,9 @@ void RS_ActionInterface::updateMouseWidgetTRBack(const QString &msg, const LC_Mo
  * @param right right string (key for tr())
  */
 void RS_ActionInterface::updateMouseWidgetTRCancel(const QString &msg, const LC_ModifiersInfo& modifiers){
+    if (infoCursorOverlayPrefs != nullptr && infoCursorOverlayPrefs->enabled) {
+        preparePromptForInfoCursorOverlay(msg, modifiers);
+    }
     RS_DIALOGFACTORY->updateMouseWidget(msg,tr("Cancel"), modifiers);
 }
 
@@ -518,7 +557,15 @@ void RS_ActionInterface::updateMouseWidgetTRCancel(const QString &msg, const LC_
  * @param right string
  */
 void RS_ActionInterface::updateMouseWidget(const QString& left,const QString& right, const LC_ModifiersInfo& modifiers){
+    if (infoCursorOverlayPrefs != nullptr && infoCursorOverlayPrefs->enabled) {
+        preparePromptForInfoCursorOverlay(left, modifiers);
+    }
     RS_DIALOGFACTORY->updateMouseWidget(left, right, modifiers);
+}
+
+void RS_ActionInterface::clearMouseWidgetIcon(){
+    infoCursorOverlayData.setZone4("");
+    RS_DIALOGFACTORY->clearMouseWidgetIcon();
 }
 
 
@@ -545,6 +592,15 @@ void RS_ActionInterface::updateSnapAngleStep() {
         case 3:
             snapToAngleStep = 15.0;
             break;
+        case 4:
+            snapToAngleStep = 30.0;
+            break;
+        case 5:
+            snapToAngleStep = 45.0;
+            break;
+        case 6:
+            snapToAngleStep = 90.0;
+            break;
         default:
             snapToAngleStep = 15.0;
     }
@@ -569,4 +625,52 @@ void RS_ActionInterface::fireCoordinateEventForSnap(QMouseEvent *e){
 
 void RS_ActionInterface::initPrevious(int stat) {
     init(stat - 1);
+}
+
+bool RS_ActionInterface::undoCycleAdd(RS_Entity *e, bool addToContainer) const{
+    // upd. undo list:
+    if (addToContainer){
+        container->addEntity(e);
+    }
+    if (document){
+        undoCycleStart();
+        undoableAdd(e);
+        undoCycleEnd();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Just utility method for deleting given entity from drawing - should be called within undo cycle
+ * @param entity entity to delete
+ */
+void RS_ActionInterface::undoableDeleteEntity(RS_Entity *entity){
+    entity->changeUndoState();
+    undoableAdd(entity);
+}
+
+void RS_ActionInterface::undoCycleReplace(RS_Entity *entityToReplace, RS_Entity *entityReplacing) {
+    if (document != nullptr) {
+        undoCycleStart();
+        undoableDeleteEntity(entityToReplace);
+        undoableAdd(entityReplacing);
+        undoCycleEnd();
+    }
+}
+
+void RS_ActionInterface::undoCycleEnd() const {
+    RS_Undoable* relZeroUndoable = graphicView->getRelativeZeroUndoable();
+    if (relZeroUndoable != nullptr) {
+        document->addUndoable(relZeroUndoable);
+    }
+    document->endUndoCycle();
+}
+
+void RS_ActionInterface::undoCycleStart() const { document->startUndoCycle(); }
+void RS_ActionInterface::undoableAdd(RS_Undoable *e) const { document->addUndoable(e); }
+
+void RS_ActionInterface::setPenAndLayerToActive(RS_Entity *e) {
+    e->setLayerToActive();
+    e->setPenToActive();
 }

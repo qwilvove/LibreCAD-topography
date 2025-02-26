@@ -34,24 +34,15 @@ RS_ActionModifyDelete::RS_ActionModifyDelete(RS_EntityContainer &container,RS_Gr
     actionType=RS2::ActionModifyDelete;
 }
 
-void RS_ActionModifyDelete::trigger() {
+void RS_ActionModifyDelete::doTrigger([[maybe_unused]] bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyDelete::trigger()");
     RS_Modification m(*container, graphicView);
     m.remove(selectedEntities);
 }
 
-void RS_ActionModifyDelete::selectionCompleted(bool singleEntity,  [[maybe_unused]]bool fromInit) {
-    trigger();
-    if (singleEntity) {
-        deselectAll();
-    } else {
-        finish(false);
-    }
-    updateSelectionWidget();
-}
 
 void RS_ActionModifyDelete::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to delete"),MOD_CTRL(tr("Delete immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select to delete (Enter to complete)"), MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Delete immediately after selection")));
 }
 
 RS2::CursorType RS_ActionModifyDelete::doGetMouseCursorSelected([[maybe_unused]] int status){

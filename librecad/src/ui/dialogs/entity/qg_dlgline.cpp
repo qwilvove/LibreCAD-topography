@@ -28,6 +28,7 @@
 #include "rs_line.h"
 #include "rs_graphic.h"
 #include "rs_math.h"
+#include "rs_settings.h"
 
 /*
  *  Constructs a QG_DlgLine as a child of 'parent', with the
@@ -72,16 +73,18 @@ void QG_DlgLine::setLine(RS_Line& l) {
 
     wPen->setPen(lineResolvedPen, lay, "Pen");
 //    wPen->setPen(linePen,lay, "Pen");
-    QString s;
-    s.setNum(line->getStartpoint().x, 'g', 10);
-    leStartX->setText(s);
-    s.setNum(line->getStartpoint().y, 'g', 10);
-    leStartY->setText(s);
-    s.setNum(line->getEndpoint().x, 'g', 10);
-    leEndX->setText(s);
-    s.setNum(line->getEndpoint().y, 'g', 10);
-    leEndY->setText(s);
-    lId->setText(QString("ID: %1").arg(line->getId()));
+
+    leStartX->setText(asString(line->getStartpoint().x));
+    leStartY->setText(asString(line->getStartpoint().y));
+    leEndX->setText(asString(line->getEndpoint().x));
+    leEndY->setText(asString(line->getEndpoint().y));
+    // fixme - sand - refactor to common function
+    if (LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false)){
+        lId->setText(QString("ID: %1").arg(line->getId()));
+    }
+    else{
+        lId->setVisible(false);
+    }
 }
 
 void QG_DlgLine::updateLine() {

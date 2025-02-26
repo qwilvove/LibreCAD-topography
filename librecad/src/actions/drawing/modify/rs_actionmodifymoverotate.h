@@ -45,7 +45,6 @@ public:
                               RS_GraphicView& graphicView);
     ~RS_ActionModifyMoveRotate() override;
 
-    void trigger() override;
     QStringList getAvailableCommands() override;
     void setAngle(double a);
     double getAngle() const;
@@ -83,9 +82,10 @@ protected:
     void updateMouseButtonHintsForSelected(int status) override;
     LC_ModifyOperationFlags *getModifyOperationFlags() override;
     void previewRefPointsForMultipleCopies();
-    void doTrigger();
+    void doPerformTrigger();
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
+    void doTrigger(bool keepSelected) override;
 };
 #endif

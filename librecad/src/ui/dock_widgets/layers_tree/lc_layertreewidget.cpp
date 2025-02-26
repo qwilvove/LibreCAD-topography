@@ -659,6 +659,7 @@ void LC_LayerTreeWidget::onCustomContextMenu(const QPoint &point){
         caption->setPalette(palette);
         caption->setAlignment(Qt::AlignCenter);
 
+
         // Actions for all layers:
 
         QModelIndex index = layerTreeView->indexAt(point);
@@ -1444,14 +1445,11 @@ void LC_LayerTreeWidget::deselectEntitiesOnLockedLayer(RS_Layer *layer){
 
     for (auto e: *document) {
         if (e && e->isVisible() && e->getLayer() == layer){
-            if (view){
-                view->deleteEntity(e);
-            }
             e->setSelected(false);
-            if (view){
-                view->drawEntity(e);
-            }
         }
+    }
+    if (view){
+        view->redraw();
     }
 }
 /**
@@ -1463,13 +1461,11 @@ void LC_LayerTreeWidget::deselectEntities(RS_Layer *layer){
 
     for (auto e: *document) {
         if (e && e->isVisible() && e->getLayer() == layer){
-            if (view){
-                view->deleteEntity(e);
-            }
-            if (view){
-                view->drawEntity(e);
-            }
+            e->setSelected(false);
         }
+    }
+    if (view){
+        view->redraw();
     }
 }
 
@@ -1578,15 +1574,13 @@ void LC_LayerTreeWidget::doSelectLayersEntities(QList<RS_Layer *> &layers){
         if (en && en->isVisible() && !en->isSelected() && (!(en->getLayer() && en->getLayer()->isLocked()))){
             RS_Layer *l = en->getLayer(true);
             if (l != nullptr && layers.contains(l)){
-                if (view){
-                    view->deleteEntity(en);
-                }
                 en->setSelected(true);
-                if (view){
-                    view->drawEntity(en);
-                }
             }
         }
+    }
+
+    if (view){
+        view->redraw();
     }
 
     RS_DIALOGFACTORY->updateSelectionWidget(document->countSelected(), document->totalSelectedLength());
@@ -1682,13 +1676,7 @@ void LC_LayerTreeWidget::doMoveSelectionToLayer(LC_LayerTreeItem* layerItem, boo
                 if (en->isVisible() && en->isSelected() && !en->isParentSelected()){
                     RS_Layer *l = en->getLayer(true);
                     if (l != nullptr && l != targetLayer){ // don't move to itself
-                        if (view){
-                            view->deleteEntity(en);
-                        }
                         en->setSelected(false);
-                        if (view){
-                            view->drawEntity(en);
-                        }
                         RS_Entity *duplicateEntity = en->clone();
                         if (resolvePens){
                             // resolve pen in original entities, so "by layer" and "by block" values will be replaced by resolved values
@@ -1710,9 +1698,6 @@ void LC_LayerTreeWidget::doMoveSelectionToLayer(LC_LayerTreeItem* layerItem, boo
                 if (en->isVisible() && en->isSelected() && !en->isParentSelected()){
                     RS_Layer *l = en->getLayer(true);
                     if (l != nullptr && l != targetLayer){
-                        if (view){
-                            view->deleteEntity(en);
-                        }
                         if (resolvePens){
                             // before changing the layer, resolve pen and
                             // set it back to the entity.
@@ -1720,13 +1705,13 @@ void LC_LayerTreeWidget::doMoveSelectionToLayer(LC_LayerTreeItem* layerItem, boo
                             en ->setPen(resolvedPen);
                         }
                         en->setLayer(targetLayer);
-                        if (view){
-                            view->drawEntity(en);
-                        }
                     }
                 }
             }
         }
+    }
+    if (view){
+        view->redraw();
     }
 }
 // TBD - Undo support?
@@ -1743,7 +1728,6 @@ void LC_LayerTreeWidget::doRemoveLayersFromSource(LC_LayerTreeItem *source, bool
     source->collectDescendantChildren(itemsToRemove, &acceptAllAcceptor, !removeChildrenOnly);
 
     doRemoveLayerItems(itemsToRemove);
-
 }
 
 /**

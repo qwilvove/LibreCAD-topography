@@ -49,24 +49,23 @@ void LC_ActionPenApply::init(int status){
     }
 }
 
-void LC_ActionPenApply::trigger(){
-    RS_PreviewActionInterface::trigger();
-    // do nothing, processing is performed on mouse click
-}
-
 void LC_ActionPenApply::mouseMoveEvent(QMouseEvent *e){
+    deletePreview();
+    deleteHighlights();
+
+    snapPoint(e);
+
     switch (getStatus()){
         case SelectEntity:
         case ApplyToEntity:
-            RS_Entity* en = catchEntity(e, RS2::ResolveNone);
-            deleteHighlights();
+            RS_Entity* en = catchEntityOnPreview(e, RS2::ResolveNone);
             if (en != nullptr && en != srcEntity){ // exclude entity we use as source, if any
                 highlightHover(en);
-                graphicView->redraw();
             }
-            drawHighlights();
             break;
     }
+    drawPreview();
+    drawHighlights();
 }
 
 /**
@@ -115,12 +114,11 @@ void LC_ActionPenApply::onMouseLeftButtonRelease([[maybe_unused]]int status, QMo
                     data.changeLayer = false;
 
                     // this is temporary selection, it is needed as RS_Modification relies on selected entities.
-                    // TODO - should RS_Modification be expanded for support of explicitly provided entities instead of selected ones?
+                    // fixme - sand - replace by version with explicitly provided entity rather than one that relies on selection
                     en->setSelected(true);
 
                     RS_Modification m(*container, graphicView);
-                    m.changeAttributes(data);
-                    graphicView->drawEntity(en);
+                    m.changeAttributes(data, false);
                 }
                 break;
             }
@@ -157,7 +155,7 @@ void LC_ActionPenApply::updateMouseButtonHints(){
             updateMouseWidgetTRCancel(tr("Specify entity to pick the pen"));
             break;
         case ApplyToEntity:
-            updateMouseWidgetTRCancel(tr("Specify entity to apply pen"), copyMode? MOD_SHIFT(tr("Apply Resolved Pen")) : MOD_NONE);
+            updateMouseWidgetTRCancel(tr("Specify entity to apply pen"), copyMode? MOD_SHIFT_LC(tr("Apply Resolved Pen")) : MOD_NONE);
             break;
         default:
             RS_ActionInterface::updateMouseButtonHints();

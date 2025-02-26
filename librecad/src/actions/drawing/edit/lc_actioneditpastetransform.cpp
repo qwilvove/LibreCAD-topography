@@ -19,16 +19,18 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
+#include <QMouseEvent>
 
 #include "lc_actioneditpastetransform.h"
-#include "rs_modification.h"
 #include "lc_pastetransformoptions.h"
-#include "rs_math.h"
+#include "rs_clipboard.h"
 #include "rs_coordinateevent.h"
-#include "rs_preview.h"
+#include "rs_debug.h"
 #include "rs_graphic.h"
 #include "rs_graphicview.h"
-#include "rs_clipboard.h"
+#include "rs_math.h"
+#include "rs_modification.h"
+#include "rs_preview.h"
 #include "rs_units.h"
 
 LC_ActionEditPasteTransform::LC_ActionEditPasteTransform(RS_EntityContainer &container, RS_GraphicView &graphicView)
@@ -46,14 +48,11 @@ void LC_ActionEditPasteTransform::init(int status) {
     }
 }
 
-void LC_ActionEditPasteTransform::trigger() {
-    deletePreview();
-
+void LC_ActionEditPasteTransform::doTrigger() {
     RS_Modification m(*container, graphicView, false);
 
     int numX = data->arrayXCount;
     int numY = data->arrayYCount;
-
 
     RS_Vector xArrayVector;
     RS_Vector yArrayVector;
@@ -67,7 +66,7 @@ void LC_ActionEditPasteTransform::trigger() {
         numY = 1;
     }
 
-    document->startUndoCycle();
+    undoCycleStart();
 
     for (int x = 0; x < numX; x++){
         for (int y = 0; y < numY; y++){
@@ -75,23 +74,23 @@ void LC_ActionEditPasteTransform::trigger() {
             const RS_PasteData &pasteData = RS_PasteData(currentPoint, data->factor , data->angle,
                                                          false, "");
             m.paste(pasteData);
+            // fixme - some progress is needed there, ++++ speed improvement for paste operation!!
+            LC_ERR << "Paste: " << x+y;
         }
     }
 
-    document->endUndoCycle();
+    undoCycleEnd();
 
-
-    graphicView->redraw(RS2::RedrawDrawing);
     if (!invokedWithControl) {
         finish(false);
     }
 }
 
 void LC_ActionEditPasteTransform::mouseMoveEvent(QMouseEvent *e) {
+    deletePreview();
     if (getStatus()==SetReferencePoint) {
         *referencePoint = snapPoint(e);
-        deletePreview();
-        preview->addAllFrom(*RS_CLIPBOARD->getGraphic());
+        preview->addAllFrom(*RS_CLIPBOARD->getGraphic(),graphicView);
         preview->move(*referencePoint);
 
         if (graphic) {
@@ -105,10 +104,11 @@ void LC_ActionEditPasteTransform::mouseMoveEvent(QMouseEvent *e) {
                 previewMultipleReferencePoints();
             }
         }
-        drawPreview();
     }
-    else
+    else {
         deleteSnapper();
+    }
+    drawPreview();
 }
 
 void LC_ActionEditPasteTransform::onMouseLeftButtonRelease([[maybe_unused]]int status, QMouseEvent *e) {

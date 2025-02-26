@@ -99,6 +99,18 @@ void RS_Vector::set(double vx, double vy, double vz) {
     valid = true;
 }
 
+void RS_Vector::plus(const RS_Vector &other) {
+   x+= other.x;
+   y+= other.y;
+   z+= other.z;
+}
+
+void RS_Vector::minus(const RS_Vector &other) {
+    x-= other.x;
+    y-= other.y;
+    z-= other.z;
+}
+
 /**
  * Sets a new position for the vector in polar coordinates.
  */
@@ -665,6 +677,26 @@ void RS_VectorSolutions::clear() {
  * are less solutions.
  */
 const RS_Vector& RS_VectorSolutions::at(size_t i) const {
+    return vector.at(i);
+}
+
+const RS_Vector& RS_VectorSolutions::back() const {
+    return vector.back();
+}
+
+RS_Vector& RS_VectorSolutions::back() {
+    return vector.back();
+}
+
+const RS_Vector& RS_VectorSolutions::front() const {
+    return vector.front();
+}
+
+RS_Vector& RS_VectorSolutions::front() {
+    return vector.front();
+}
+
+RS_Vector& RS_VectorSolutions::at(size_t i) {
     return vector.at(i);
 }
 

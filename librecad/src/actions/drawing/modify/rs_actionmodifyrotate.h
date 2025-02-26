@@ -44,7 +44,6 @@ public:
         RS_GraphicView &graphicView);
     ~RS_ActionModifyRotate() override;
     void init(int status) override;
-    void trigger() override;
     double getAngle();
     void setAngle(double angle);
     void setFreeAngle(bool enable);
@@ -70,7 +69,6 @@ protected:
         SetTargetPoint,    /**< Setting the target to rotation to*/
         SetTargetPoint2ndRotation,    /**< Setting the target to rotation around ref point*/
     };
-    // fixme - sand -  review whether it's practical to select rotation center first... it's less convenient
     // support of old mode, most probably it should be removed and one selection mode should remain
     bool selectRefPointFirst = true;
     bool freeAngle = false;
@@ -91,6 +89,7 @@ protected:
     void tryTrigger();
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget *createOptionsWidget() override;
+    void doTrigger(bool keepSelected) override;
 };
 
 #endif

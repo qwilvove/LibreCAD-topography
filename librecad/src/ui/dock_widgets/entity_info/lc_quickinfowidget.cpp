@@ -21,23 +21,23 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
 #include <QClipboard>
-#include <QUrl>
-#include <QStandardItemModel>
+#include <QDockWidget>
 #include <QListView>
+#include <QMenu>
+#include <QStandardItemModel>
 #if defined(Q_OS_LINUX)
 #include <QThread>
 #endif
-#include <QMenu>
-#include "rs_point.h"
-#include "rs_math.h"
-
-#include "lc_quickinfowidget.h"
-#include "ui_lc_quickinfowidget.h"
+#include <QUrl>
 
 #include "lc_flexlayout.h"
-#include "rs_dialogfactory.h"
+#include "lc_quickinfowidget.h"
 #include "lc_quickinfowidgetoptionsdialog.h"
+#include "rs_dialogfactory.h"
+#include "rs_math.h"
+#include "rs_point.h"
 #include "rs_settings.h"
+#include "ui_lc_quickinfowidget.h"
 
 // todo - discover generic way for reliable refresh of entity info widget if entity editing properties/attributes is performed outside of outside of widget
 // (via normal editing actions, mouse operations or custom actions)
@@ -69,13 +69,13 @@ LC_QuickInfoWidget::LC_QuickInfoWidget(QWidget *parent, QMap<QString, QAction *>
     connect(ui->tbEditProperties, &QToolButton::clicked, this, &LC_QuickInfoWidget::onEditEntityProperties);
     connect(ui->pteInfo, &QTextEdit::textChanged, this, &LC_QuickInfoWidget::onTextChanged);
     connect(ui->pteInfo, &QTextBrowser::anchorClicked, this, &LC_QuickInfoWidget::onAnchorClicked);
-    connect(ui->pteInfo, SIGNAL(highlighted(const QUrl&)), this, SLOT(onAnchorHighlighted(const QUrl&)));
+    connect(ui->pteInfo, &LC_PlainTextEdit::highlighted, this, &LC_QuickInfoWidget::onAnchorHighlighted);
     connect(ui->pteInfo, &LC_PlainTextEdit::unhighlighted, this, &LC_QuickInfoWidget::onAnchorUnHighlighted);
     connect(ui->pteInfo, &LC_PlainTextEdit::customContextMenuRequested, this, &LC_QuickInfoWidget::onViewContextMenu);
 
     // text editor setup
     ui->pteInfo->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->cbPointsCoordinatesMode, SIGNAL(currentIndexChanged(int)), this, SLOT(onCoordinateModeIndexChanged(int)));
+    connect(ui->cbPointsCoordinatesMode, &QComboBox::currentIndexChanged, this, &LC_QuickInfoWidget::onCoordinateModeIndexChanged);
     ui->pteInfo->setOpenLinks(false);
     ui->pteInfo->document()->setDefaultStyleSheet("a {text-decoration: none;} body {background-color: white;}");
 
@@ -107,6 +107,8 @@ LC_QuickInfoWidget::LC_QuickInfoWidget(QWidget *parent, QMap<QString, QAction *>
     options->load();
     entityData.setOptions(options);
 
+    options->displayEntityID = LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false);
+
     LC_GROUP_GUARD("QuickInfoWidget");
     {
         entityData.setCoordinatesMode(LC_GET_INT("EntityCoordinatesMode", LC_QuickInfoBaseData::COORD_ABSOLUTE));
@@ -133,6 +135,7 @@ void LC_QuickInfoWidget::processEntity(RS_Entity *en){
         clearEntityInfo();
     }
     else { // just delegate action processing to entity data
+        options->displayEntityID = LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false);
         bool updated = entityData.processEntity(en);
         if (updated){
             updateEntityInfoView();
@@ -140,10 +143,14 @@ void LC_QuickInfoWidget::processEntity(RS_Entity *en){
     }
  }
 
- /**
-  * Central method for processing collected coordinates
-  * @param point coordinate
-  */
+QString LC_QuickInfoWidget::getEntityDescription(RS_Entity *en, RS2::EntityDescriptionLevel shortDescription) {
+    return entityData.getEntityDescription(en, shortDescription);
+}
+
+/**
+ * Central method for processing collected coordinates
+ * @param point coordinate
+ */
 void LC_QuickInfoWidget::processCoordinate(const RS_Vector &point){
     setWidgetMode(MODE_COORDINATE_COLLECTING);
     pointsData.processCoordinate(point); // delegate processing
@@ -196,6 +203,7 @@ void LC_QuickInfoWidget::updateEntityInfoView(bool forceUpdate, bool updateView)
             RS_Entity *entity = findEntityById(entityId);
             if (entity != nullptr){
                 entityData.clear();
+                options->displayEntityID = LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false);
                 entityData.processEntity(entity);
             }
         }
@@ -333,24 +341,24 @@ void LC_QuickInfoWidget::onViewContextMenu(QPoint pos){
                 if (ok){
                     if (widgetMode == MODE_COORDINATE_COLLECTING){
                         // specific commands for anchors on collected points view
-                        QAction* toCmdAction = contextMenu->addAction(getCoordinateMenuName("&To Cmd", pointIndex));
+                        QAction* toCmdAction = contextMenu->addAction(getCoordinateMenuName(tr("&To Cmd"), pointIndex));
                         connect(toCmdAction, &QAction::triggered, this,  [this, pointIndex]{ onToCmd(pointIndex); });
 
-                        QAction* relZeroAction = contextMenu->addAction(getCoordinateMenuName("&Set Relative Zero",pointIndex));
+                        QAction* relZeroAction = contextMenu->addAction(getCoordinateMenuName(tr("&Set Relative Zero"),pointIndex));
                         connect(relZeroAction, &QAction::triggered, this,  [this, pointIndex]{ onSetRelZero(pointIndex); });
                         contextMenu->addSeparator();
-                        QAction* removeAction = contextMenu->addAction(getCoordinateMenuName("&Remove Coordinate", pointIndex));
+                        QAction* removeAction = contextMenu->addAction(getCoordinateMenuName(tr("&Remove Coordinate"), pointIndex));
                         connect(removeAction, &QAction::triggered, this,  [this, pointIndex]{ onRemoveCoordinate(pointIndex); });
 
-                        QAction* insertAction = contextMenu->addAction(getCoordinateMenuName("&Insert Coordinates", pointIndex));
+                        QAction* insertAction = contextMenu->addAction(getCoordinateMenuName(tr("&Insert Coordinates"), pointIndex));
                         connect(insertAction, &QAction::triggered, this,  [this, pointIndex]{ onInsertCoordinates(pointIndex); });
                     }
                     else{
                         // specific commands for anchors on entity info view
-                        QAction* toCmdAction = contextMenu->addAction(getCoordinateMenuName("&To Cmd", -1));
+                        QAction* toCmdAction = contextMenu->addAction(getCoordinateMenuName(tr("&To Cmd"), -1));
                         connect(toCmdAction, &QAction::triggered, this,  [this, pointIndex]{ onToCmd(pointIndex); });
 
-                        QAction* relZeroAction = contextMenu->addAction(getCoordinateMenuName("&Set Relative Zero",-1));
+                        QAction* relZeroAction = contextMenu->addAction(getCoordinateMenuName(tr("&Set Relative Zero"),-1));
                         connect(relZeroAction, &QAction::triggered, this,  [this, pointIndex]{ onSetRelZero(pointIndex); });
                     }
                 }
@@ -381,8 +389,7 @@ void LC_QuickInfoWidget::onViewContextMenu(QPoint pos){
  * @param idx
  * @return
  */
-QString LC_QuickInfoWidget::getCoordinateMenuName(const char *command, int idx) const{
-    QString actionName = tr(command);
+QString LC_QuickInfoWidget::getCoordinateMenuName(QString actionName, int idx) const{
     if (idx >= 0){
         QString index;
         index.setNum(idx+1);
@@ -463,7 +470,7 @@ void LC_QuickInfoWidget::processURLCommand(const QString &path, int index){
  * @return vector
  */
 RS_Vector LC_QuickInfoWidget::retrievePositionForModelIndex(int index) const{
-    auto data = RS_Vector(false);
+    auto data = RS_Vector{false};
     if (widgetMode == MODE_ENTITY_INFO){ // return entity property
         if (entityData.hasData()){
             data = entityData.getVectorForIndex(index);
@@ -620,7 +627,7 @@ void LC_QuickInfoWidget::onSelectEntity(){
         if (e != nullptr){
             // entity found, do selection
             e->setSelected(true);
-            graphicView->drawEntity(e);
+            graphicView->redraw();
         }
         else{
             // if we're there - entity may be selected, or its id may be changed due to modification.
@@ -636,17 +643,12 @@ void LC_QuickInfoWidget::onSelectEntity(){
  * @return
  */
 RS_Entity* LC_QuickInfoWidget::findEntityById(unsigned long entityId) const{
-    RS_Entity* foundEntity = nullptr;
     for (RS_Entity *e: *document) {
-        unsigned long eId = e->getId();
-        if (eId == entityId){
-            if (e->isVisible()){
-                foundEntity = e;
-                break;
-            }
+        if (e != nullptr && e->getId() == entityId && e->isVisible()){
+            return e;
         }
     }
-    return foundEntity;
+    return nullptr;
 }
 
 /**
@@ -660,7 +662,6 @@ void LC_QuickInfoWidget::onEditEntityProperties(){
             // entity found, do editing
             std::unique_ptr<RS_Entity> clone{en->clone()};
             en->setSelected(true);
-            graphicView->drawEntity(en);
 
             RS_Entity* newEntity = clone.get();
             if (RS_DIALOGFACTORY->requestModifyEntityDialog(newEntity)){
@@ -670,11 +671,9 @@ void LC_QuickInfoWidget::onEditEntityProperties(){
                 // update widget view
                 processEntity(newEntity);
 
-                graphicView->deleteEntity(en);
                 en->setSelected(false);
 
                 clone->setSelected(false);
-                graphicView->drawEntity(newEntity);
 
                 document->startUndoCycle();
 
@@ -691,6 +690,7 @@ void LC_QuickInfoWidget::onEditEntityProperties(){
         else{ // entity not found, cleanup
             clearEntityInfo();
         }
+        graphicView->redraw();
     }
 }
 
@@ -703,12 +703,11 @@ void LC_QuickInfoWidget::setDocumentAndView(RS_Document *doc, QG_GraphicView* v)
 
     // add tracking of relative point for new view
     if (v != nullptr){
-        connect(v, SIGNAL(relative_zero_changed(const RS_Vector&)),
-                this, SLOT(onRelativeZeroChanged(const RS_Vector&)));
+        connect(v, &QG_GraphicView::relative_zero_changed, this, &LC_QuickInfoWidget::onRelativeZeroChanged);
     }
     // remove tracking of relative point from old view
     if (graphicView != nullptr && graphicView != v){
-        disconnect(graphicView, SIGNAL(relative_zero_changed(const RS_Vector&)), this,SLOT(onRelativeZeroChanged(const RS_Vector&)));
+        disconnect(graphicView, &QG_GraphicView::relative_zero_changed, this, &LC_QuickInfoWidget::onRelativeZeroChanged);
     }
     // do setup
     document = doc;

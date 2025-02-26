@@ -19,15 +19,16 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
+#include <QMouseEvent>
 
 #include "lc_actiondrawdimbaseline.h"
-#include "rs_dimlinear.h"
-#include "rs_preview.h"
-#include "rs_graphicview.h"
-#include "rs_debug.h"
-#include "rs_dimaligned.h"
 #include "qg_dimoptions.h"
 #include "rs_actiondimension.h"
+#include "rs_debug.h"
+#include "rs_dimaligned.h"
+#include "rs_dimlinear.h"
+#include "rs_graphicview.h"
+#include "rs_preview.h"
 
 // some functions are duplicated with DimLiner action, however, that's intentional as later we can support angular dimensions in additional to linear ones
 LC_ActionDrawDimBaseline::LC_ActionDrawDimBaseline(RS_EntityContainer &container, RS_GraphicView &graphicView, RS2::ActionType type)
@@ -48,22 +49,24 @@ void LC_ActionDrawDimBaseline::reset(){
     *edata = {{}, {}, oldAngle, 0.0};
 }
 
-void LC_ActionDrawDimBaseline::trigger() {
-    RS_ActionDimension::trigger();
-
+void LC_ActionDrawDimBaseline::doTrigger() {
     preparePreview();
     auto *dim = createDim(container);
-    dim->setLayerToActive();
-    dim->setPenToActive();
+    setPenAndLayerToActive(dim);
     dim->update();
-    container->addEntity(dim);
 
-    addToDocumentUndoable(dim);
+    bool baseline = isBaseline();
 
-    graphicView->redraw(RS2::RedrawDrawing);
-
-    if (isBaseline()) {
+    if (baseline){
         moveRelativeZero(edata->extensionPoint1);
+    }
+    else{
+        moveRelativeZero(edata->extensionPoint2);
+    }
+
+    undoCycleAdd(dim);
+
+    if (baseline) {
         prevExtensionPointEnd = edata->extensionPoint2;
         // test is just in case
         auto* dimLinear = dynamic_cast<RS_DimLinear*>(dim);
@@ -72,12 +75,10 @@ void LC_ActionDrawDimBaseline::trigger() {
         }
     }
     else{
-        moveRelativeZero(edata->extensionPoint2);
         edata->extensionPoint1 = edata->extensionPoint2;
         prevExtensionPointEnd = edata->extensionPoint1; // todo - check whether this is necessary. Potentially - for ordnance continued
     }
     baseDefPoint = data->definitionPoint;
-
 }
 
 RS_Entity *LC_ActionDrawDimBaseline::createDim(RS_EntityContainer* parent){
@@ -90,12 +91,12 @@ bool LC_ActionDrawDimBaseline::isBaseline(){
 }
 
 void LC_ActionDrawDimBaseline::mouseMoveEvent(QMouseEvent *e) {
+    deletePreview();
+    deleteHighlights();
     int status = getStatus();
     RS_Vector mouse = snapPoint(e); // snap on entity?
-    deletePreview();
     switch (status){
         case SetExtPoint1: {
-            deleteHighlights();
             auto dimCandidate = RS_Snapper::catchEntity(mouse, dimEntityTypes, RS2::ResolveNone);
             if (dimCandidate != nullptr) {
                 highlightHover(dimCandidate);
@@ -139,7 +140,6 @@ void LC_ActionDrawDimBaseline::mouseMoveEvent(QMouseEvent *e) {
                     previewRefSelectablePoint(extPoint2);
                 }
             }
-            drawHighlights();
             break;
         }
         case SetExtPoint2:{
@@ -239,6 +239,7 @@ void LC_ActionDrawDimBaseline::mouseMoveEvent(QMouseEvent *e) {
 
     }
     drawPreview();
+    drawHighlights();
 }
 
 void LC_ActionDrawDimBaseline::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
@@ -403,13 +404,13 @@ void LC_ActionDrawDimBaseline::updateMouseButtonHints() {
     int status = getStatus();
     switch (status) {
         case SetExtPoint1:
-            updateMouseWidgetTRCancel(tr("Select base linear/aligned dimension"), MOD_CTRL("Select distant extension point"));
+            updateMouseWidgetTRCancel(tr("Select base linear/aligned dimension"), MOD_CTRL(tr("Select distant extension point")));
             break;
         case SetExtPoint2:
-            updateMouseWidgetTRBack(tr("Specify second extension line origin"), isBaseline() && !freeBaselineDistance ? MOD_CTRL("Mirror offset direction"): MOD_NONE);
+            updateMouseWidgetTRBack(tr("Specify second extension line origin"), isBaseline() && !freeBaselineDistance ? MOD_CTRL(tr("Mirror offset direction")): MOD_NONE);
             break;
         case SetDefPoint:
-            updateMouseWidgetTRBack(tr("Specify dimension line location"), MOD_SHIFT(tr("Snap to Adjacent Dim")));
+            updateMouseWidgetTRBack(tr("Specify dimension line location"), MOD_SHIFT_LC(tr("Snap to Adjacent Dim")));
             break;
         case SetText:
             updateMouseWidget(tr("Enter dimension text:"));

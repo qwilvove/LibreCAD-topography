@@ -40,7 +40,6 @@ public:
         RS_GraphicView &graphicView);
     ~RS_ActionDrawArc3P() override;
     void init(int status) override;
-    void trigger() override;
     void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
 protected:
@@ -53,17 +52,16 @@ protected:
         SetPoint3        /**< Setting the 3rd point. */
     };
 
-    /**
-     * Arc data defined so far.
-     */
     struct Points;
-    std::unique_ptr<Points> pPoints;
+    std::unique_ptr<Points> m_pPoints;
+    bool alternatedPoints = false;
     void reset() override;
-    void preparePreview();
+    void preparePreview(bool alternatePoints);
     void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
     void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
+    void doTrigger() override;
 };
 #endif

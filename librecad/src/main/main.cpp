@@ -27,36 +27,39 @@
 **
 **********************************************************************/
 #include <clocale>
-#include "main.h"
 
 #include <QApplication>
 #include <QByteArray>
 #include <QDebug>
-#include <QSplashScreen>
-#include <QSettings>
-#include <QMessageBox>
 #include <QFileInfo>
+#include <QMessageBox>
+#include <QPainter>
+#include <QPixmap>
+#include <QSettings>
+#include <QSplashScreen>
 
+#include "console_dxf2pdf.h"
+#include "console_dxf2png.h"
+#include "lc_application.h"
+#include "main.h"
+#include "qc_applicationwindow.h"
+#include "qg_dlginitial.h"
+#include "rs_debug.h"
 #include "rs_fontlist.h"
 #include "rs_patternlist.h"
 #include "rs_settings.h"
 #include "rs_system.h"
-#include "qg_dlginitial.h"
-
-#include "lc_application.h"
-#include "qc_applicationwindow.h"
-#include "rs_debug.h"
-
-#include "console_dxf2pdf.h"
-#include "console_dxf2png.h"
 
 namespace
 {
-void restoreWindowGeometry(QC_ApplicationWindow& appWin, QSettings& settings);
+    void restoreWindowGeometry(QC_ApplicationWindow& appWin, QSettings& settings);
+// update splash for alpha/beta names)
+    void updateSplash(const std::unique_ptr<QSplashScreen>& splash);
 }
 /**
  * Main. Creates Application window.
  */
+ // fixme - sand - refactor and split to several specialized functions
 int main(int argc, char** argv)
 {
     QT_REQUIRE_VERSION(argc, argv, "5.2.1");
@@ -93,9 +96,7 @@ int main(int argc, char** argv)
 
     RS_Settings::init(app.organizationName(), app.applicationName());
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 7, 0))
     QGuiApplication::setDesktopFileName("librecad.desktop");
-#endif
 
     QSettings settings; // fixme - direct invocation of settings
 
@@ -139,9 +140,8 @@ int main(int argc, char** argv)
             RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Debugging", RS_Debug::D_DEBUGGING);
             exit(0);
         }
-        if ( allowOptions&& (argstr.startsWith(lpDebugSwitch0, Qt::CaseInsensitive) ||
-                             argstr.startsWith(lpDebugSwitch1, Qt::CaseInsensitive) ))
-        {
+        if (allowOptions&& (argstr.startsWith(lpDebugSwitch0, Qt::CaseInsensitive) ||
+                             argstr.startsWith(lpDebugSwitch1, Qt::CaseInsensitive) )){
             argClean<<i;
 
             // to control the level of debugging output use --debug with level 0-6, e.g. --debug3
@@ -150,71 +150,72 @@ int main(int argc, char** argv)
             argstr.remove(QRegularExpression("^"+lpDebugSwitch0));
             argstr.remove(QRegularExpression("^"+lpDebugSwitch1));
             char level;
-            if(argstr.size()==0)
-            {
-                if(i+1<argc)
-                {
-                    if(QRegularExpression(R"(\d*)").match(argv[i+1]).hasMatch())
-                    {
+            if(argstr.size()==0){
+                if(i+1<argc){
+                    if(QRegularExpression(R"(\d*)").match(argv[i+1]).hasMatch()){
                         ++i;
                         qDebug()<<"reading "<<argv[i]<<" as debugging level";
                         level=argv[i][0];
                         argClean<<i;
                     }
-                    else
-                        level='3';
+                    else {
+                        level = '3';
+                    }
                 }
-                else
-                    level='3'; //default to D_WARNING
+                else {
+                    level = '3'; //default to D_WARNING
+                }
             }
-            else
-                level=argstr.toStdString()[0];
-
-            switch(level)
-            {
-            case '?' :
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "possible debug levels:");
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Nothing", RS_Debug::D_NOTHING);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Critical", RS_Debug::D_CRITICAL);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Error", RS_Debug::D_ERROR);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Warning", RS_Debug::D_WARNING);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Notice", RS_Debug::D_NOTICE);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Informational", RS_Debug::D_INFORMATIONAL);
-                RS_DEBUG->print( RS_Debug::D_NOTHING, "    %d Debugging", RS_Debug::D_DEBUGGING);
-                return 0;
-
-            case '0' + RS_Debug::D_NOTHING :
-                RS_DEBUG->setLevel( RS_Debug::D_NOTHING);
-                break;
-
-            case '0' + RS_Debug::D_CRITICAL :
-                RS_DEBUG->setLevel( RS_Debug::D_CRITICAL);
-                break;
-
-            case '0' + RS_Debug::D_ERROR :
-                RS_DEBUG->setLevel( RS_Debug::D_ERROR);
-                break;
-
-            case '0' + RS_Debug::D_WARNING :
-                RS_DEBUG->setLevel( RS_Debug::D_WARNING);
-                break;
-
-            case '0' + RS_Debug::D_NOTICE :
-                RS_DEBUG->setLevel( RS_Debug::D_NOTICE);
-                break;
-
-            case '0' + RS_Debug::D_INFORMATIONAL :
-                RS_DEBUG->setLevel( RS_Debug::D_INFORMATIONAL);
-                break;
-
-            case '0' + RS_Debug::D_DEBUGGING :
-                RS_DEBUG->setLevel( RS_Debug::D_DEBUGGING);
-                break;
-
-            default :
-                RS_DEBUG->setLevel(RS_Debug::D_DEBUGGING);
-                break;
+            else {
+                level = argstr.toStdString()[0];
             }
+
+            switch(level){
+                case '?' : {
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "possible debug levels:");
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Nothing", RS_Debug::D_NOTHING);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Critical", RS_Debug::D_CRITICAL);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Error", RS_Debug::D_ERROR);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Warning", RS_Debug::D_WARNING);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Notice", RS_Debug::D_NOTICE);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Informational", RS_Debug::D_INFORMATIONAL);
+                    RS_DEBUG->print(RS_Debug::D_NOTHING, "    %d Debugging", RS_Debug::D_DEBUGGING);
+                    return 0;
+                }
+                case '0' + RS_Debug::D_NOTHING : {
+                    RS_DEBUG->setLevel(RS_Debug::D_NOTHING);
+                    break;
+                }
+                case '0' + RS_Debug::D_CRITICAL : {
+                    RS_DEBUG->setLevel(RS_Debug::D_CRITICAL);
+                    break;
+                }
+                case '0' + RS_Debug::D_ERROR : {
+                    RS_DEBUG->setLevel(RS_Debug::D_ERROR);
+                    break;
+                }
+                case '0' + RS_Debug::D_WARNING : {
+                    RS_DEBUG->setLevel(RS_Debug::D_WARNING);
+                    break;
+                }
+                case '0' + RS_Debug::D_NOTICE : {
+                    RS_DEBUG->setLevel(RS_Debug::D_NOTICE);
+                    break;
+                }
+                case '0' + RS_Debug::D_INFORMATIONAL : {
+                    RS_DEBUG->setLevel(RS_Debug::D_INFORMATIONAL);
+                    break;
+                }
+                case '0' + RS_Debug::D_DEBUGGING : {
+                    RS_DEBUG->setLevel(RS_Debug::D_DEBUGGING);
+                    break;
+                }
+                default : {
+                    RS_DEBUG->setLevel(RS_Debug::D_DEBUGGING);
+                    break;
+                }
+            }
+
         }
     }
     RS_DEBUG->print("param 0: %s", argv[0]);
@@ -241,17 +242,12 @@ int main(int argc, char** argv)
         RS_DEBUG->print("main: show initial config dialog: OK");
     }
 
-    auto splash = new QSplashScreen;
+    auto splash = std::make_unique<QSplashScreen>();
 
     bool show_splash = settings.value("Startup/ShowSplash", 1).toBool();
 
     if (show_splash){
-        QPixmap pixmap(":/main/splash_librecad.png");
-        splash->setPixmap(pixmap);
-        splash->setAttribute(Qt::WA_DeleteOnClose);
-        splash->show();
-        splash->showMessage(QObject::tr("Loading.."),
-                            Qt::AlignRight|Qt::AlignBottom, Qt::black);
+        updateSplash(splash);
         app.processEvents();
         RS_DEBUG->print("main: splashscreen: OK");
     }
@@ -296,22 +292,24 @@ int main(int argc, char** argv)
     }
     settings.endGroup();
 
-    if (!first_load)
+    if (!first_load) {
         restoreWindowGeometry(appWin, settings);
+    }
 
     bool maximize = settings.value("Startup/Maximize", 0).toBool();
 
-    if (maximize || first_load)
+    if (maximize || first_load) {
         appWin.showMaximized();
-    else
+    }
+    else {
         appWin.show();
+    }
 
     RS_DEBUG->print("main: set focus");
     appWin.setFocus();
     RS_DEBUG->print("main: creating main window: OK");
 
-    if (show_splash)
-    {
+    if (show_splash){
         RS_DEBUG->print("main: updating splash");
         splash->raise();
         splash->showMessage(QObject::tr("Loading..."),
@@ -335,50 +333,58 @@ int main(int argc, char** argv)
     bool reopenLastFiles;
     QString lastFiles;
     QString activeFile;
-    LC_GROUP_GUARD("Startup");
+    LC_GROUP("Startup");
     {
         reopenLastFiles = LC_GET_BOOL("OpenLastOpenedFiles");
         lastFiles = LC_GET_STR("LastOpenFilesList", "");
         activeFile = LC_GET_STR("LastOpenFilesActive", "");
-    }
+        bool checkForNewVersion = LC_GET_BOOL("CheckForNewVersions", true);
 
-    if (reopenLastFiles && fileList.isEmpty() && !lastFiles.isEmpty()){
-        foreach(const QString& filename, lastFiles.split(";")) {
-            if (!filename.isEmpty() && QFileInfo::exists(filename))
-                fileList << filename;
+        if (reopenLastFiles && fileList.isEmpty() && !lastFiles.isEmpty()) {
+                foreach(const QString &filename, lastFiles.split(";")) {
+                    if (!filename.isEmpty() && QFileInfo::exists(filename))
+                        fileList << filename;
+                }
+        }
+
+        bool files_loaded = false;
+        for (QStringList::Iterator it = fileList.begin(); it != fileList.end(); ++it) {
+            if (show_splash) {
+                splash->showMessage(QObject::tr("Loading File %1..")
+                                        .arg(QDir::toNativeSeparators(*it)),
+                                    Qt::AlignRight | Qt::AlignBottom, Qt::black);
+                qApp->processEvents();
+            }
+            appWin.slotFileOpen(*it);
+            files_loaded = true;
+        }
+
+        if (reopenLastFiles) {
+            appWin.activateWindowWithFile(activeFile);
+        }
+        RS_DEBUG->print("main: loading files: OK");
+
+        if (!files_loaded) {
+            appWin.slotFileNewNew();
+        }
+
+        if (show_splash) {
+            splash->finish(&appWin);
+            splash.release();
+        }
+
+
+        if (checkForNewVersion) {
+            appWin.checkForNewVersion();
         }
     }
-
-    bool files_loaded = false;
-    for (QStringList::Iterator it = fileList.begin(); it != fileList.end(); ++it ) {
-        if (show_splash){
-            splash->showMessage(QObject::tr("Loading File %1..")
-                    .arg(QDir::toNativeSeparators(*it)),
-            Qt::AlignRight|Qt::AlignBottom, Qt::black);
-            qApp->processEvents();
-        }
-        appWin.slotFileOpen(*it);
-        files_loaded = true;
-    }
-
-    if (reopenLastFiles){
-        appWin.activateWindowWithFile(activeFile);
-    }
-    RS_DEBUG->print("main: loading files: OK");
-
-    if (!files_loaded) {
-        appWin.slotFileNewNew();
-    }
-
-    if (show_splash)
-        splash->finish(&appWin);
-    else
-        delete splash;
-
+    LC_GROUP_END();
     if (first_load)
         settings.setValue("Startup/FirstLoad", 0);
 
     RS_DEBUG->print("main: entering Qt event loop");
+
+    QCoreApplication::processEvents();
 
     int return_code = app.exec();
 
@@ -390,21 +396,18 @@ int main(int argc, char** argv)
     return return_code;
 }
 
-
 /**
  * Handles command line arguments that might not require a GUI.
  *
  * @return list of files to load on startup.
  */
-QStringList handleArgs(int argc, char** argv, const QList<int>& argClean)
-{
+QStringList handleArgs(int argc, char** argv, const QList<int>& argClean){
     RS_DEBUG->print("main: handling args..");
     QStringList ret;
 
     bool doexit = false;
 
-    for (int i=1; i<argc; i++)
-    {
+    for (int i=1; i<argc; i++)    {
         if(argClean.indexOf(i)>=0) continue;
         if (!QString(argv[i]).startsWith("-"))
         {
@@ -412,37 +415,93 @@ QStringList handleArgs(int argc, char** argv, const QList<int>& argClean)
             QFileInfo(QFile::decodeName(argv[i])).absoluteFilePath());
             ret.append(fname);
         }
-        else if (QString(argv[i])=="--exit")
-        {
+        else if (QString(argv[i])=="--exit")        {
             doexit = true;
         }
     }
-    if (doexit)
-    {
+    if (doexit)    {
         exit(0);
     }
     RS_DEBUG->print("main: handling args: OK");
     return ret;
 }
 
-namespace {
-void restoreWindowGeometry(QC_ApplicationWindow& appWin, QSettings& settings)
+QString LCReleaseLabel()
 {
-    settings.beginGroup("Geometry");
-    auto geometryB64 = settings.value("/WindowGeometry").toString().toUtf8();
-    auto geometry = QByteArray::fromBase64(geometryB64, QByteArray::Base64Encoding);
-    if (!geometry.isEmpty()) {
-        appWin.restoreGeometry(geometry);
-    } else {
-        // fallback
-        int windowWidth = settings.value("WindowWidth", 1024).toInt();
-        int windowHeight = settings.value("WindowHeight", 1024).toInt();
-        int windowX = settings.value("WindowX", 32).toInt();
-        int windowY = settings.value("WindowY", 32).toInt();
-        appWin.resize(windowWidth, windowHeight);
-        appWin.move(windowX, windowY);
+    QString version{XSTR(LC_VERSION)};
+    QString label;
+    const std::map<QString, QString> labelMap = {
+        {"rc", QObject::tr("Release Candidate")},
+        {"beta", QObject::tr("BETA")},
+        {"alpha", QObject::tr("ALPHA")}
+    };
+    for (const auto& [key, value]: labelMap) {
+        if (version.contains(key, Qt::CaseInsensitive)) {
+            label=value;
+            break;
+        }
+    }
+    return label;
+}
+
+namespace {
+    void restoreWindowGeometry(QC_ApplicationWindow& appWin, QSettings& settings)
+    {
+        settings.beginGroup("Geometry");
+        auto geometryB64 = settings.value("/WindowGeometry").toString().toUtf8();
+        auto geometry = QByteArray::fromBase64(geometryB64, QByteArray::Base64Encoding);
+        if (!geometry.isEmpty()) {
+            appWin.restoreGeometry(geometry);
+        } else {
+            // fallback
+            int windowWidth = settings.value("WindowWidth", 1024).toInt();
+            int windowHeight = settings.value("WindowHeight", 1024).toInt();
+            int windowX = settings.value("WindowX", 32).toInt();
+            int windowY = settings.value("WindowY", 32).toInt();
+            appWin.resize(windowWidth, windowHeight);
+            appWin.move(windowX, windowY);
+        }
+
+        settings.endGroup();
     }
 
-    settings.endGroup();
-}
+
+// Update Splash image to show "ALPHA", "BETA", and "Release Candidate"
+QPixmap getSplashImage(const std::unique_ptr<QSplashScreen>& splash, const QString& label);
+// Update Splash Screen
+    void updateSplash(const std::unique_ptr<QSplashScreen>& splash)
+    {
+        if (splash == nullptr)
+            return;
+
+    QString label = LCReleaseLabel();
+        if (label.isEmpty())
+            return;
+
+        QPixmap splashImage = getSplashImage(splash, label);
+        splash->setPixmap(splashImage);
+        splash->setAttribute(Qt::WA_DeleteOnClose);
+        splash->show();
+        splash->showMessage(QObject::tr("Loading.."),
+                            Qt::AlignRight|Qt::AlignBottom, Qt::black);
+    }
+
+// Update Splash image to show "ALPHA", "BETA", and "Release Candidate"
+    QPixmap getSplashImage(const std::unique_ptr<QSplashScreen>& splash, const QString& label)
+    {
+        if (splash == nullptr)
+            return {};
+
+        QPixmap pixmapSplash(":/main/splash_librecad.png");
+        QPainter painter(&pixmapSplash);
+        const double factorX = pixmapSplash.width()/542.;
+        const double factorY = pixmapSplash.height()/337.;
+        painter.setPen(QColor(255, 0, 0, 128));
+        QRectF labelRect{QPointF{280.*factorX, 130.*factorY}, QPointF{480.*factorX, 170.*factorY}};
+        QFont font;
+        font.setPixelSize(int(labelRect.height()) - 2);
+        painter.setFont(font);
+        painter.drawText(labelRect,Qt::AlignRight, label);
+        return pixmapSplash;
+    }
 }

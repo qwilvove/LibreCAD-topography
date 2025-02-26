@@ -19,13 +19,15 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
+#include <QMouseEvent>
 
-#include "rs_math.h"
-#include "rs_debug.h"
-#include "rs_graphicview.h"
-#include "rs_preview.h"
 #include "lc_actioncircledimbase.h"
 #include "qg_dimoptions.h"
+#include "rs_debug.h"
+#include "rs_graphicview.h"
+#include "rs_math.h"
+#include "rs_preview.h"
+
 
 LC_ActionCircleDimBase::LC_ActionCircleDimBase(const char* name, RS_EntityContainer &container, RS_GraphicView &graphicView, RS2::ActionType type)
   : RS_ActionDimension(name, container,  graphicView)
@@ -37,33 +39,26 @@ LC_ActionCircleDimBase::LC_ActionCircleDimBase(const char* name, RS_EntityContai
 
 LC_ActionCircleDimBase::~LC_ActionCircleDimBase() = default;
 
-void LC_ActionCircleDimBase::trigger() {
-    RS_ActionDimension::trigger();
-
+void LC_ActionCircleDimBase::doTrigger() {
     if (entity != nullptr) {
         preparePreview(entity, *pos, alternateAngle);
         auto *newEntity = createDim(container);
-        newEntity->setLayerToActive();
-        newEntity->setPenToActive();
+
+        setPenAndLayerToActive(newEntity);
         newEntity->update();
-        container->addEntity(newEntity);
-
-        addToDocumentUndoable(newEntity);
-
-        graphicView->redraw(RS2::RedrawDrawing);
+        undoCycleAdd(newEntity);
         alternateAngle = false;
         RS_Snapper::finish();
-
     } else {
         RS_DEBUG->print("RS_ActionDimDiametric::trigger: Entity is nullptr\n");
     }
 }
 
 void LC_ActionCircleDimBase::mouseMoveEvent(QMouseEvent *e) {
-    RS_DEBUG->print("LC_ActionCircleDimBase::mouseMoveEvent begin");
-    RS_Vector snap = snapPoint(e);
     deleteHighlights();
     deletePreview();
+    RS_DEBUG->print("LC_ActionCircleDimBase::mouseMoveEvent begin");
+    RS_Vector snap = snapPoint(e);
     switch (getStatus()) {
         case SetEntity: {
             RS_Entity *en = catchEntity(e, RS2::ResolveAll);

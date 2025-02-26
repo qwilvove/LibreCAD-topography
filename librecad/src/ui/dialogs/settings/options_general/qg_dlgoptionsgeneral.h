@@ -40,25 +40,27 @@ public:
     QG_DlgOptionsGeneral(QWidget* parent = nullptr);
     ~QG_DlgOptionsGeneral() override = default;
     static int current_tab;
-    void set_color(QComboBox* combo, QColor custom);
 
-public slots:
-    virtual void setRestartNeeded();
-    virtual void ok();
-    void onAutoBackupChanged(int state);
-    void on_cbVisualizeHoveringClicked();
-    void on_cbPersistentDialogsClicked();
 
 protected slots:
+    void ok();
     void languageChange();
     void setTemplateFile();
     void setLibraryPath();
-
-private slots:
+    void setRestartNeeded();
+    void onAutoBackupChanged(int state);
+    void on_cbVisualizeHoveringClicked();
+    void on_cbPersistentDialogsClicked();
+    void on_cbGridExtendAxisLinesToggled();
+    void on_cbClassicStatusBarToggled();
+    void onCheckNewVersionChanged();
+    void onTabCloseButtonChanged();
     void on_tabWidget_currentChanged(int index);
     void on_pb_background_clicked();
-    void on_pb_grid_clicked();
-    void on_pb_meta_clicked();
+    void on_pb_gridPoints_clicked();
+    void on_pb_gridLines_clicked();
+    void on_pb_metaPoints_clicked();
+    void on_pb_metaLines_clicked();
     void on_pb_selected_clicked();
     void on_pb_highlighted_clicked();
     void on_pb_start_clicked();
@@ -67,17 +69,41 @@ private slots:
     void on_pb_clear_all_clicked();
     void on_pb_clear_geometry_clicked();
     void on_pb_snap_color_clicked();
+    void on_pb_snap_lines_color_clicked();
     void on_pb_relativeZeroColor_clicked();
     void on_pb_previewRefColor_clicked();
     void on_pb_previewRefHighlightColor_clicked();
     void on_rbRelSize_toggled(bool checked);
+    void on_pb_axis_X_clicked();
+    void on_pb_axis_Y_clicked();
+    void on_pbcbInfoOverlayAbsolutePositionColor_clicked();
+    void on_pbInfoOverlaySnapColor_clicked();
+    void on_pbInfoOverlayRelativeColor_clicked();
+    void on_pbInfoOverlayCommandPromptColor_clicked();
     void setVariableFile();
     void setFontsFolder();
     void setTranslationsFolder();
     void setHatchPatternsFolder();
     void setShortcutsMappingsFoler();
+    bool checkRestartNeeded();
+    void on_pbOverlayBoxLine_clicked();
+    void on_pbOverlayBoxFill_clicked();
+    void on_pbOverlayBoxLineInverted_clicked();
+    void on_pbOverlayBoxFillInverted_clicked();
+
+    void onInfoCursorPromptChanged();
+    void onInfoCursorAbsolutePositionChanged();
+    void onInfoCursorRelativeChanged();
+    void onInfoCursorSnapChanged();
+
+    void set_color(QComboBox* combo, QColor custom);
 private:
     bool restartNeeded=false;
+
+    QString originalLibraryPath;
+    bool originalUseClassicToolbar;
+    bool originalAllowsMenusTearOff;
+
     void init();
     void initComboBox(QComboBox* cb, const QString& text);
     void destroy();
@@ -85,6 +111,8 @@ private:
     void updateLPtSzUnits();
     void saveReferencePoints();
     QString selectFolder(const char* title);
+
+
 };
 
 #endif // QG_DLGOPTIONSGENERAL_H

@@ -52,23 +52,18 @@ void RS_ActionModifyRotate2::init(int status) {
     LC_ActionModifyBase::init(status);
 }
 
-void RS_ActionModifyRotate2::trigger(){
+void RS_ActionModifyRotate2::doTrigger(bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyRotate2::trigger()");
-
     RS_Modification m(*container, graphicView);
-    m.rotate2(*data, selectedEntities,false);
-
+    m.rotate2(*data, selectedEntities,false, keepSelected);
     finish(false);
-
-    updateSelectionWidget();
 }
 
 void RS_ActionModifyRotate2::mouseMoveEventSelected(QMouseEvent *e) {
-    RS_DEBUG->print("RS_ActionModifyRotate2::mouseMoveEvent begin");
-
+    deletePreview();
     RS_Vector mouse = snapPoint(e);
     int status = getStatus();
-    deletePreview();
+    RS_DEBUG->print("RS_ActionModifyRotate2::mouseMoveEvent begin");
     switch (status) {
         case SetReferencePoint1: {
             trySnapToRelZeroCoordinateEvent(e);
@@ -79,12 +74,21 @@ void RS_ActionModifyRotate2::mouseMoveEventSelected(QMouseEvent *e) {
                 mouse = getSnapAngleAwarePoint(e, data->center1, mouse, true);
                 data->center2 = mouse;
                 RS_Modification m(*preview, graphicView, false);
-                m.rotate2(*data, selectedEntities, true);
+                m.rotate2(*data, selectedEntities, true, false);
 
                 if (showRefEntitiesOnPreview) {
                     previewRefPoint(data->center1);
                     previewRefLine(data->center1, mouse);
                     previewRefPointsForMultipleCopies(mouse);
+                }
+
+                if (isInfoCursorForModificationEnabled()){
+                    LC_InfoMessageBuilder msg(tr("Rotating Twice"));
+                    msg.add(tr("Center 1:"), formatVector(data->center1));
+                    msg.add(tr("Angle 1:"), formatAngle(data->angle1));
+                    msg.add(tr("Center 2:"), formatVector(data->center2));
+                    msg.add(tr("Angle 2:"), formatAngle(data->angle2));
+                    appendInfoCursorZoneMessage(msg.toString(), 2, false);
                 }
             }
             break;
@@ -92,9 +96,9 @@ void RS_ActionModifyRotate2::mouseMoveEventSelected(QMouseEvent *e) {
         default:
             break;
     }
-    drawPreview();
 
     RS_DEBUG->print("RS_ActionModifyRotate2::mouseMoveEvent end");
+    drawPreview();
 }
 
 void RS_ActionModifyRotate2::mouseLeftButtonReleaseEventSelected(int status, QMouseEvent *e) {
@@ -135,7 +139,7 @@ void RS_ActionModifyRotate2::onCoordinateEvent(int status, [[maybe_unused]]bool 
         case SetReferencePoint2: {
             data->center2 = pos;
 //            setStatus(ShowDialog);
-            doTrigger();
+            doPerformTrigger();
             break;
         }
         default:
@@ -143,7 +147,7 @@ void RS_ActionModifyRotate2::onCoordinateEvent(int status, [[maybe_unused]]bool 
     }
 }
 
-void RS_ActionModifyRotate2::doTrigger() {
+void RS_ActionModifyRotate2::doPerformTrigger() {
     if (isShowModifyActionDialog()) {
         if (RS_DIALOGFACTORY->requestRotate2Dialog(*data)) {
             updateOptions();
@@ -159,7 +163,7 @@ void RS_ActionModifyRotate2::doTrigger() {
 }
 
 void RS_ActionModifyRotate2::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select for two axis rotation"), MOD_CTRL(tr("Rotate 2 Axis immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select for two axis rotation  (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Rotate 2 Axis immediately after selection")));
 }
 
 void RS_ActionModifyRotate2::updateMouseButtonHintsForSelected(int status) {

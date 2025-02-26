@@ -58,13 +58,9 @@ RS_Selection::RS_Selection(
 void RS_Selection::selectSingle(RS_Entity *e){
     if (e && (!(e->getLayer() && e->getLayer()->isLocked()))){
 
-        if (graphicView) graphicView->deleteEntity(e);
-
         e->toggleSelected();
 
         if (graphicView){
-            graphicView->drawEntity(e);
-
             if (e->isSelected() && (e->rtti() == RS2::EntityInsert)){
                 const RS_Block *selectedBlock = dynamic_cast<RS_Insert *>(e)->getBlockForInsert();
 
@@ -77,6 +73,7 @@ void RS_Selection::selectSingle(RS_Entity *e){
             } else {
                 QG_DIALOGFACTORY->displayBlockName("", false);
             }
+            graphicView->redraw();
         }
     }
 }
@@ -135,7 +132,7 @@ void RS_Selection::invertSelection(){
  *
  * @param v1 First corner of the window to select.
  * @param v2 Second corner of the window to select.
- * @param select true: select, false: deselect
+ * @param select true: select, false: invertSelectionOperation
  */
 void RS_Selection::selectWindow(
     enum RS2::EntityType typeToSelect, const RS_Vector &v1, const RS_Vector &v2,
@@ -148,24 +145,29 @@ void RS_Selection::selectWindow(
     }
 }
 
+void RS_Selection::selectWindow(const QList<RS2::EntityType> &typesToSelect, const RS_Vector &v1, const RS_Vector &v2,
+    bool select, bool cross){
+
+    container->selectWindow(typesToSelect, v1, v2, select, cross);
+
+    if (graphicView){
+        graphicView->redraw();
+    }
+}
+
 /**
  * Selects all entities that are intersected by the given line.
  *
  * @param v1 Startpoint of line.
  * @param v2 Endpoint of line.
- * @param select true: select, false: deselect
+ * @param select true: select, false: invertSelectionOperation
  */
-void RS_Selection::selectIntersected(
-    const RS_Vector &v1, const RS_Vector &v2,
-    bool select){
-
+void RS_Selection::selectIntersected(const RS_Vector &v1, const RS_Vector &v2, bool select){
     RS_Line line{v1, v2};
     bool inters;
 
     for (auto e: *container) { // fixme - iteration over ALL entities, limit area
-
         if (e && e->isVisible()){
-
             inters = false;
 
             // select containers / groups:
@@ -193,17 +195,12 @@ void RS_Selection::selectIntersected(
             }
 
             if (inters){
-                if (graphicView){
-                    graphicView->deleteEntity(e);
-                }
-
                 e->setSelected(select);
-
-                if (graphicView){
-                    graphicView->drawEntity(e);
-                }
             }
         }
+    }
+    if (graphicView){
+        graphicView->redraw();
     }
 }
 
@@ -229,13 +226,7 @@ void RS_Selection::selectContour(RS_Entity *e){
     bool found = false;
 
     // (de)select 1st entity:
-    if (graphicView){
-        graphicView->deleteEntity(e);
-    }
     e->setSelected(select);
-    if (graphicView){
-        graphicView->drawEntity(e);
-    }
 
     do {// fixme - hm...iterating over all entities of drawing in cycle???? too nice for me...
         found = false;
@@ -274,25 +265,21 @@ void RS_Selection::selectContour(RS_Entity *e){
                 }
 
                 if (doit){
-                    if (graphicView){
-                        graphicView->deleteEntity(ae);
-                    }
                     ae->setSelected(select);
-                    if (graphicView){
-                        graphicView->drawEntity(ae);
-                    }
                     found = true;
                 }
             }
         }
     } while (found);
+    if (graphicView){
+        graphicView->redraw();
+    }
 }
 
 /**
  * Selects all entities on the given layer.
  */
 void RS_Selection::selectLayer(RS_Entity *e){
-
     if (e == nullptr)
         return;
 
@@ -309,7 +296,6 @@ void RS_Selection::selectLayer(RS_Entity *e){
  * Selects all entities on the given layer.
  */
 void RS_Selection::selectLayer(const QString &layerName, bool select){
-
     for (auto en: *container) {
         // fixme - review and make more efficient... why check for locking upfront? Why just not use layer pointers but names?
         if (en && en->isVisible() &&
@@ -319,14 +305,11 @@ void RS_Selection::selectLayer(const QString &layerName, bool select){
             RS_Layer *l = en->getLayer(true);
 
             if (l != nullptr && l->getName() == layerName){
-                if (graphicView){
-                    graphicView->deleteEntity(en);
-                }
                 en->setSelected(select);
-                if (graphicView){
-                    graphicView->drawEntity(en);
-                }
             }
         }
+    }
+    if (graphicView){
+        graphicView->redraw();
     }
 }

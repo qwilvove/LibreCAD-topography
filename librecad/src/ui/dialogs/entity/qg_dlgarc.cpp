@@ -28,6 +28,7 @@
 #include "rs_arc.h"
 #include "rs_graphic.h"
 #include "rs_math.h"
+#include "rs_settings.h"
 
 /*
  *  Constructs a QG_DlgArc as a child of 'parent', with the
@@ -62,19 +63,20 @@ void QG_DlgArc::setArc(RS_Arc& a) {
 
     wPen->setPen(arc, lay, "Pen");
 
-    QString s;
-    s.setNum(arc->getCenter().x, 'g', 10);
-    leCenterX->setText(s);
-    s.setNum(arc->getCenter().y, 'g', 10);
-    leCenterY->setText(s);
-    s.setNum(arc->getRadius(), 'g', 10);
-    leRadius->setText(s);
-    s.setNum(RS_Math::rad2deg(arc->getAngle1()), 'g', 10);
-    leAngle1->setText(s);
-    s.setNum(RS_Math::rad2deg(arc->getAngle2()), 'g', 10);
-    leAngle2->setText(s);
+    leCenterX->setText(asString(arc->getCenter().x));
+    leCenterY->setText(asString(arc->getCenter().y));
+    leRadius->setText(asString(arc->getRadius()));
+    leAngle1->setText(asStringAngleDeg(arc->getAngle1()));
+    leAngle2->setText(asStringAngleDeg(arc->getAngle2()));
+
     cbReversed->setChecked(arc->isReversed());
-    lId->setText(QString("ID: %1").arg(arc->getId()));
+    // fixme - sand - refactor to common function
+    if (LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false)){
+        lId->setText(QString("ID: %1").arg(arc->getId()));
+    }
+    else{
+        lId->setVisible(false);
+    }
 }
 
 void QG_DlgArc::updateArc() {

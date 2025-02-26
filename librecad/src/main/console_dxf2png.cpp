@@ -43,7 +43,7 @@
 #include "rs_fontlist.h"
 #include "rs_graphic.h"
 #include "rs_math.h"
-#include "rs_painterqt.h"
+#include "rs_painter.h"
 #include "rs_patternlist.h"
 #include "rs_settings.h"
 #include "rs_staticgraphicview.h"
@@ -292,7 +292,7 @@ bool slotFileExport(RS_Graphic* graphic, const QString& name,
     }
 
     // set painter with buffer
-    RS_PainterQt painter(buffer);
+    RS_Painter painter(buffer);
 
     if (black) {
         painter.setBackground( Qt::black);
@@ -310,6 +310,8 @@ bool slotFileExport(RS_Graphic* graphic, const QString& name,
     painter.eraseRect(0,0, size.width(), size.height());
 
     RS_StaticGraphicView gv(size.width(), size.height(), &painter, &borders);
+    gv.updateSettings(graphic);
+
     if (black) {
         gv.setBackground(Qt::black);
     } else {

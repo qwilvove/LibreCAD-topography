@@ -28,6 +28,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "rs_math.h"
 #include "rs_vector.h"
 
+namespace {
+
+// Compare by coordinates
+// points within RS_TOLERANCE distance are considered equal
+bool compareCoordinates(const RS_Vector& p0, const RS_Vector& p1)
+{
+    return p0.distanceTo(p1) >= RS_TOLERANCE && (
+               p0.x < p1.x || (p0.x <= p1.x && p0.y < p1.y));
+}
+
+/**
+ * @brief isCounterclockwise v3 - v1, v2 - v1, if ordered as counterclockwise
+ * @param v1
+ * @param v2
+ * @param v3
+ * @return
+ */
+bool isCounterClockwise (const RS_Vector& v1, const RS_Vector& v2, const RS_Vector& v3)
+{
+    double res = RS_Vector::crossP((v2 - v1).normalized(), (v3 - v1).normalized()).z;
+
+    return res >= RS_TOLERANCE;
+}
+}
+
 /**
  * Calculates point located on specified distance and angle from given starting point
  * @param startPoint start point
@@ -342,4 +367,161 @@ RS_Vector LC_LineMath::getIntersectionLineLine(const RS_Vector& s1, const RS_Vec
     RS_Line line2{nullptr, {s2, e2}};
     RS_VectorSolutions sol = RS_Information::getIntersectionLineLine(&line1, &line2);
     return sol.empty() ? RS_Vector{false} : sol.at(0);
+}
+
+RS_Vector LC_LineMath::getIntersectionLineLineFast(const RS_Vector& s1, const RS_Vector& e1, const RS_Vector& s2, const RS_Vector& e2) {
+
+    RS_Vector ret;
+
+    double num = ((e2.x - s2.x) * (s1.y - s2.y) - (e2.y - s2.y) * (s1.x - s2.x));
+    double div = ((e2.y - s2.y) * (e1.x - s1.x) - (e2.x - s2.x) * (e1.y - s1.y));
+
+    double angle1 = s1.angleTo(e1);
+    double angle2 = s2.angleTo(e2);
+
+    if (fabs(div)>RS_TOLERANCE &&
+        fabs(remainder(angle1-angle2, M_PI))>=RS_TOLERANCE*10.) {
+        double u = num / div;
+
+        double xs = s1.x + u * (e1.x - s1.x);
+        double ys = s1.y + u * (e1.y - s1.y);
+        ret = RS_Vector(xs, ys);
+    }
+    else {
+        // lines are parallel
+        ret = RS_Vector(false);
+    }
+    return ret;
+}
+
+RS_Vector LC_LineMath::getIntersectionInfiniteLineLineFast(const RS_Vector& s1, const RS_Vector& e1, const RS_Vector& s2, const RS_Vector& e2, double offsetX, double offsetY) {
+
+    RS_Vector ret;
+
+    double num = ((e2.x - s2.x) * (s1.y - s2.y) - (e2.y - s2.y) * (s1.x - s2.x));
+    double div = ((e2.y - s2.y) * (e1.x - s1.x) - (e2.x - s2.x) * (e1.y - s1.y));
+
+    double angle1 = s1.angleTo(e1);
+    double angle2 = s2.angleTo(e2);
+
+    if (fabs(div)>RS_TOLERANCE &&
+        fabs(remainder(angle1-angle2, M_PI))>=RS_TOLERANCE*10.) {
+        double u = num / div;
+
+        double xs = s1.x + u * (e1.x - s1.x);
+        double ys = s1.y + u * (e1.y - s1.y);
+        // check that intersection is within finite line, here we expect that start/end is properly orderred (from min to max)
+        if ((xs >= (s2.x-offsetX)) && (xs <= (e2.x+offsetX)) && (ys >= (s2.y-offsetY)) && (ys <= (e2.y+offsetY))){
+            ret = RS_Vector(xs, ys);
+        }
+        else {
+            ret = RS_Vector(false);
+        }
+    }
+    else {
+        // lines are parallel
+        ret = RS_Vector(false);
+    }
+    return ret;
+}
+
+
+
+bool LC_LineMath::hasIntersectionLineRect(const RS_Vector& lineStart, const RS_Vector& lineEnd, const RS_Vector& rectMin, const RS_Vector& rectMax) {
+    RS_Vector direction =  lineEnd - lineStart;
+    // fixme - rewrite to faster implementation as it is used in rendering pipeline!!
+    // here we check intersection of infinite line and two diagonals of given rect with edges parallel to axis.
+
+    if (hasLineIntersection(lineStart, direction, rectMin, rectMax)){ // intersection with first diagonal
+        return true;
+    }
+    else{
+        return hasLineIntersection(lineStart, direction, {rectMin.x, rectMax.y}, {rectMax.x, rectMin.y}); // intersection with second diagnonal
+    }
+
+}
+
+/*
+ * check whether there is intersection of infinite line and segment
+ */
+bool LC_LineMath::hasLineIntersection(RS_Vector p0, RS_Vector direction, RS_Vector p2, RS_Vector p3)
+{
+    RS_Vector P = p2;
+    RS_Vector R = p3 - p2;
+    RS_Vector Q = p0;
+    RS_Vector S = direction;
+
+    RS_Vector N = RS_Vector(S.y, -S.x);
+//    float t = dot(Q-P, N) / dot(R, N);
+
+    RS_Vector tmp = Q-P;
+    double t = tmp.dotP(N) / R.dotP(N);
+
+    if (t >= 0.0 && t <= 1.0){
+        return true;
+//        return P + R * t;
+    }
+    return false;
+//    return RS_Vector(-1.0);
+}
+
+
+/**
+ * @brief convexHull - find the convex hull by Graham's scan
+ * @param points - input points
+ * @return - the convex hull found
+ */
+RS_VectorSolutions LC_LineMath::convexHull(const RS_VectorSolutions& points)
+{
+    RS_VectorSolutions sol = points;
+    // ignore invalid points
+    auto it = std::remove_if(sol.begin(), sol.end(), [](const RS_Vector& p) {
+        return ! p.valid;});
+    sol = {{sol.begin(), it}};
+
+    if (sol.size() <= 1)
+        return sol;
+
+    // find the left-most and lowest corner
+    std::sort(sol.begin(), sol.end(), compareCoordinates);
+
+    // avoid duplicates
+    RS_VectorSolutions hull{{sol.at(0)}};
+    for(size_t i = 1; i < sol.size(); ++i) {
+        if (hull.back().distanceTo(sol.at(i)) > RS_TOLERANCE)
+            hull.push_back(sol.at(i));
+    }
+
+    if (hull.size() <= 2)
+        return hull;
+
+    // soft by the angle to the corner
+    std::sort(hull.begin() + 1, hull.end(),
+              [lowerLeft=hull.at(0)](const RS_Vector& lhs, const RS_Vector& rhs) {
+                  return lowerLeft.angleTo(lhs) < lowerLeft.angleTo(rhs);
+              });
+
+    // keep the farthest for the same angle
+    sol = {hull.at(0), hull.at(1)};
+    for (size_t i = 2; i < hull.size(); ++i) {
+        const double angle0 = sol.at(0).angleTo(sol.back());
+        const double angle1 = sol.at(0).angleTo(hull.at(i));
+        if (RS_Math::equal(angle0, angle1, RS_TOLERANCE)) {
+            if (sol.at(0).distanceTo(hull.at(i)) < sol.at(0).distanceTo(sol.back()))
+                sol.back() = hull.at(i);
+        } else {
+            sol.push_back(hull.at(i));
+        }
+    }
+
+    // only keep left turns
+    hull = {sol.at(0), sol.at(1)};
+    for (size_t i = 2; i < sol.size(); ++i) {
+        const size_t j = hull.size() - 1;
+        if (isCounterClockwise(hull.at(j-1), hull.at(j), sol.at(i)))
+            hull.push_back(sol.at(i));
+        else
+            hull.at(j) = sol.at(i);
+    }
+    return hull;
 }

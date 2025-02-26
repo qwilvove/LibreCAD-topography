@@ -80,8 +80,9 @@ EntityTypeList LC_ActionDrawSliceDivide::getCatchEntityTypeList() const{
  */
 void LC_ActionDrawSliceDivide::doPreparePreviewEntities([[maybe_unused]]QMouseEvent *e, [[maybe_unused]]RS_Vector &snap, QList<RS_Entity *> &list, [[maybe_unused]]int status){
     ticksData.clear();
+    deleteSnapper();
     EntityTypeList catchEntityTypes = getCatchEntityTypeList();
-    RS_Entity *en = catchModifiableEntity(e, catchEntityTypes);
+    RS_Entity *en = catchModifiableEntityOnPreview(e, catchEntityTypes);
     int optionsMode = SELECTION_NONE;
     if (en != nullptr){
         int rtti = en->rtti();
@@ -216,7 +217,7 @@ void LC_ActionDrawSliceDivide::doPrepareTriggerEntities(QList<RS_Entity *> &list
 
     // delete original entity, if necessary
     if (entityToDelete != nullptr){
-        deleteEntityUndoable(entityToDelete);
+        undoableDeleteEntity(entityToDelete);
     }
 
     bool hasTickLength = LC_LineMath::isMeaningful(tickLength);
@@ -228,8 +229,7 @@ void LC_ActionDrawSliceDivide::doPrepareTriggerEntities(QList<RS_Entity *> &list
             if (tick.isVisible){
                 auto *line = new RS_Line(container, tick.tickLine);
                 // for ticks, we'll always use current pen and layer
-                line->setPenToActive();
-                line->setLayerToActive();
+                setPenAndLayerToActive(line);
                 list<<line;
             }
         }
@@ -284,7 +284,7 @@ bool LC_ActionDrawSliceDivide::checkShouldDivideEntity(const RS_Entity *e, const
 void LC_ActionDrawSliceDivide::createLineSegments(RS_Line *pLine, QList<RS_Entity *> &list){
     uint count = ticksData.size();
     if (count > 2){ // we always set 2 ticks for edges
-        RS_Pen originalPen = pLine->getPen();
+        RS_Pen originalPen = pLine->getPen(false);
         RS_Layer *originalLayer = pLine->getLayer();
 
         for (uint i = 1; i < count; i++) {
@@ -336,7 +336,7 @@ void LC_ActionDrawSliceDivide::doCreateArcSegments(RS_Entity *pArc, const RS_Vec
     size_t count = ticksData.size();
 
     if (count > 2){ // we always set 2 ticks for edges
-        RS_Pen originalPen = pArc->getPen();
+        RS_Pen originalPen = pArc->getPen(false);
         RS_Layer* originalLayer = pArc->getLayer();
 
 

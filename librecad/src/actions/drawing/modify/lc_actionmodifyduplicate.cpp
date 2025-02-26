@@ -19,12 +19,16 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
+
 #include <QList>
-#include "rs_math.h"
+
 #include "lc_linemath.h"
 #include "lc_duplicateoptions.h"
 #include "lc_actionmodifyduplicate.h"
 #include "lc_abstractactionwithpreview.h"
+
+#include "rs_ellipse.h"
+#include "rs_math.h"
 #include "rs_previewactioninterface.h"
 
 LC_ActionModifyDuplicate::LC_ActionModifyDuplicate(RS_EntityContainer &container, RS_GraphicView &graphicView):
@@ -186,18 +190,24 @@ bool LC_ActionModifyDuplicate::doCheckMayDrawPreview([[maybe_unused]]QMouseEvent
 void LC_ActionModifyDuplicate::doPreparePreviewEntities(QMouseEvent *e, [[maybe_unused]]RS_Vector &snap, QList<RS_Entity *> &list, [[maybe_unused]]int status){
     switch (status){
         case SelectEntity:{
-            RS_Entity *en = catchEntity(e, RS2::ResolveNone);
+            auto en = catchEntity(e, RS2::ResolveNone);
             if (en != nullptr){
                 // highlight original
                 highlightHover(en);
 
                 // handle offset - if it is present, create a clone of snapped entity and display it for preview
                 auto snapForOffset = RS_Vector(false);
-                RS_Vector offset = determineOffset(snapForOffset, getEntityCenterPoint(en));
+                auto offset = determineOffset(snapForOffset, getEntityCenterPoint(en));
                 if (offset.valid){
-                    RS_Entity *clone = en->clone();
+                    auto clone = en->clone();
                     clone->move(offset);
                     list << clone;
+                    if (isInfoCursorForModificationEnabled()){
+                        LC_InfoMessageBuilder msg(tr("Duplicate Offset"));
+                        msg.add(formatRelative(offset));
+                        msg.add(formatRelativePolar(offset));
+                        appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                    }
                 }
             }
             break;
@@ -216,17 +226,23 @@ void LC_ActionModifyDuplicate::doPreparePreviewEntities(QMouseEvent *e, [[maybe_
                 }
                 RS_Vector offset = determineOffset(snapOffset, center);
                 if (offset.valid){
-                    RS_Entity *clone = selectedEntity->clone();
+                    auto clone = selectedEntity->clone();
                     clone->move(offset);
                     list << clone;
                     if (showRefEntitiesOnPreview) {
                         const RS_Vector newCenter = getEntityCenterPoint(clone);
                         previewRefSelectablePoint(newCenter);
-                        RS_EllipseData data = RS_EllipseData();
+                        auto data = RS_EllipseData();
                         data.center = center;
                         data.majorP = RS_Vector(std::abs(offsetX), 0, 0);
                         data.ratio = std::abs(offsetY / offsetX);
                         previewRefEllipse(data);
+                    }
+                    if (isInfoCursorForModificationEnabled()){
+                        LC_InfoMessageBuilder msg(tr("Duplicate Offset"));
+                        msg.add(formatRelative(offset));
+                        msg.add(formatRelativePolar(offset));
+                        appendInfoCursorZoneMessage(msg.toString(), 2, false);
                     }
                 }
             }
@@ -248,7 +264,7 @@ RS_Vector LC_ActionModifyDuplicate::getEntityCenterPoint(const RS_Entity *en) co
 void LC_ActionModifyDuplicate::updateMouseButtonHints(){
     switch (getStatus()){
         case SelectEntity:
-            updateMouseWidgetTRCancel(tr("Select entity to duplicate"), duplicateInplace ? MOD_NONE :  MOD_SHIFT(tr("Interactive Offset")));
+            updateMouseWidgetTRCancel(tr("Select entity to duplicate"), duplicateInplace ? MOD_NONE :  MOD_SHIFT_LC(tr("Interactive Offset")));
             break;
         case SetOffsetDirection:
             updateMouseWidgetTRCancel(tr("Select direction of offset"),MOD_SHIFT_ANGLE_SNAP);

@@ -28,6 +28,9 @@
 #define RS_ACTIONDRAWPOLYLINE_H
 
 #include <memory>
+
+#include "rs_arc.h"
+#include "rs_polyline.h"
 #include "rs_previewactioninterface.h"
 
 namespace mu {
@@ -36,8 +39,8 @@ namespace mu {
 
 class RS_EntityContainer;
 class RS_GraphicView;
-class RS_Polyline;
-struct RS_PolylineData;
+
+
 
 /**
  * This action class can handle user events to draw 
@@ -52,9 +55,9 @@ public:
         Line = 0,
         Tangential = 1,
         TanRad = 2,
-        // TanAng,
+        TanAng = 3,
+        Ang = 4
         // TanRadAng,
-        Ang = 3,
         // RadAngEndp,
         // RadAngCenp
     };
@@ -63,14 +66,10 @@ public:
     ~RS_ActionDrawPolyline() override;
 
     void reset();
-
     void init(int status) override;
-    void trigger() override;
-
     void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     void close();
-
     virtual void undo();
     void setMode(SegmentMode m);
     int getMode() const;
@@ -100,8 +99,48 @@ protected:
     double m_radius = 0.;
     double m_angle = 0.;
     SegmentMode m_mode{};
+    int alternateArc = false;
     int m_reversed = 1;
     bool m_calculatedSegment = false;
+
+    bool prepend = false;
+
+    struct Points {
+
+/**
+ * Line data defined so far.
+ */
+        RS_PolylineData data;
+        RS_ArcData arc_data;
+        /**
+      * Polyline entity we're working on.
+      */
+        RS_Polyline* polyline;
+
+        /**
+      * last point.
+      */
+        RS_Vector point;
+        RS_Vector calculatedEndpoint;
+        /**
+      * Start point of the series of lines. Used for close function.
+      */
+        RS_Vector start;
+
+        /**
+      * Point history (for undo)
+      */
+        QList<RS_Vector> history;
+
+        /**
+      * Bulge history (for undo)
+      */
+        QList<double> bHistory;
+        QString equation;
+    };
+
+    std::unique_ptr<Points> pPoints;
+
     RS2::CursorType doGetMouseCursor(int status) override;
     void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
     void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
@@ -109,13 +148,11 @@ protected:
     QString prepareCommand(RS_CommandEvent *e) const override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
-private:
-    struct Points;
-    std::unique_ptr<Points> pPoints;
-
+    void updateMouseButtonHintsForNextPoint();
     void drawEquation(int numberOfPolylines);
     void setParserExpression(const QString& expression);
     bool getPlottingX(QString command, double& x);
+    void doTrigger() override;
     std::unique_ptr<mu::Parser> m_muParserObject;
 
     double startPointX = 0.;

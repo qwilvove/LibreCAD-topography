@@ -2,6 +2,8 @@
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
 **
+** Copyright (C) librecad.org
+** Copyright (C) 2024 sand1024
 ** Copyright (C) 2018 webmite <ianm.main@gmail.com>
 ** Copyright (C) 2018 A. Stebich (librecad@mail.lordofbikes.de)
 ** Copyright (C) 2010 R. van Twisk (librecad@rvt.dds.nl)
@@ -140,9 +142,11 @@ LC_SnapOptionsWidgetsHolder* QG_DialogFactory::getSnapOptionsHolder(){
     bool useSnapToolbar = LC_GET_ONE_BOOL("Appearance", "showSnapOptionsInSnapToolbar", false);
     if (useSnapToolbar){
         result = snapOptionsWidgetHolderSnapToolbar;
+        snapOptionsWidgetHolderOptionsToolbar->setVisible(false);
     }
     else{
         result = snapOptionsWidgetHolderOptionsToolbar;
+        snapOptionsWidgetHolderOptionsToolbar->setVisible(true);
     }
     if (lastUsedSnapOptionsWidgetHolder != nullptr && lastUsedSnapOptionsWidgetHolder != result){
         result->updateBy(lastUsedSnapOptionsWidgetHolder);
@@ -468,8 +472,6 @@ RS_BlockData QG_DialogFactory::requestNewBlockDialog(RS_BlockList* blockList) {
     return ret;
 }
 
-
-
 /**
  * Shows a dialog for renaming the currently active block.
  *
@@ -725,8 +727,6 @@ bool QG_DialogFactory::requestRotateDialog(RS_RotateData& data) {
     return false;
 }
 
-
-
 /**
  * Shows scale options dialog presenting the given data.
  */
@@ -739,8 +739,6 @@ bool QG_DialogFactory::requestScaleDialog(RS_ScaleData& data) {
     }
     return false;
 }
-
-
 
 /**
  * Shows mirror options dialog presenting the given data.
@@ -755,8 +753,6 @@ bool QG_DialogFactory::requestMirrorDialog(RS_MirrorData& data) {
     return false;
 }
 
-
-
 /**
  * Shows move/rotate options dialog presenting the given data.
  */
@@ -770,8 +766,6 @@ bool QG_DialogFactory::requestMoveRotateDialog(RS_MoveRotateData& data) {
     return false;
 }
 
-
-
 /**
  * Shows rotate around two centers options dialog presenting the given data.
  */
@@ -784,7 +778,6 @@ bool QG_DialogFactory::requestRotate2Dialog(RS_Rotate2Data& data) {
     }
     return false;
 }
-
 
 /**
  * Shows a dialog to edit the given entity.
@@ -802,9 +795,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updatePoint();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityLine: {
         QG_DlgLine dlg(parent);
         dlg.setLine(*((RS_Line*)entity));
@@ -812,9 +804,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateLine();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityArc: {
         QG_DlgArc dlg(parent);
         dlg.setArc(*((RS_Arc*)entity));
@@ -822,9 +813,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateArc();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityCircle: {
         QG_DlgCircle dlg(parent);
         dlg.setCircle(*((RS_Circle*)entity));
@@ -832,9 +822,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateCircle();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityEllipse: {
         QG_DlgEllipse dlg(parent);
         dlg.setEllipse(*((RS_Ellipse*)entity));
@@ -842,9 +831,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateEllipse();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityParabola: {
         LC_DlgParabola dlg;
         dlg.setParabola(*static_cast<LC_Parabola*>(entity));
@@ -852,9 +840,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateParabola();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntitySpline: {
         QG_DlgSpline dlg;
         dlg.setSpline(*((RS_Spline*)entity));
@@ -862,9 +849,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateSpline();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntitySplinePoints: {
         LC_DlgSplinePoints dlg;
         dlg.setSpline(*static_cast<LC_SplinePoints*>(entity));
@@ -872,9 +858,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateSpline();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityInsert: {
         QG_DlgInsert dlg;
         dlg.setInsert(*((RS_Insert*)entity));
@@ -883,9 +868,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             entity->update();
         }
-    }
         break;
-
+    }
     case RS2::EntityDimAligned:
     case RS2::EntityDimAngular:
     case RS2::EntityDimDiametric:
@@ -898,9 +882,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             ((RS_Dimension*)entity)->updateDim(true);
         }
-    }
         break;
-
+    }
     case RS2::EntityDimLinear: {
         QG_DlgDimLinear dlg(parent);
         dlg.setDim(*((RS_DimLinear*)entity));
@@ -909,9 +892,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             ((RS_DimLinear*)entity)->updateDim(true);
         }
-    }
         break;
-
+    }
     case RS2::EntityMText: {
         QG_DlgMText dlg(parent);
         dlg.setText(*((RS_MText*)entity), false);
@@ -920,9 +902,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             ((RS_MText*)entity)->update();
         }
-    }
         break;
-
+    }
     case RS2::EntityText: {
         QG_DlgText dlg(parent);
         dlg.setText(*((RS_Text*)entity), false);
@@ -931,9 +912,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             ((RS_Text*)entity)->update();
         }
-    }
         break;
-
+    }
     case RS2::EntityHatch: {
         QG_DlgHatch dlg(parent);
         dlg.setHatch(*((RS_Hatch*)entity), false);
@@ -942,9 +922,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             ret = true;
             ((RS_Hatch*)entity)->update();
         }
-    }
         break;
-
+    }
     case RS2::EntityPolyline: {
         QG_DlgPolyline dlg(parent);
         dlg.setPolyline(*((RS_Polyline*)entity));
@@ -952,9 +931,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updatePolyline();
             ret = true;
         }
-    }
         break;
-
+    }
     case RS2::EntityImage: {
         QG_DlgImage dlg(parent);
         dlg.setImage(*((RS_Image*)entity));
@@ -962,9 +940,8 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
             dlg.updateImage();
             ret = true;
         }
-    }
         break;
-
+    }
     default:
         break;
     }
@@ -1010,7 +987,6 @@ bool QG_DialogFactory::requestMTextDialog(RS_MText* text) {
     return false;
 }
 
-
 /**
  * Shows a dialog to edit the attributes of the given text entity.
  */
@@ -1026,7 +1002,6 @@ bool QG_DialogFactory::requestTextDialog(RS_Text* text) {
 
     return false;
 }
-
 
 /**
  * Shows a dialog to edit pattern / hatch attributes of the given entity.
@@ -1061,13 +1036,13 @@ void QG_DialogFactory::requestKeyboardShortcutsDialog(LC_ActionGroupManager *pMa
     dlg.exec();
 }
 
-
 /**
  * Shows dialog for drawing options.
  */
-int QG_DialogFactory::requestOptionsDrawingDialog(RS_Graphic& graphic) {
+int QG_DialogFactory::requestOptionsDrawingDialog(RS_Graphic& graphic, int tabIndex) {
     QG_DlgOptionsDrawing dlg(parent);
     dlg.setGraphic(&graphic);
+    dlg.showInitialTab(tabIndex);
     int result = dlg.exec();
     return result;
 }
@@ -1092,7 +1067,7 @@ QString QG_DialogFactory::requestFileSaveAsDialog(const QString& caption /* = QS
  */
 void QG_DialogFactory::updateCoordinateWidget(const RS_Vector& abs,
                                               const RS_Vector& rel, bool updateFormat) {
-    if (coordinateWidget) {
+    if (coordinateWidget != nullptr) {
         coordinateWidget->setCoordinates(abs, rel, updateFormat);
     }
 }
@@ -1100,39 +1075,61 @@ void QG_DialogFactory::updateCoordinateWidget(const RS_Vector& abs,
 void QG_DialogFactory::updateMouseWidget(const QString& left,
                                          const QString& right,
                                          const LC_ModifiersInfo& modifiers) {
-    if (mouseWidget) {
+    if (mouseWidget != nullptr) {
         mouseWidget->setHelp(left, right, modifiers);
     }
-    // Issue #1874: Review the following logic. If confirmed as a mistake, delete this commented out
-    // section
-    // if (commandWidget) {
-    //     commandWidget->setCommand(left);
-    // }
+
+    if (commandWidget != nullptr) {
+       commandWidget->setCommand(left);
+    }
+
+    if (statusBarManager != nullptr){
+        statusBarManager->setActionHelp(left, right, modifiers);
+    }
+}
+
+void QG_DialogFactory::setCurrentQAction(QAction* q_action) {
+    if (mouseWidget != nullptr){
+        mouseWidget->setCurrentQAction(q_action);
+    }
+    if (statusBarManager != nullptr){
+        statusBarManager->setCurrentQAction(q_action);
+    }
+    if (optionWidgetHolder != nullptr){
+        optionWidgetHolder->setCurrentQAction(q_action);
+    }
+}
+
+void QG_DialogFactory::clearMouseWidgetIcon() {
+   if (mouseWidget != nullptr){
+       mouseWidget->clearActionIcon();
+   }
+   if (statusBarManager != nullptr){
+       statusBarManager->clearAction();
+   }
+   if (optionWidgetHolder != nullptr){
+       optionWidgetHolder->clearActionIcon();
+   }
 }
 
 /**
  * Called whenever the selection changed.
  */
 void QG_DialogFactory::updateSelectionWidget(int num, double length) {
-    if (selectionWidget) {
+    if (selectionWidget != nullptr) {
         selectionWidget->setNumber(num);
         selectionWidget->setTotalLength(length);
     }
 }
 
-
-
-void QG_DialogFactory::displayBlockName(const QString& blockName, const bool& display)
-{
-    if (selectionWidget)
-    {
+void QG_DialogFactory::displayBlockName(const QString& blockName, const bool& display){
+    if (selectionWidget != nullptr)    {
         selectionWidget->flashAuxData( QString("Block Name"),
                                        blockName,
                                        QC_ApplicationWindow::DEFAULT_STATUS_BAR_MESSAGE_TIMEOUT,
                                        display);
     }
 }
-
 
 /**
  * Called when an action needs to communicate 'message' to the user.
@@ -1152,8 +1149,6 @@ void QG_DialogFactory::command(const QString& message) {
     }
     RS_DEBUG->print("QG_DialogFactory::command: OK");
 }
-
-
 
 /**
  * Converts an extension to a format description.
@@ -1213,4 +1208,8 @@ QString QG_DialogFactory::extToFormat(const QString& ext) {
     else {
         return ext.toUpper();
     }
+}
+
+void QG_DialogFactory::setStatusBarManager(LC_QTStatusbarManager *statusBarManager) {
+    QG_DialogFactory::statusBarManager = statusBarManager;
 }

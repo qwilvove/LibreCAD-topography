@@ -263,5 +263,51 @@
         <file>ellipse_arc_1_point.svg</file>
         <file>dim_baseline.svg</file>
         <file>dim_continue.svg</file>
+        <file>grid_ortho.svg</file>
+        <file>grid_iso_top.svg</file>
+        <file>grid_iso_left.svg</file>
+        <file>grid_iso_right.svg</file>
+        <file>draftLineWidth.svg</file>
+        <file>anti_aliasing.svg</file>
+        <file>polyline_arc_to_lines.svg</file>
+        <file>polyline_segment_type.svg</file>
+        <file>arc_2p_radius.svg</file>
+        <file>arc_2p_angle.svg</file>
+        <file>arc_2p_length.svg</file>
+        <file>arc_2p_height.svg</file>
+        <file>arc_center_point_chord.svg</file>
+        <file>arc_center_point_anglelen.svg</file>
+        <file>spline_points_add.svg</file>
+        <file>spline_points_remove.svg</file>
+        <file>spline_points_insert.svg</file>
+        <file>nview_visible.svg</file>
+        <file>nview_add.svg</file>
+        <file>spline_explode.svg</file>
+        <file>spline_from_polyline.svg</file>
+        <file>spline_points_remove_two.svg</file>
+        <file>points_lattice.svg</file>
+        <file>select_points.svg</file>
+        <file>paste_to_points.svg</file>
+        <file>points_middle.svg</file>
+        <file>line_middle.svg</file>
+        <file>bounding_box.svg</file>
+        <file>halign_middle.svg</file>
+        <file>valign_middle.svg</file>
+        <file>valign_top.svg</file>
+        <file>valign_bottom.svg</file>
+        <file>halign_right.svg</file>
+        <file>halign_left.svg</file>
+        <file>no_align.svg</file>
+        <file>align_one.svg</file>
+        <file>line_polygon_size_size.svg</file>
+        <file>align_ref.svg</file>
+        <file>info_cursor_enable.svg</file>
+        <file>info_cursor_entity.svg</file>
+        <file>info_cursor_zone1.svg</file>
+        <file>info_cursor_zone2.svg</file>
+        <file>info_cursor_zone3.svg</file>
+        <file>info_cursor_zone4.svg</file>
+        <file>info_cursor_zone2_entity.svg</file>
+        <file>entity_description_info.svg</file>
     </qresource>
 </RCC>

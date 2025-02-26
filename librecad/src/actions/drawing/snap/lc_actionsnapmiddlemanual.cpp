@@ -92,15 +92,17 @@ void LC_ActionSnapMiddleManual::mouseMoveEvent(QMouseEvent *e){
 
     if (getStatus() == SetEndPoint){
         /* Snapping to an angle defined by settings, if the shift key is pressed. */
-        mouse = getSnapAngleAwarePoint(e, m_pPoints->startPoint, mouse,true);
-
         deletePreview();
 
-        // fixme - review, most probably pen and layer not needed and this may be replaced by referenceLine
-        auto *line = previewLine(m_pPoints->startPoint, mouse);
-        line->setLayerToActive();
-        line->setPenToActive();
+        mouse = getSnapAngleAwarePoint(e, m_pPoints->startPoint, mouse,true);
 
+        auto *line = previewLine(m_pPoints->startPoint, mouse);
+        previewRefSelectablePoint(line->getMiddlePoint());
+        if (showRefEntitiesOnPreview){
+            previewRefLine(m_pPoints->startPoint, mouse);
+            previewRefPoint(m_pPoints->startPoint);
+            previewRefPoint(mouse);
+        }
         drawPreview();
     } else if (getStatus() == SetPercentage){
         if (predecessor != nullptr){
@@ -142,7 +144,7 @@ void LC_ActionSnapMiddleManual::onCoordinateEvent(int status, [[maybe_unused]]bo
         case SetStartPoint: {
             m_pPoints->startPoint = mouse;
             setStatus(SetEndPoint);
-            graphicView->moveRelativeZero(mouse);
+            moveRelativeZero(mouse);
             updateMouseButtonHints();
             break;
         }

@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LIBRECAD_LC_ACTIONDIMLINEARBASE_H
 #define LIBRECAD_LC_ACTIONDIMLINEARBASE_H
 
-#include "rs_constructionline.h"
 #include "rs_actiondimension.h"
 
 class LC_ActionDimLinearBase:public RS_ActionDimension {
@@ -31,9 +30,7 @@ Q_OBJECT
 public:
     LC_ActionDimLinearBase(const char *name, RS_EntityContainer &container, RS_GraphicView &graphicView);
     ~LC_ActionDimLinearBase() override;
-    void trigger() override;
     void mouseMoveEvent(QMouseEvent *e) override;
-
 protected:
     /**
    * Action States.
@@ -68,6 +65,6 @@ protected:
     void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
-
+    void doTrigger() override;
 };
 #endif //LIBRECAD_LC_ACTIONDIMLINEARBASE_H

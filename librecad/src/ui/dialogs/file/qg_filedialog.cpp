@@ -96,6 +96,7 @@ RS2::FormatType QG_FileDialog::getType(const QString& filter) const
     } else if (filter == fDxf1) {
         return  RS2::FormatDXF1;
     }
+    return RS2::FormatDXFRW;
 }
 
 QG_FileDialog::QG_FileDialog(QWidget* parent, Qt::WindowFlags f, FileType type)
@@ -145,9 +146,8 @@ QString QG_FileDialog::getOpenFile(RS2::FormatType* type){
 //    bool fileAccepted = false;
     setAcceptMode ( QFileDialog::AcceptOpen );
     // read default settings:
-    LC_GROUP("Paths"); // fixme - settings
-    QString defDir = LC_GET_STR("Open",
-                                          RS_SYSTEM->getHomeDir());
+    LC_GROUP("Paths");
+    QString defDir = LC_GET_STR("Open", RS_SYSTEM->getHomeDir());
     QString open_filter = LC_GET_STR("OpenFilter", fDxfrw);
     LC_GROUP_END();
 

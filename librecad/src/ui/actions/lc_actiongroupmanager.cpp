@@ -37,27 +37,33 @@ namespace Sorting
 
 LC_ActionGroupManager::LC_ActionGroupManager(QC_ApplicationWindow *parent)
     :QObject(parent)
-    , block(new LC_ActionGroup(this,tr("Block"),tr("Block related operations"), nullptr))
+    , block(new LC_ActionGroup(this,tr("Block"),tr("Block related operations"), ":/icons/create_block.svg"))
     , circle(new LC_ActionGroup(this,tr("Circle"),tr("Circle drawing commands"),":/icons/circle.svg"))
-    , curve(new LC_ActionGroup(this,tr("Curve"), tr("Curve drawing commands"), ":/icons/line_freehand.svg"))
-    , edit(new LC_ActionGroup(this,tr("Edit"), tr("Editing operations"), nullptr))
+    , curve(new LC_ActionGroup(this,tr("Arc"), tr("Arc drawing commands"), ":/icons/arc_center_point_angle.svg"))
+    , spline(new LC_ActionGroup(this,tr("Spline"), tr("Spline drawing commands"), ":/icons/spline_points.svg"))
+    , edit(new LC_ActionGroup(this,tr("Edit"), tr("Editing operations"), ":/icons/rename_active_block.svg"))
     , ellipse(new LC_ActionGroup(this,tr("Ellipse"),tr("Ellipse drawing commands") ,":/icons/ellipses.svg"))
-    , file(new LC_ActionGroup(this,tr("File"),tr("File Operations"), nullptr))
+    , file(new LC_ActionGroup(this,tr("File"),tr("File Operations"), ":/icons/save.svg"))
     , dimension(new LC_ActionGroup(this,tr("Dimension"),tr("Dimensions creation commands"), ":/icons/dim_horizontal.svg"))
     , info(new LC_ActionGroup(this,tr("Info"),tr("Informational commands"), ":/icons/measure.svg"))
-    , layer(new LC_ActionGroup(this,tr("Layer"),tr("Layers operations"), nullptr))
+    , layer(new LC_ActionGroup(this,tr("Layer"),tr("Layers operations"), ":/icons/deselect_layer.svg"))
     , line(new LC_ActionGroup(this,tr("Line"),tr("Line drawing commands"), ":/icons/line.svg"))
+    , point(new LC_ActionGroup(this,tr("Point"),tr("Point drawing commands"), ":/icons/points.svg"))
+    , shape(new LC_ActionGroup(this,tr("Polygon"),tr("Polygon drawing commands"), ":/icons/rectangle_2_points.svg"))
     , modify(new LC_ActionGroup(this,tr("Modify"), tr("Modification operations"), ":/icons/move_rotate.svg"))
-    , options(new LC_ActionGroup(this,tr("Options"),tr("Options management"), nullptr))
-    , other(new LC_ActionGroup(this,tr("Other"),tr("Other operations"), nullptr))
+    , options(new LC_ActionGroup(this,tr("Options"),tr("Options management"), ":/icons/settings.svg"))
+    , other(new LC_ActionGroup(this,tr("Other"),tr("Other operations"), ":/icons/text.svg"))
+    , relZero(new LC_ActionGroup(this,tr("Relative Zero"),tr("Relative Zero"), ":/icons/set_rel_zero.svg"))
     , polyline(new LC_ActionGroup(this,tr("Polyline"),tr("Polyline drawing commands"),":/icons/polylines_polyline.svg"))
-    , restriction(new LC_ActionGroup(this,tr("Restriction"), tr("Snap restrictions"), nullptr))
+    , restriction(new LC_ActionGroup(this,tr("Restriction"), tr("Snap restrictions"), ":/icons/restr_ortho.svg"))
     , select(new LC_ActionGroup(this,tr("Select"),tr("Entity selection operations"),":/icons/select.svg"))
-    , snap(new LC_ActionGroup(this,tr("Snap"),tr("Snapping operations"), nullptr))
-    , snap_extras(new LC_ActionGroup(this,tr("Snap Extras"), tr("Additional Snaps"), nullptr))
-    , view(new LC_ActionGroup(this,tr("View"),tr("View related operations"), nullptr))
-    , widgets(new LC_ActionGroup(this,tr("Widgets"), tr("Widgets management"),nullptr))
-    , pen(new LC_ActionGroup(this,tr("PenTB"),tr("Pen related operations"), nullptr)){
+    , snap(new LC_ActionGroup(this,tr("Snap"),tr("Snapping operations"), ":/icons/snap_intersection.svg"))
+    , snap_extras(new LC_ActionGroup(this,tr("Snap Extras"), tr("Additional Snaps"), ":/icons/snap_free.svg"))
+    , view(new LC_ActionGroup(this,tr("View"),tr("View related operations"), ":/icons/zoom_in.svg"))
+    , namedViews(new LC_ActionGroup(this,tr("Named Views"),tr("Persistent Views operations"), ":/icons/visible.svg"))
+    , widgets(new LC_ActionGroup(this,tr("Widgets"), tr("Widgets management"),":/icons/dockwidgets_bottom.svg"))
+    , pen(new LC_ActionGroup(this,tr("PenTB"),tr("Pen related operations"), ":/icons/pen_apply.svg"))
+    , infoCursor(new LC_ActionGroup(this,tr("InfoCursor"),tr("Informational Cursor"), ":/icons/info_cursor_enable.svg")){
 
     for (auto const& ag : findChildren<QActionGroup*>()) {
         ag->setExclusive(false);
@@ -67,7 +73,6 @@ LC_ActionGroupManager::LC_ActionGroupManager(QC_ApplicationWindow *parent)
         }
     }
 
-    // fixme - review and probably remove relay (it seems that intention was to use it for #570, yet unsuccessfully
     for (auto ag: toolGroups()) {
         connect( ag, &QActionGroup::triggered, parent, &QC_ApplicationWindow::relayAction);
     }
@@ -84,10 +89,13 @@ QList<LC_ActionGroup *> LC_ActionGroupManager::toolGroups() {
     ag_list << block
             << circle
             << curve
+            << spline
             << ellipse
             << dimension
             << info
             << line
+            << point
+            << shape
             << modify
             << other
             << polyline
@@ -156,8 +164,8 @@ void LC_ActionGroupManager::assignShortcutsToActions(QMap<QString, QAction *> &m
     shortcutsManager.assignShortcutsToActions(map, shortcutsList);
 }
 
-int LC_ActionGroupManager::loadShortcuts(const QMap<QString, QAction *> &map) {
-    a_map = map;
+int LC_ActionGroupManager::loadShortcuts([[maybe_unused]] const QMap<QString, QAction *> &map) {
+//    a_map = map;
     int loadResult = shortcutsManager.loadShortcuts(a_map);
     return loadResult;
 }
@@ -179,4 +187,32 @@ int LC_ActionGroupManager::saveShortcuts(QMap<QString, LC_ShortcutInfo *> shortc
 
 const QString LC_ActionGroupManager::getShortcutsMappingsFolder() {
     return shortcutsManager.getShortcutsMappingsFolder();
+}
+
+QMap<QString, QAction *> &LC_ActionGroupManager::getActionsMap() {
+    return a_map;
+}
+
+QAction *LC_ActionGroupManager::getActionByName(const QString& name) {
+    return a_map[name];
+}
+
+bool LC_ActionGroupManager::hasActionGroup(QString categoryName) {
+    QList<LC_ActionGroup *> ag_list = findChildren<LC_ActionGroup *>();
+    for (auto ag: ag_list) {
+        if (ag->objectName() == categoryName){
+            return true;
+        }
+    }
+    return false;
+}
+
+LC_ActionGroup* LC_ActionGroupManager::getActionGroup(QString groupName) {
+    QList<LC_ActionGroup *> ag_list = findChildren<LC_ActionGroup *>();
+    for (auto ag: ag_list) {
+        if (ag->objectName() == groupName){
+            return ag;
+        }
+    }
+    return nullptr;
 }

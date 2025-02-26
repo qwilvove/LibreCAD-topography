@@ -24,12 +24,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define LC_QUICKINFOWIDGET_H
 
 #include <QWidget>
-#include <QDockWidget>
+
+#include "lc_quickinfoentitydata.h"
+#include "lc_quickinfopointsdata.h"
+#include "lc_quickinfowidgetoptions.h"
 #include "qg_graphicview.h"
 #include "rs_units.h"
-#include "lc_quickinfopointsdata.h"
-#include "lc_quickinfoentitydata.h"
-#include "lc_quickinfowidgetoptions.h"
 
 namespace Ui {
 class LC_QuickInfoWidget;
@@ -54,22 +54,33 @@ public:
     void setDocumentAndView(RS_Document *document, QG_GraphicView* view);
 
     void processEntity(RS_Entity *en);
+    QString getEntityDescription(RS_Entity *en, RS2::EntityDescriptionLevel shortDescription);
     void processCoordinate(const RS_Vector& point);
     void endAddingCoordinates();
 
     void updateCollectedPointsView(bool forceUpdate = false);
 
-    RS_Vector getCollectedCoordinate(int index) {return pointsData.getCollectedCoordinate(index);};
-    int getCollectedCoordinatesCount(){return pointsData.getCollectedCoordinatesCount();};
+    RS_Vector getCollectedCoordinate(int index) const {
+        return pointsData.getCollectedCoordinate(index);
+    }
+    int getCollectedCoordinatesCount() const {
+        return pointsData.getCollectedCoordinatesCount();
+    }
 
     void setCollectedPointsCoordinateViewMode(int mode);
     void setEntityPointsCoordinateViewMode(int mode);
 
     void setWidgetMode(int mode);
 
-    bool isDisplayPointsPathOnPreview(){return options->displayPointsPath;};
-    bool isSelectEntitiesInDefaultActionWithCTRL(){return options->selectEntitiesInDefaultActionByCTRL;};
-    bool isAutoSelectEntitiesInDefaultAction(){return options->autoSelectEntitiesInDefaultAction;};
+    bool isDisplayPointsPathOnPreview() const {
+        return options->displayPointsPath;
+    }
+    bool isSelectEntitiesInDefaultActionWithCTRL() const {
+        return options->selectEntitiesInDefaultActionByCTRL;
+    }
+    bool isAutoSelectEntitiesInDefaultAction() const {
+        return options->autoSelectEntitiesInDefaultAction;
+    }
 
     void onEntityPropertiesEdited(unsigned long originalId, unsigned long editedCloneId);
 
@@ -94,7 +105,7 @@ protected slots:
     void onRelativeZeroChanged(const RS_Vector& relZero);
 
 private:
-    Ui::LC_QuickInfoWidget *ui;
+    Ui::LC_QuickInfoWidget *ui = nullptr;
     RS_GraphicView* graphicView = nullptr;
     RS_Document* document = nullptr;
 
@@ -129,7 +140,7 @@ private:
     void drawPreviewPoint(const RS_Vector &vector);
     RS_Vector retrievePositionForModelIndex(int index) const;
     void processURLCommand(const QString &path, int index);
-    QString getCoordinateMenuName(const char *command, int idx) const;
+    QString getCoordinateMenuName(QString actionName, int idx) const;
     QString retrievePositionStringForModelIndex(int index) const;
     void showNoDataMessage();
     void invokeOptionsDialog();

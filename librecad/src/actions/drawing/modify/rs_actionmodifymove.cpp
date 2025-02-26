@@ -34,6 +34,7 @@
 #include "rs_modification.h"
 #include "rs_preview.h"
 #include "lc_moveoptions.h"
+#include "rs_settings.h"
 
 struct RS_ActionModifyMove::Points {
 	RS_MoveData data;
@@ -50,18 +51,15 @@ RS_ActionModifyMove::RS_ActionModifyMove(RS_EntityContainer& container,
 
 RS_ActionModifyMove::~RS_ActionModifyMove() = default;
 
-void RS_ActionModifyMove::trigger(){
-
+void RS_ActionModifyMove::doTrigger(bool keepSelected) {
     RS_DEBUG->print("RS_ActionModifyMove::trigger()");
-
     RS_Modification m(*container, graphicView);
-    m.move(pPoints->data, selectedEntities, false, false);
-
-    updateSelectionWidget();
+    m.move(pPoints->data, selectedEntities, false, keepSelected);
     finish(false);
 }
 
 void RS_ActionModifyMove::mouseMoveEventSelected(QMouseEvent *e) {
+    deletePreview();
     RS_DEBUG->print("RS_ActionModifyMove::mouseMoveEvent begin");
 
     RS_Vector mouse = snapPoint(e);
@@ -73,7 +71,6 @@ void RS_ActionModifyMove::mouseMoveEventSelected(QMouseEvent *e) {
         }
         case SetTargetPoint: {
             if (pPoints->referencePoint.valid){
-                deletePreview();
 
                 mouse = getSnapAngleAwarePoint(e, pPoints->referencePoint, mouse, true);
                 pPoints->targetPoint = mouse;
@@ -101,7 +98,12 @@ void RS_ActionModifyMove::mouseMoveEventSelected(QMouseEvent *e) {
                         }
                     }
                 }
-                drawPreview();
+                if (isInfoCursorForModificationEnabled()){
+                    LC_InfoMessageBuilder msg(tr("Moving Offset"));
+                    msg.add(formatRelative(offset));
+                    msg.add(formatRelativePolar(offset));
+                    appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                }
             }
             break;
         }
@@ -112,6 +114,7 @@ void RS_ActionModifyMove::mouseMoveEventSelected(QMouseEvent *e) {
     }    
 
     RS_DEBUG->print("RS_ActionModifyMove::mouseMoveEvent end");
+    drawPreview();
 }
 
 void RS_ActionModifyMove::mouseLeftButtonReleaseEventSelected(int status, QMouseEvent *e) {
@@ -189,7 +192,7 @@ void RS_ActionModifyMove::updateMouseButtonHintsForSelected(int status) {
 }
 
 void RS_ActionModifyMove::updateMouseButtonHintsForSelection() {
-    updateMouseWidgetTRCancel(tr("Select to move"), MOD_CTRL(tr("Move immediately after selection")));
+    updateMouseWidgetTRCancel(tr("Select to move (Enter to complete)"),  MOD_SHIFT_AND_CTRL(tr("Select contour"),tr("Move immediately after selection")));
 }
 
 RS2::CursorType RS_ActionModifyMove::doGetMouseCursorSelected([[maybe_unused]]int status) {
