@@ -303,10 +303,10 @@ void TT_DialogMain::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("X=%1 , Y=%2").arg(point.x, 11, 'f', 3).arg(point.y, 11, 'f', 3);
+        QString infoParameters = tr("X = %1 , Y = %2").arg(point.x, 11, 'f', 3).arg(point.y, 11, 'f', 3);
         if (point.hasZ)
         {
-            infoParameters += tr(" , Z=%1").arg(point.z, 8, 'f', 3);
+            infoParameters += tr(" , Z = %1").arg(point.z, 8, 'f', 3);
         }
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark green")));
@@ -333,10 +333,10 @@ void TT_DialogMain::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("IH=%1").arg(point.ih, 7, 'f', 3);
+        QString infoParameters = tr("IH = %1").arg(point.ih, 7, 'f', 3);
         if (point.v0 >= 0)
         {
-            infoParameters += tr(" , V0=%1").arg(point.v0, 8, 'f', 4);
+            infoParameters += tr(" , V0 = %1").arg(point.v0, 9, 'f', 5);
         }
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark red")));
@@ -363,10 +363,10 @@ void TT_DialogMain::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("PH=%1 , HA=%2 , VA=%3 , ID=%4")
+        QString infoParameters = tr("PH = %1 , HA = %2 , VA = %3 , ID = %4")
                 .arg(point.ph, 7, 'f', 3)
-                .arg(point.ha, 8, 'f', 4)
-                .arg(point.va, 8, 'f', 4)
+                .arg(point.ha, 9, 'f', 5)
+                .arg(point.va, 9, 'f', 5)
                 .arg(point.id, 7, 'f', 3);
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark blue")));
@@ -393,10 +393,10 @@ void TT_DialogMain::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("PH=%1 , HA=%2 , VA=%3 , ID=%4")
+        QString infoParameters = tr("PH = %1 , HA = %2 , VA = %3 , ID = %4")
                 .arg(point.ph, 7, 'f', 3)
-                .arg(point.ha, 8, 'f', 4)
-                .arg(point.va, 8, 'f', 4)
+                .arg(point.ha, 9, 'f', 5)
+                .arg(point.va, 9, 'f', 5)
                 .arg(point.id, 7, 'f', 3);
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark cyan")));
@@ -448,6 +448,8 @@ void TT_DialogMain::movePointUp(int index)
     points.move(index, index - 1);
 
     displayPoints();
+
+    ui->tableWidget->setCurrentCell(index - 1, 0);
 }
 
 // Move points[index] one position down in points QList
@@ -456,12 +458,27 @@ void TT_DialogMain::movePointDown(int index)
     points.move(index, index + 1);
 
     displayPoints();
+
+    ui->tableWidget->setCurrentCell(index + 1, 0);
 }
 
 // Draw points on the current drawing
 int TT_DialogMain::drawPoints()
 {
     int nbPoints = 0;
+
+    // Check if layers already exist
+    QStringList layers = this->doc->getAllLayer();
+
+    bool hasTtPointsLayer = layers.contains(QString("TT_POINTS"));
+    bool hasTtNameLayer = layers.contains(QString("TT_NAME"));
+    bool hasTtAltiLayer = layers.contains(QString("TT_ALTI"));
+
+    // If at least one of the following layers exists, do not draw points
+    if (hasTtPointsLayer || hasTtNameLayer || hasTtAltiLayer)
+    {
+        return -1;
+    }
 
     // Prepare layers
     QString currentLayer = this->doc->getCurrentLayer();
@@ -677,6 +694,10 @@ void TT_DialogMain::on_pbDraw_clicked()
     if (nbPointsDrawn > -1)
     {
         ui->label->setText(tr("Active file : %1 | %2 points drawn.").arg(fileName).arg(nbPointsDrawn));
+    }
+    else
+    {
+        ui->label->setText(tr("Active file : %1 | No points drawn.").arg(fileName));
     }
 }
 

@@ -447,7 +447,7 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogAdd</name>
     <message>
         <location filename="../topographytools/tt_dialogadd.ui" line="14"/>
-        <source>Dialog</source>
+        <source>Add a line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -508,6 +508,26 @@ first base, second base, first target, second target.</source>
     <message>
         <location filename="../topographytools/tt_dialogadd.ui" line="136"/>
         <source>Inclined distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogadd.cpp" line="13"/>
+        <source>POINT</source>
+        <translation type="unfinished">PONT</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogadd.cpp" line="14"/>
+        <source>STATION</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogadd.cpp" line="15"/>
+        <source>REFERENCE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogadd.cpp" line="16"/>
+        <source>MEASURE</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -576,6 +596,26 @@ first base, second base, first target, second target.</source>
     <message>
         <location filename="../topographytools/tt_dialogedit.ui" line="136"/>
         <source>Inclined distance</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogedit.cpp" line="13"/>
+        <source>POINT</source>
+        <translation type="unfinished">PONT</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogedit.cpp" line="14"/>
+        <source>STATION</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogedit.cpp" line="15"/>
+        <source>REFERENCE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogedit.cpp" line="16"/>
+        <source>MEASURE</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -718,8 +758,8 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <location filename="../topographytools/tt_dialogmain.cpp" line="27"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="539"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="574"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="556"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="591"/>
         <source>Active file : %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -776,12 +816,33 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <location filename="../topographytools/tt_dialogmain.cpp" line="306"/>
-        <source>X=%1 , Y=%2</source>
+        <source>X = %1 , Y = %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../topographytools/tt_dialogmain.cpp" line="309"/>
-        <source> , Z=%1</source>
+        <source> , Z = %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="336"/>
+        <source>IH = %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="339"/>
+        <source> , V0 = %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="366"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="396"/>
+        <source>PH = %1 , HA = %2 , VA = %3 , ID = %4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="700"/>
+        <source>Active file : %1 | No points drawn.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -790,24 +851,8 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="336"/>
-        <source>IH=%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="339"/>
-        <source> , V0=%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../topographytools/tt_dialogmain.cpp" line="354"/>
         <source>REFERENCE</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="366"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="396"/>
-        <source>PH=%1 , HA=%2 , VA=%3 , ID=%4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -816,33 +861,33 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="529"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="546"/>
         <source>Create a TT file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="529"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="558"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="546"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="575"/>
         <source>TT files (*.tt)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="558"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="575"/>
         <source>Open a TT file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="596"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="613"/>
         <source>Active file : %1 | %2 points saved.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="605"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="622"/>
         <source>Active file : %1 | %2 points imported.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="679"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="696"/>
         <source>Active file : %1 | %2 points drawn.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -911,9 +956,9 @@ first base, second base, first target, second target.</source>
     <message>
         <location filename="../topographytools/tt_dialogv0.cpp" line="117"/>
         <location filename="../topographytools/tt_dialogv0.cpp" line="124"/>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="139"/>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="158"/>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="171"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="140"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="159"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="172"/>
         <source>Error!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -928,17 +973,17 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="139"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="140"/>
         <source>Please check at least one reference!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="158"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="159"/>
         <source>At least one of the checked references has no cooordinates!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.cpp" line="171"/>
+        <location filename="../topographytools/tt_dialogv0.cpp" line="172"/>
         <source>At least one of the checked references has a distance with the station equal to zero!</source>
         <translation type="unfinished"></translation>
     </message>

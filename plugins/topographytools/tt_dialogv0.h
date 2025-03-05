@@ -38,8 +38,6 @@ private:
     TT::Point *currentStation;
     QList<TT::Point*> currentReferences;
 
-    QList<TT::Point*> checkedReferences;
-
     QList<QCheckBox*> checkBoxes; // Checkboxes currently displayed to the user
 };
 

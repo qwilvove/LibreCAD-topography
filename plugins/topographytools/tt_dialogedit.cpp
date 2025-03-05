@@ -10,10 +10,10 @@ TT_DialogEdit::TT_DialogEdit(QWidget *parent, TT::Point *point) :
 
     tempPoint = {};
 
-    ui->cbType->addItem("POINT");
-    ui->cbType->addItem("STATION");
-    ui->cbType->addItem("REFERENCE");
-    ui->cbType->addItem("MEASURE");
+    ui->cbType->addItem(tr("POINT"));
+    ui->cbType->addItem(tr("STATION"));
+    ui->cbType->addItem(tr("REFERENCE"));
+    ui->cbType->addItem(tr("MEASURE"));
     ui->cbType->setCurrentIndex(-1);
 
     loadData();
@@ -45,7 +45,7 @@ void TT_DialogEdit::loadData()
         ui->leIh->setText(QString("%1").arg(point->ih, 0, 'f', 3));
         if (point->v0 >= 0)
         {
-            ui->leV0->setText(QString("%1").arg(point->v0, 0, 'f', 4));
+            ui->leV0->setText(QString("%1").arg(point->v0, 0, 'f', 5));
         }
     }
     else if (ui->cbType->currentIndex() == TT::PTYPE::REFERENCE ||
@@ -53,8 +53,8 @@ void TT_DialogEdit::loadData()
     {
         ui->leName->setText(point->name);
         ui->lePh->setText(QString("%1").arg(point->ph, 0, 'f', 3));
-        ui->leHa->setText(QString("%1").arg(point->ha, 0, 'f', 4));
-        ui->leVa->setText(QString("%1").arg(point->va, 0, 'f', 4));
+        ui->leHa->setText(QString("%1").arg(point->ha, 0, 'f', 5));
+        ui->leVa->setText(QString("%1").arg(point->va, 0, 'f', 5));
         ui->leId->setText(QString("%1").arg(point->id, 0, 'f', 3));
     }
 

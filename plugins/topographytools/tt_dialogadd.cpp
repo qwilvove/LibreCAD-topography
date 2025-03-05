@@ -10,10 +10,10 @@ TT_DialogAdd::TT_DialogAdd(QWidget *parent, TT::Point *point) :
 
     tempPoint = {};
 
-    ui->cbType->addItem("POINT");
-    ui->cbType->addItem("STATION");
-    ui->cbType->addItem("REFERENCE");
-    ui->cbType->addItem("MEASURE");
+    ui->cbType->addItem(tr("POINT"));
+    ui->cbType->addItem(tr("STATION"));
+    ui->cbType->addItem(tr("REFERENCE"));
+    ui->cbType->addItem(tr("MEASURE"));
     ui->cbType->setCurrentIndex(-1);
 }
 

@@ -126,6 +126,7 @@ void TT_DialogV0::on_pbCalculate_clicked()
     }
 
     // Get checked references
+    QList<TT::Point*> checkedReferences = {};
     for (int i = 0; i < checkBoxes.size(); i++)
     {
         QCheckBox *currentCheckBox = checkBoxes[i];
@@ -174,26 +175,38 @@ void TT_DialogV0::on_pbCalculate_clicked()
     }
 
     // For each check reference
-    double totalV0 = 0.0;
-    double totalDistance = 0.0;
+    //double totalV0 = 0.0;
+    //double totalDistance = 0.0;
+    QList<double> v0s = {};
+    QList<double> distances = {};
     for (int i = 0; i < checkedReferencesCoordinates.size(); i++)
     {
         // Calculate V0
         TT::Point b = checkedReferencesCoordinates.at(i);
         double gAB = 2.0 * std::atan( ( b.x - a.x ) / ( std::sqrt( std::pow( b.x - a.x, 2.0 ) + std::pow( b.y - a.y, 2.0 ) ) + ( b.y - a.y ) ) ) * 200.0 / M_PI;
         double distance = std::sqrt( std::pow(b.x - a.x, 2.0) + std::pow(b.y - a.y, 2.0) );
-        double v0 = (gAB - checkedReferences.at(i)->ha) * distance;
-        totalDistance += distance;
-        totalV0 += v0;
+        double v0 = std::fmod(gAB - checkedReferences.at(i)->ha, 400.0);
+        if (v0 < 0.0)
+        {
+            v0 += 400.0;
+        }
+        //totalDistance += distance;
+        //totalV0 += v0;
+        v0s.append(v0);
+        distances.append(distance);
     }
 
     // Calculate the average V0 weighted by distances
-    double averageV0 = totalV0 / totalDistance;
-    if (averageV0 < 0.0)
+    double totalV0 = 0.0;
+    double totalDistance = 0.0;
+    for (int i = 0; i < v0s.size(); i++)
     {
-        averageV0 += 400.0;
+        totalV0 += v0s.at(i) * distances.at(i);
+        totalDistance += distances.at(i);
     }
-    ui->leV0->setText(QString("%1").arg(averageV0, 0, 'f', 4));
+    double averageV0 = totalV0 / totalDistance;
+
+    ui->leV0->setText(QString("%1").arg(averageV0, 0, 'f', 5));
     ui->buttonBox->setEnabled(true);
 }
 
