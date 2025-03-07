@@ -17,9 +17,16 @@ public:
     explicit TT_DialogPoints(QWidget *parent, QList<TT::Point> &points);
     ~TT_DialogPoints();
 
+private slots:
+    void identifyStationsAndMeasures();
+    void setupCheckBoxes();
+
 private:
     Ui::TT_DialogPoints *ui;
     QList<TT::Point> &points;
+
+    QList<TT::Point*> stations;
+    QList<QList<TT::Point*>> measures;
 };
 
 #endif // TT_DIALOGPOINTS_H
