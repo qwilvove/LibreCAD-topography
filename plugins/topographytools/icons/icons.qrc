@@ -1,19 +1,19 @@
 <RCC>
     <qresource prefix="/icons">
+        <file>add.svg</file>
+        <file>angle_line_to_line.svg</file>
+        <file>attributes.svg</file>
+        <file>down.svg</file>
+        <file>draw_points.svg</file>
+        <file>import.svg</file>
+        <file>left.svg</file>
         <file>new.svg</file>
         <file>open.svg</file>
-        <file>save.svg</file>
-        <file>import.svg</file>
-        <file>draw_points.svg</file>
         <file>points.svg</file>
-        <file>attributes.svg</file>
-        <file>add.svg</file>
         <file>remove.svg</file>
-        <file>down.svg</file>
-        <file>up.svg</file>
-        <file>angle_line_to_line.svg</file>
-        <file>total_length_selected_entities.svg</file>
-        <file>left.svg</file>
         <file>right.svg</file>
+        <file>save.svg</file>
+        <file>total_length_selected_entities.svg</file>
+        <file>up.svg</file>
     </qresource>
 </RCC>

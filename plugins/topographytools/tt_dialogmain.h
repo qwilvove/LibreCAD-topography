@@ -61,6 +61,8 @@ private slots:
 
     void on_pbV0_clicked();
     void on_pbPolygo_clicked();
+    void on_pbPoints_clicked();
+
     void on_pbDraw_clicked();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);

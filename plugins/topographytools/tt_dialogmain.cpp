@@ -7,6 +7,7 @@
 #include "tt_dialogadd.h"
 #include "tt_dialogv0.h"
 #include "tt_dialogpolygo.h"
+#include "tt_dialogpoints.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -35,6 +36,7 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
         ui->pbDown->setEnabled(true);
         ui->pbV0->setEnabled(true);
         ui->pbPolygo->setEnabled(true);
+        ui->pbPoints->setEnabled(true);
         ui->pbDraw->setEnabled(true);
 
         loadPoints();
@@ -564,6 +566,7 @@ void TT_DialogMain::on_pbNew_clicked()
     ui->pbDown->setEnabled(true);
     ui->pbV0->setEnabled(true);
     ui->pbPolygo->setEnabled(true);
+    ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     points.clear();
@@ -599,6 +602,7 @@ void TT_DialogMain::on_pbOpen_clicked()
     ui->pbDown->setEnabled(true);
     ui->pbV0->setEnabled(true);
     ui->pbPolygo->setEnabled(true);
+    ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
 
     loadPoints();
@@ -688,6 +692,15 @@ void TT_DialogMain::on_pbPolygo_clicked()
     }
 }
 
+void TT_DialogMain::on_pbPoints_clicked()
+{
+    TT_DialogPoints pointsDialog(this, points);
+    if (pointsDialog.exec() == QDialog::Accepted)
+    {
+        displayPoints();
+    }
+}
+
 void TT_DialogMain::on_pbDraw_clicked()
 {
     int nbPointsDrawn = TT_DialogMain::drawPoints();
@@ -707,4 +720,3 @@ void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
 
     editPoint(points[row]);
 }
-
