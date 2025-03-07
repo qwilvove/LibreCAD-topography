@@ -175,8 +175,6 @@ void TT_DialogV0::on_pbCalculate_clicked()
     }
 
     // For each check reference
-    //double totalV0 = 0.0;
-    //double totalDistance = 0.0;
     QList<double> v0s = {};
     QList<double> distances = {};
     for (int i = 0; i < checkedReferencesCoordinates.size(); i++)
@@ -190,8 +188,6 @@ void TT_DialogV0::on_pbCalculate_clicked()
         {
             v0 += 400.0;
         }
-        //totalDistance += distance;
-        //totalV0 += v0;
         v0s.append(v0);
         distances.append(distance);
     }
