@@ -916,6 +916,7 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogPolygo</name>
     <message>
         <location filename="../topographytools/tt_dialogpolygo.ui" line="14"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="194"/>
         <source>Calculate polygonation</source>
         <translation>Calculer une polygonation</translation>
     </message>
@@ -948,6 +949,79 @@ first base, second base, first target, second target.</source>
         <location filename="../topographytools/tt_dialogpolygo.ui" line="150"/>
         <source>PgDown</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="176"/>
+        <source>Antenna path</source>
+        <translation>Cheminement en antenne</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="181"/>
+        <source>Bounded path</source>
+        <translation>Cheminement encadré</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="186"/>
+        <source>Closed path</source>
+        <translation>Cheminement fermé</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="95"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="114"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="121"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="145"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="165"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="363"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="368"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="373"/>
+        <source>Error!</source>
+        <translation>Erreur !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="95"/>
+        <source>The path must have at least 2 stations!</source>
+        <translation>Le cheminement doit comporter au moins 2 stations !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="114"/>
+        <source>The first station of the path has no coordinates!</source>
+        <translation>La station de départ du cheminement n&apos;a pas de coordonnées !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="121"/>
+        <source>The first station of the path has no V0!</source>
+        <translation>La station de départ du cheminement n&apos;a pas de V0 !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="145"/>
+        <source>Missing front view between stations %1 and %2!</source>
+        <translation>Il manque une visée avant entre les stations %1 et %2 !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="165"/>
+        <source>Missing back view between stations %1 and %2!</source>
+        <translation>Il manque une visée arrière entre les stations %1 et %2 !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="232"/>
+        <source>Success!</source>
+        <translation>Succès !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="232"/>
+        <source>Polygonation calculated!</source>
+        <translation>Polygonation calculée !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="363"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="368"/>
+        <source>Function not implemented yet!</source>
+        <translation>Fonction encore non implémentée !</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="373"/>
+        <source>No valid path type is selected!</source>
+        <translation>Aucun type de cheminement valide sélectionné !</translation>
     </message>
 </context>
 <context>

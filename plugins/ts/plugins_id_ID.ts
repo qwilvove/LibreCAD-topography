@@ -896,6 +896,7 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogPolygo</name>
     <message>
         <location filename="../topographytools/tt_dialogpolygo.ui" line="14"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="194"/>
         <source>Calculate polygonation</source>
         <translation type="unfinished"></translation>
     </message>
@@ -927,6 +928,79 @@ first base, second base, first target, second target.</source>
     <message>
         <location filename="../topographytools/tt_dialogpolygo.ui" line="150"/>
         <source>PgDown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="176"/>
+        <source>Antenna path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="181"/>
+        <source>Bounded path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="186"/>
+        <source>Closed path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="95"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="114"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="121"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="145"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="165"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="363"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="368"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="373"/>
+        <source>Error!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="95"/>
+        <source>The path must have at least 2 stations!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="114"/>
+        <source>The first station of the path has no coordinates!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="121"/>
+        <source>The first station of the path has no V0!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="145"/>
+        <source>Missing front view between stations %1 and %2!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="165"/>
+        <source>Missing back view between stations %1 and %2!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="232"/>
+        <source>Success!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="232"/>
+        <source>Polygonation calculated!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="363"/>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="368"/>
+        <source>Function not implemented yet!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpolygo.cpp" line="373"/>
+        <source>No valid path type is selected!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
