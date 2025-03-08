@@ -14,7 +14,8 @@
 #define TOPOGRAPHYTOOLS_H
 
 #include "qc_plugininterface.h"
-#include <QDialog>
+
+#include "tt_mainwindow.h"
 
 class QLineEdit;
 
@@ -30,6 +31,9 @@ class LC_Topographytools : public QObject, QC_PluginInterface
     virtual QString name() const Q_DECL_OVERRIDE;
     virtual void execComm(Document_Interface *doc,
                           QWidget *parent, QString cmd) Q_DECL_OVERRIDE;
+
+private:
+    TT_MainWindow* mainWindow = nullptr;
 };
 
 namespace TT

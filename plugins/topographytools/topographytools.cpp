@@ -30,6 +30,14 @@ PluginCapabilities LC_Topographytools::getCapabilities() const
 void LC_Topographytools::execComm(Document_Interface *doc, QWidget *parent, QString cmd)
 {
     Q_UNUSED(cmd);
-    TT_DialogMain mainDialog(parent, doc);
-    mainDialog.exec();
+
+    if (mainWindow == nullptr)
+    {
+        mainWindow = new TT_MainWindow(parent, doc);
+        mainWindow->show();
+    }
+    else
+    {
+        mainWindow->activateWindow();
+    }
 }
