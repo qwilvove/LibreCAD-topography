@@ -12,7 +12,6 @@
 
 #include "topographytools.h"
 
-#include "document_interface.h"
 #include "tt_dialogmain.h"
 
 QString LC_Topographytools::name() const
@@ -31,13 +30,6 @@ void LC_Topographytools::execComm(Document_Interface *doc, QWidget *parent, QStr
 {
     Q_UNUSED(cmd);
 
-    if (mainWindow == nullptr)
-    {
-        mainWindow = new TT_MainWindow(parent, doc);
-        mainWindow->show();
-    }
-    else
-    {
-        mainWindow->activateWindow();
-    }
+    TT_DialogMain mainDialog(parent, doc);
+    mainDialog.exec();
 }

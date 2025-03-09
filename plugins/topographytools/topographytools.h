@@ -14,10 +14,7 @@
 #define TOPOGRAPHYTOOLS_H
 
 #include "qc_plugininterface.h"
-
-#include "tt_mainwindow.h"
-
-class QLineEdit;
+#include "document_interface.h"
 
 /****** LC_Topographytools ******/
 class LC_Topographytools : public QObject, QC_PluginInterface
@@ -31,38 +28,6 @@ class LC_Topographytools : public QObject, QC_PluginInterface
     virtual QString name() const Q_DECL_OVERRIDE;
     virtual void execComm(Document_Interface *doc,
                           QWidget *parent, QString cmd) Q_DECL_OVERRIDE;
-
-private:
-    TT_MainWindow* mainWindow = nullptr;
 };
-
-namespace TT
-{
-
-enum PTYPE
-{
-    POINT,
-    STATION,
-    REFERENCE,
-    MEASURE
-};
-
-struct Point
-{
-    PTYPE type;
-    QString name;
-    double x;
-    double y;
-    bool hasZ;
-    double z;
-    double ih; // Instrument height - for a STATION
-    double v0; // Start angle (grades) - for a STATION
-    double ph; // Prism height
-    double ha; // Horizontal angle
-    double va; // Vertical angle
-    double id; // Inclined distance
-};
-
-}
 
 #endif // TOPOGRAPHYTOOLS_H

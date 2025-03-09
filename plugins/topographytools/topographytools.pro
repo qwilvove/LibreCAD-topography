@@ -29,6 +29,7 @@ SOURCES += \
 
 HEADERS += \
     topographytools.h \
+    tt.h \
     tt_dialogadd.h \
     tt_dialogedit.h \
     tt_dialogmain.h \

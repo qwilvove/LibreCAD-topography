@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QListWidgetItem>
 
-#include "topographytools.h"
+#include "tt.h"
 
 namespace Ui {
 class TT_DialogPolygo;

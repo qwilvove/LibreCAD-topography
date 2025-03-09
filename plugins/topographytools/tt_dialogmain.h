@@ -4,7 +4,7 @@
 #include "qc_plugininterface.h"
 #include <QDialog>
 
-#include "topographytools.h"
+#include "tt.h"
 
 namespace Ui {
 class TT_DialogMain;

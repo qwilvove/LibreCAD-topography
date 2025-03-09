@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QCheckBox>
 
-#include "topographytools.h"
+#include "tt.h"
 
 namespace Ui {
 class TT_DialogV0;

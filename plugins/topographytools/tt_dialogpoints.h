@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "topographytools.h"
+#include "tt.h"
 
 namespace Ui {
 class TT_DialogPoints;
