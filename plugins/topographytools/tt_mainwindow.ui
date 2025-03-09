@@ -332,7 +332,7 @@
    </property>
    <property name="icon">
     <iconset resource="icons/icons.qrc">
-     <normaloff>:/icons/test.svg</normaloff>:/icons/test.svg</iconset>
+     <normaloff>:/icons/points.svg</normaloff>:/icons/points.svg</iconset>
    </property>
    <property name="text">
     <string>points</string>
