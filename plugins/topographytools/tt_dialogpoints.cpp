@@ -32,7 +32,7 @@ void TT_DialogPoints::identifyStationsAndMeasures()
             do
             {
                 i++;
-                if (points.at(i)->type == TT::PTYPE::MEASURE)
+                if (i < points.size() && points.at(i)->type == TT::PTYPE::MEASURE)
                 {
                     currentMeasures.append(points.at(i));
                 }

@@ -10,8 +10,6 @@ TT_DialogPolygo::TT_DialogPolygo(QWidget *parent, QList<TT::Point *> &points) :
 {
     ui->setupUi(this);
 
-    qInfo() << "test"; // To remove
-
     fillStationsAndReferences();
     fillItemsStations();
     displayItems();
@@ -34,7 +32,7 @@ void TT_DialogPolygo::fillStationsAndReferences()
             do
             {
                 i++;
-                if (points.at(i)->type == TT::PTYPE::REFERENCE)
+                if (i < points.size() && points.at(i)->type == TT::PTYPE::REFERENCE)
                 {
                     currentReferences.append(points.at(i));
                 }

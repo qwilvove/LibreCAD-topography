@@ -32,7 +32,7 @@ void TT_DialogV0::identifyStationsAndReferences()
             do
             {
                 i++;
-                if (points.at(i)->type == TT::PTYPE::REFERENCE)
+                if (i < points.size() && points.at(i)->type == TT::PTYPE::REFERENCE)
                 {
                     currentReferences.append(points.at(i));
                 }

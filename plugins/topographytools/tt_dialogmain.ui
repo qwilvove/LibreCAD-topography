@@ -369,7 +369,7 @@
        </property>
        <property name="icon">
         <iconset resource="icons/icons.qrc">
-         <normaloff>:/icons/points.svg</normaloff>:/icons/points.svg</iconset>
+         <normaloff>:/icons/test.svg</normaloff>:/icons/test.svg</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -401,7 +401,7 @@
         <string>Draw points</string>
        </property>
        <property name="icon">
-        <iconset>
+        <iconset resource="icons/icons.qrc">
          <normaloff>:/icons/draw_points.svg</normaloff>:/icons/draw_points.svg</iconset>
        </property>
        <property name="iconSize">
