@@ -13,6 +13,7 @@
 #include "topographytools.h"
 
 #include "tt_dialogmain.h"
+/*#include "tt_mainwindow.h"*/
 
 QString LC_Topographytools::name() const
 {
@@ -32,4 +33,6 @@ void LC_Topographytools::execComm(Document_Interface *doc, QWidget *parent, QStr
 
     TT_DialogMain mainDialog(parent, doc);
     mainDialog.exec();
+    /*TT_MainWindow *mainWindow = new TT_MainWindow(parent, doc);
+    mainWindow->show();*/
 }

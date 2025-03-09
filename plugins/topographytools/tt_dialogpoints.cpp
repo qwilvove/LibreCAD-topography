@@ -4,7 +4,7 @@
 #include <QCheckBox>
 #include <QMessageBox>
 
-TT_DialogPoints::TT_DialogPoints(QWidget *parent, QList<TT::Point> &points) :
+TT_DialogPoints::TT_DialogPoints(QWidget *parent, QList<TT::Point *> &points) :
     QDialog(parent),
     ui(new Ui::TT_DialogPoints),
     points(points)
@@ -24,20 +24,20 @@ void TT_DialogPoints::identifyStationsAndMeasures()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i).type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::PTYPE::STATION)
         {
-            TT::Point *currentStation = &(points[i]);
+            TT::Point *currentStation = points.at(i);
             QList<TT::Point*> currentMeasures = {};
 
             do
             {
                 i++;
-                if (points.at(i).type == TT::PTYPE::MEASURE)
+                if (points.at(i)->type == TT::PTYPE::MEASURE)
                 {
-                    currentMeasures.append(&(points[i]));
+                    currentMeasures.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i).type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
 
             stations.append(currentStation);
             measures.append(currentMeasures);
@@ -102,10 +102,10 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
         bool found = false;
         for (int j = 0; j < points.size(); j++)
         {
-            if (points.at(j).type == TT::PTYPE::POINT && points.at(j).name == selectedStations.at(i)->name)
+            if (points.at(j)->type == TT::PTYPE::POINT && points.at(j)->name == selectedStations.at(i)->name)
             {
-                stationsCoordinates.append(&(points[j]));
-                calculateWithZ.append(points.at(j).hasZ);
+                stationsCoordinates.append(points.at(j));
+                calculateWithZ.append(points.at(j)->hasZ);
                 found = true;
                 break;
             }
@@ -178,7 +178,7 @@ void TT_DialogPoints::on_buttonBox_accepted()
     {
         for (int j = 0; j < newPoints.at(i).size(); j++)
         {
-            points.append(*(newPoints.at(i).at(j)));
+            points.append(newPoints.at(i).at(j));
         }
     }
 }

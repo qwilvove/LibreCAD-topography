@@ -3,12 +3,14 @@
 
 #include <QMessageBox>
 
-TT_DialogPolygo::TT_DialogPolygo(QWidget *parent, QList<TT::Point> &points) :
+TT_DialogPolygo::TT_DialogPolygo(QWidget *parent, QList<TT::Point *> &points) :
     QDialog(parent),
     ui(new Ui::TT_DialogPolygo),
     points(points)
 {
     ui->setupUi(this);
+
+    qInfo() << "test"; // To remove
 
     fillStationsAndReferences();
     fillItemsStations();
@@ -24,20 +26,20 @@ void TT_DialogPolygo::fillStationsAndReferences()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i).type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::PTYPE::STATION)
         {
-            TT::Point *currentStation = &(points[i]);
+            TT::Point *currentStation = points.at(i);
             QList<TT::Point*> currentReferences = {};
 
             do
             {
                 i++;
-                if (points.at(i).type == TT::PTYPE::REFERENCE)
+                if (points.at(i)->type == TT::PTYPE::REFERENCE)
                 {
-                    currentReferences.append(&(points[i]));
+                    currentReferences.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i).type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
 
             stations.append(currentStation);
             references.append(currentReferences);
@@ -97,14 +99,14 @@ void TT_DialogPolygo::calculateAntennaPath()
     }
 
     // Check if the first station of the path has coordinates (at least X and Y)
-    TT::Point firstStationCoordinates {};
+    TT::Point *firstStationCoordinates = nullptr;
     bool found = false;
     for (int i = 0; i < points.size(); i++)
     {
-        if (points.at(i).type == TT::PTYPE::POINT && points.at(i).name == itemsPolygo.at(0)->name)
+        if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == itemsPolygo.at(0)->name)
         {
             firstStationCoordinates = points.at(i);
-            calculateWithZ = points.at(i).hasZ;
+            calculateWithZ = points.at(i)->hasZ;
             found = true;
             break;
         }
@@ -177,15 +179,15 @@ void TT_DialogPolygo::calculateAntennaPath()
     hds.append(0.0);
     // X (for each stations of the polygo)
     xs.clear();
-    xs.append(firstStationCoordinates.x);
+    xs.append(firstStationCoordinates->x);
     // Y (for each stations of the polygo)
     ys.clear();
-    ys.append(firstStationCoordinates.y);
+    ys.append(firstStationCoordinates->y);
     // Z (for each stations of the polygo)
     zs.clear();
     if (calculateWithZ)
     {
-        zs.append(firstStationCoordinates.z);
+        zs.append(firstStationCoordinates->z);
     }
 
     // For each station (except the first one)
@@ -240,9 +242,9 @@ void TT_DialogPolygo::writeDataAfterCalculateAntennaPath()
     {
         for (int j = 0; j < points.size(); j++)
         {
-            if (points.at(j).name == itemsPolygo.at(i)->name && points.at(j).type == itemsPolygo.at(i)->type)
+            if (points.at(j)->name == itemsPolygo.at(i)->name && points.at(j)->type == itemsPolygo.at(i)->type)
             {
-                points[j].v0 = v0s.at(i);
+                points.at(j)->v0 = v0s.at(i);
                 break;
             }
         }
@@ -253,17 +255,17 @@ void TT_DialogPolygo::writeDataAfterCalculateAntennaPath()
     {
         for (int j = 0; j < points.size(); j++)
         {
-            if (points.at(j).name == itemsPolygo.at(i)->name && points.at(j).type == itemsPolygo.at(i)->type)
+            if (points.at(j)->name == itemsPolygo.at(i)->name && points.at(j)->type == itemsPolygo.at(i)->type)
             {
-                TT::Point newPoint = {};
-                newPoint.type = TT::PTYPE::POINT;
-                newPoint.name = itemsPolygo.at(i)->name;
-                newPoint.x = xs.at(i);
-                newPoint.y = ys.at(i);
+                TT::Point *newPoint = new TT::Point();
+                newPoint->type = TT::PTYPE::POINT;
+                newPoint->name = itemsPolygo.at(i)->name;
+                newPoint->x = xs.at(i);
+                newPoint->y = ys.at(i);
                 if (zs.size() > 0)
                 {
-                    newPoint.hasZ = true;
-                    newPoint.z = zs.at(i);
+                    newPoint->hasZ = true;
+                    newPoint->z = zs.at(i);
                 }
                 points.append(newPoint);
                 break;

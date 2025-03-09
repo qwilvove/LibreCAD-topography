@@ -15,7 +15,7 @@ class TT_DialogPolygo : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogPolygo(QWidget *parent, QList<TT::Point> &points);
+    explicit TT_DialogPolygo(QWidget *parent, QList<TT::Point *> &points);
     ~TT_DialogPolygo();
 
 private slots:
@@ -38,7 +38,7 @@ private slots:
 
 private:
     Ui::TT_DialogPolygo *ui;
-    QList<TT::Point> &points;
+    QList<TT::Point *> &points;
 
     QList<TT::Point*> stations;
     QList<QList<TT::Point*>> references;

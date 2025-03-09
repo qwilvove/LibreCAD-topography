@@ -97,7 +97,7 @@ int TT_MainWindow::loadPoints()
 
     for (int i = 0; i < max; i++)
     {
-        TT::Point point{};
+        TT::Point *point = new TT::Point();
         loadPoint(stream, point);
         points.append(point);
         nbPoints++;
@@ -109,20 +109,20 @@ int TT_MainWindow::loadPoints()
 }
 
 // Read each information for a single point
-void TT_MainWindow::loadPoint(QDataStream &stream, TT::Point &point)
+void TT_MainWindow::loadPoint(QDataStream &stream, TT::Point *point)
 {
-    stream >> point.type;
-    stream >> point.name;
-    stream >> point.x;
-    stream >> point.y;
-    stream >> point.hasZ;
-    stream >> point.z;
-    stream >> point.ih;
-    stream >> point.v0;
-    stream >> point.ph;
-    stream >> point.ha;
-    stream >> point.va;
-    stream >> point.id;
+    stream >> point->type;
+    stream >> point->name;
+    stream >> point->x;
+    stream >> point->y;
+    stream >> point->hasZ;
+    stream >> point->z;
+    stream >> point->ih;
+    stream >> point->v0;
+    stream >> point->ph;
+    stream >> point->ha;
+    stream >> point->va;
+    stream >> point->id;
 }
 
 // Save all points in the .tt file following the file structure
@@ -144,7 +144,7 @@ int TT_MainWindow::savePoints()
     int len = points.size();
     stream << len;
 
-    foreach (TT::Point point, points)
+    foreach (TT::Point *point, points)
     {
         savePoint(stream, point);
         nbPoints++;
@@ -156,20 +156,20 @@ int TT_MainWindow::savePoints()
 }
 
 // Write each information for a single point
-void TT_MainWindow::savePoint(QDataStream &stream, TT::Point &point)
+void TT_MainWindow::savePoint(QDataStream &stream, TT::Point *point)
 {
-    stream << point.type;
-    stream << point.name;
-    stream << point.x;
-    stream << point.y;
-    stream << point.hasZ;
-    stream << point.z;
-    stream << point.ih;
-    stream << point.v0;
-    stream << point.ph;
-    stream << point.ha;
-    stream << point.va;
-    stream << point.id;
+    stream << point->type;
+    stream << point->name;
+    stream << point->x;
+    stream << point->y;
+    stream << point->hasZ;
+    stream << point->z;
+    stream << point->ih;
+    stream << point->v0;
+    stream << point->ph;
+    stream << point->ha;
+    stream << point->va;
+    stream << point->id;
 }
 
 // Read a CSV file to add points to the project
@@ -199,7 +199,7 @@ int TT_MainWindow::importPoints()
     while (!stream.atEnd())
     {
         QString line = stream.readLine();
-        TT::Point point{};
+        TT::Point *point = new TT::Point();
         if(importPoint(line, point))
         {
             points.append(point);
@@ -217,7 +217,7 @@ int TT_MainWindow::importPoints()
 // xxx.xx;y.yyyy
 // OR
 // xx.xxxx;y.y;zz.zzz
-bool TT_MainWindow::importPoint(QString &line, TT::Point &point)
+bool TT_MainWindow::importPoint(QString &line, TT::Point *point)
 {
     bool ok = true;
 
@@ -234,8 +234,8 @@ bool TT_MainWindow::importPoint(QString &line, TT::Point &point)
         double y = splitedLine.at(1).toDouble(&ok);
         if (!ok) return false;
 
-        point.x = x;
-        point.y = y;
+        point->x = x;
+        point->y = y;
 
         return true;
     }
@@ -248,10 +248,10 @@ bool TT_MainWindow::importPoint(QString &line, TT::Point &point)
         double z = splitedLine.at(2).toDouble(&ok);
         if (!ok) return false;
 
-        point.x = x;
-        point.y = y;
-        point.hasZ = true;
-        point.z = z;
+        point->x = x;
+        point->y = y;
+        point->hasZ = true;
+        point->z = z;
 
         return true;
     }
@@ -265,14 +265,14 @@ void TT_MainWindow::displayPoints()
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    foreach (TT::Point point, points)
+    foreach (TT::Point *point, points)
     {
         displayPoint(point);
     }
 }
 
 // Add a line to tableWidget and fill it with point info
-void TT_MainWindow::displayPoint(TT::Point &point)
+void TT_MainWindow::displayPoint(TT::Point *point)
 {
     // Add one line at the end
     int lineNumber = ui->tableWidget->rowCount() + 1;
@@ -280,7 +280,7 @@ void TT_MainWindow::displayPoint(TT::Point &point)
 
     // Fill the row
     // Check for type
-    if (point.type == TT::PTYPE::POINT)
+    if (point->type == TT::PTYPE::POINT)
     {
         // Line number
         QString infoLineNumber = QString("%1").arg(lineNumber);
@@ -295,22 +295,22 @@ void TT_MainWindow::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
 
         // Name
-        QString infoName = point.name;
+        QString infoName = point->name;
         QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
         itemName->setForeground(QColor(QString("dark green")));
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("X = %1 , Y = %2").arg(point.x, 11, 'f', 3).arg(point.y, 11, 'f', 3);
-        if (point.hasZ)
+        QString infoParameters = tr("X = %1 , Y = %2").arg(point->x, 11, 'f', 3).arg(point->y, 11, 'f', 3);
+        if (point->hasZ)
         {
-            infoParameters += tr(" , Z = %1").arg(point.z, 8, 'f', 3);
+            infoParameters += tr(" , Z = %1").arg(point->z, 8, 'f', 3);
         }
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark green")));
         ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
-    else if (point.type == TT::PTYPE::STATION)
+    else if (point->type == TT::PTYPE::STATION)
     {
         // Line number
         QString infoLineNumber = QString("%1").arg(lineNumber);
@@ -325,22 +325,22 @@ void TT_MainWindow::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
 
         // Name
-        QString infoName = point.name;
+        QString infoName = point->name;
         QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
         itemName->setForeground(QColor(QString("dark red")));
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
-        QString infoParameters = tr("IH = %1").arg(point.ih, 7, 'f', 3);
-        if (point.v0 >= 0)
+        QString infoParameters = tr("IH = %1").arg(point->ih, 7, 'f', 3);
+        if (point->v0 >= 0)
         {
-            infoParameters += tr(" , V0 = %1").arg(point.v0, 9, 'f', 5);
+            infoParameters += tr(" , V0 = %1").arg(point->v0, 9, 'f', 5);
         }
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark red")));
         ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
-    else if (point.type == TT::PTYPE::REFERENCE)
+    else if (point->type == TT::PTYPE::REFERENCE)
     {
         // Line number
         QString infoLineNumber = QString("%1").arg(lineNumber);
@@ -355,22 +355,22 @@ void TT_MainWindow::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
 
         // Name
-        QString infoName = point.name;
+        QString infoName = point->name;
         QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
         itemName->setForeground(QColor(QString("dark blue")));
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
         QString infoParameters = tr("PH = %1 , HA = %2 , VA = %3 , ID = %4")
-                                     .arg(point.ph, 7, 'f', 3)
-                                     .arg(point.ha, 9, 'f', 5)
-                                     .arg(point.va, 9, 'f', 5)
-                                     .arg(point.id, 7, 'f', 3);
+                                     .arg(point->ph, 7, 'f', 3)
+                                     .arg(point->ha, 9, 'f', 5)
+                                     .arg(point->va, 9, 'f', 5)
+                                     .arg(point->id, 7, 'f', 3);
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark blue")));
         ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
     }
-    else // point.type == TT::PTYPE::MEASURE
+    else // point->type == TT::PTYPE::MEASURE
     {
         // Line number
         QString infoLineNumber = QString("%1").arg(lineNumber);
@@ -385,17 +385,17 @@ void TT_MainWindow::displayPoint(TT::Point &point)
         ui->tableWidget->setItem(lineNumber - 1, 1, itemType);
 
         // Name
-        QString infoName = point.name;
+        QString infoName = point->name;
         QTableWidgetItem *itemName = new QTableWidgetItem(infoName);
         itemName->setForeground(QColor(QString("dark cyan")));
         ui->tableWidget->setItem(lineNumber - 1, 2, itemName);
 
         // Parameters
         QString infoParameters = tr("PH = %1 , HA = %2 , VA = %3 , ID = %4")
-                                     .arg(point.ph, 7, 'f', 3)
-                                     .arg(point.ha, 9, 'f', 5)
-                                     .arg(point.va, 9, 'f', 5)
-                                     .arg(point.id, 7, 'f', 3);
+                                     .arg(point->ph, 7, 'f', 3)
+                                     .arg(point->ha, 9, 'f', 5)
+                                     .arg(point->va, 9, 'f', 5)
+                                     .arg(point->id, 7, 'f', 3);
         QTableWidgetItem *itemParameters = new QTableWidgetItem(infoParameters);
         itemParameters->setForeground(QColor(QString("dark cyan")));
         ui->tableWidget->setItem(lineNumber - 1, 3, itemParameters);
@@ -405,8 +405,8 @@ void TT_MainWindow::displayPoint(TT::Point &point)
 // Add a point to points
 void TT_MainWindow::addPoint()
 {
-    TT::Point newPoint {};
-    TT_DialogAdd addDialog(this, &newPoint);
+    TT::Point *newPoint = new TT::Point();
+    TT_DialogAdd addDialog(this, newPoint);
     if (addDialog.exec() == QDialog::Accepted)
     {
         points.append(newPoint);
@@ -431,9 +431,9 @@ void TT_MainWindow::removePoints(QList<int> &indexesToRemove)
 }
 
 // Edit a single point attributes
-void TT_MainWindow::editPoint(TT::Point &point)
+void TT_MainWindow::editPoint(TT::Point *point)
 {
-    TT_DialogEdit editDialog(this, &point);
+    TT_DialogEdit editDialog(this, point);
     if (editDialog.exec() == QDialog::Accepted)
     {
         displayPoints();
@@ -503,8 +503,8 @@ int TT_MainWindow::drawPoints()
     // Draw each point
     for (auto i = 0; i < points.size(); i++)
     {
-        TT::Point currentPoint = points.at(i);
-        if (currentPoint.type == TT::PTYPE::POINT)
+        TT::Point *currentPoint = points.at(i);
+        if (currentPoint->type == TT::PTYPE::POINT)
         {
             drawPoint(currentPoint);
             nbPoints++;
@@ -517,24 +517,24 @@ int TT_MainWindow::drawPoints()
 }
 
 // Draw a single point on the current drawing
-void TT_MainWindow::drawPoint(TT::Point &point)
+void TT_MainWindow::drawPoint(TT::Point *point)
 {
     this->doc->setLayer("TT_POINTS");
-    QPointF insertionPoint(point.x, point.y);
+    QPointF insertionPoint(point->x, point->y);
     this->doc->addPoint(&insertionPoint);
 
-    if (!point.name.isEmpty())
+    if (!point->name.isEmpty())
     {
         this->doc->setLayer("TT_NAME");
-        QPointF textInsertionPoint(point.x + 1.0, point.y + 4.0);
-        this->doc->addText(point.name, "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
+        QPointF textInsertionPoint(point->x + 1.0, point->y + 4.0);
+        this->doc->addText(point->name, "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 
-    if (point.hasZ)
+    if (point->hasZ)
     {
         this->doc->setLayer("TT_ALTI");
-        QString text = QString("%1").arg(point.z);
-        QPointF textInsertionPoint(point.x + 1.0, point.y - 12.0 - 4.0);
+        QString text = QString("%1").arg(point->z);
+        QPointF textInsertionPoint(point->x + 1.0, point->y - 12.0 - 4.0);
         this->doc->addText(text, "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 }
@@ -650,7 +650,7 @@ void TT_MainWindow::on_actionedit_triggered()
 {
     if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size())
     {
-        editPoint(points[ui->tableWidget->currentRow()]);
+        editPoint(points.at(ui->tableWidget->currentRow()));
     }
 }
 
@@ -714,5 +714,5 @@ void TT_MainWindow::on_tableWidget_cellDoubleClicked(int row, int column)
 {
     Q_UNUSED(column);
 
-    editPoint(points[row]);
+    editPoint(points.at(row));
 }

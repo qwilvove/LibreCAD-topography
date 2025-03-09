@@ -24,29 +24,29 @@ private:
     Document_Interface *doc;
 
     QString fileName;
-    QList<TT::Point> points;
+    QList<TT::Point *> points;
 
     void readSettings();
     void writeSettings();
 
     int loadPoints();
-    void loadPoint(QDataStream &stream, TT::Point &point);
+    void loadPoint(QDataStream &stream, TT::Point *point);
     int savePoints();
-    void savePoint(QDataStream &stream, TT::Point &point);
+    void savePoint(QDataStream &stream, TT::Point *point);
     int importPoints();
-    bool importPoint(QString &line, TT::Point &point);
+    bool importPoint(QString &line, TT::Point *point);
 
     void displayPoints();
-    void displayPoint(TT::Point &point);
+    void displayPoint(TT::Point *point);
 
     void addPoint();
     void removePoints(QList<int> &indexesToRemove);
-    void editPoint(TT::Point &point);
+    void editPoint(TT::Point *point);
     void movePointUp(int index);
     void movePointDown(int index);
 
     int drawPoints();
-    void drawPoint(TT::Point &point);
+    void drawPoint(TT::Point *point);
 
 private slots:
     void on_actionnew_triggered();

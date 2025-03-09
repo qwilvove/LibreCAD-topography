@@ -4,7 +4,7 @@
 #include <QMessageBox>
 #include <QCheckBox>
 
-TT_DialogV0::TT_DialogV0(QWidget *parent, QList<TT::Point> &points) :
+TT_DialogV0::TT_DialogV0(QWidget *parent, QList<TT::Point *> &points) :
     QDialog(parent),
     ui(new Ui::TT_DialogV0),
     points(points)
@@ -24,20 +24,20 @@ void TT_DialogV0::identifyStationsAndReferences()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i).type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::PTYPE::STATION)
         {
-            currentStation = &(points[i]);
+            currentStation = points.at(i);
             currentReferences = {};
 
             do
             {
                 i++;
-                if (points.at(i).type == TT::PTYPE::REFERENCE)
+                if (points.at(i)->type == TT::PTYPE::REFERENCE)
                 {
-                    currentReferences.append(&(points[i]));
+                    currentReferences.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i).type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
 
             stations.append(currentStation);
             references.append(currentReferences);
@@ -93,19 +93,19 @@ void TT_DialogV0::on_cbStation_currentIndexChanged(int index)
     {
         ui->pbCalculate->setEnabled(true);
         setupCheckBoxes(index);
-        currentStation = stations[index];
-        currentReferences = references[index];
+        currentStation = stations.at(index);
+        currentReferences = references.at(index);
     }
 }
 
 void TT_DialogV0::on_pbCalculate_clicked()
 {
     // Check if the current station has coordinates (X and Y)
-    TT::Point currentStationCoordinates {};
+    TT::Point *currentStationCoordinates = new TT::Point();
     bool found = false;
     for (int i = 0; i < points.size(); i++)
     {
-        if (points.at(i).type == TT::PTYPE::POINT && points.at(i).name == currentStation->name)
+        if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == currentStation->name)
         {
             currentStationCoordinates = points.at(i);
             found = true;
@@ -132,7 +132,7 @@ void TT_DialogV0::on_pbCalculate_clicked()
         QCheckBox *currentCheckBox = checkBoxes[i];
         if (currentCheckBox->isChecked())
         {
-            checkedReferences.append(currentReferences[i]);
+            checkedReferences.append(currentReferences.at(i));
         }
     }
     if (checkedReferences.isEmpty())
@@ -142,12 +142,12 @@ void TT_DialogV0::on_pbCalculate_clicked()
     }
 
     // Check if each checked reference as coordinates (X and Y)
-    QList<TT::Point> checkedReferencesCoordinates {};
+    QList<TT::Point*> checkedReferencesCoordinates {};
     for (int i = 0; i < points.size(); i++)
     {
         for (int j = 0; j < checkedReferences.size(); j++)
         {
-            if (points.at(i).type == TT::PTYPE::POINT && points.at(i).name == checkedReferences[j]->name)
+            if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == checkedReferences[j]->name)
             {
                 checkedReferencesCoordinates.append(points.at(i));
                 break;
@@ -161,12 +161,12 @@ void TT_DialogV0::on_pbCalculate_clicked()
     }
 
     // For each checked reference
-    TT::Point a = currentStationCoordinates;
+    TT::Point *a = currentStationCoordinates;
     for (int i = 0; i < checkedReferencesCoordinates.size(); i++)
     {
         // Check if distance between station and reference is not equal to zero
-        TT::Point b = checkedReferencesCoordinates.at(i);
-        double distance = std::sqrt( std::pow(b.x - a.x, 2.0) + std::pow(b.y - a.y, 2.0) );
+        TT::Point *b = checkedReferencesCoordinates.at(i);
+        double distance = std::sqrt( std::pow(b->x - a->x, 2.0) + std::pow(b->y - a->y, 2.0) );
         if (distance == 0)
         {
             QMessageBox::warning(this, tr("Error!"), tr("At least one of the checked references has a distance with the station equal to zero!"), QMessageBox::StandardButton::Ok);
@@ -180,9 +180,9 @@ void TT_DialogV0::on_pbCalculate_clicked()
     for (int i = 0; i < checkedReferencesCoordinates.size(); i++)
     {
         // Calculate V0
-        TT::Point b = checkedReferencesCoordinates.at(i);
-        double gAB = 2.0 * std::atan( ( b.x - a.x ) / ( std::sqrt( std::pow( b.x - a.x, 2.0 ) + std::pow( b.y - a.y, 2.0 ) ) + ( b.y - a.y ) ) ) * 200.0 / M_PI;
-        double distance = std::sqrt( std::pow(b.x - a.x, 2.0) + std::pow(b.y - a.y, 2.0) );
+        TT::Point *b = checkedReferencesCoordinates.at(i);
+        double gAB = 2.0 * std::atan( ( b->x - a->x ) / ( std::sqrt( std::pow( b->x - a->x, 2.0 ) + std::pow( b->y - a->y, 2.0 ) ) + ( b->y - a->y ) ) ) * 200.0 / M_PI;
+        double distance = std::sqrt( std::pow(b->x - a->x, 2.0) + std::pow(b->y - a->y, 2.0) );
         double v0 = std::fmod(gAB - checkedReferences.at(i)->ha, 400.0);
         if (v0 < 0.0)
         {
