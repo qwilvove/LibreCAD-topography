@@ -6,6 +6,7 @@
 #include "tt_dialogv0.h"
 #include "tt_dialogpolygo.h"
 #include "tt_dialogpoints.h"
+#include "tt_dialogdrawblocks.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -35,6 +36,7 @@ TT_MainWindow::TT_MainWindow(QWidget *parent, Document_Interface *doc):
         ui->actionpolygo->setEnabled(true);
         ui->actionpoints->setEnabled(true);
         ui->actiondraw->setEnabled(true);
+        ui->actionDrawBlocks->setEnabled(true);
 
         loadPoints();
         displayPoints();
@@ -564,6 +566,7 @@ void TT_MainWindow::on_actionnew_triggered()
     ui->actionpolygo->setEnabled(true);
     ui->actionpoints->setEnabled(true);
     ui->actiondraw->setEnabled(true);
+    ui->actionDrawBlocks->setEnabled(true);
 
     points.clear();
     displayPoints();
@@ -600,6 +603,7 @@ void TT_MainWindow::on_actionopen_triggered()
     ui->actionpolygo->setEnabled(true);
     ui->actionpoints->setEnabled(true);
     ui->actiondraw->setEnabled(true);
+    ui->actionDrawBlocks->setEnabled(true);
 
     loadPoints();
     displayPoints();
@@ -707,6 +711,15 @@ void TT_MainWindow::on_actiondraw_triggered()
     else
     {
         ui->statusbar->showMessage(tr("Active file : %1 | No points drawn.").arg(fileName));
+    }
+}
+
+void TT_MainWindow::on_actionDrawBlocks_triggered()
+{
+    TT_DialogDrawBlocks drawBlocksDialog(this, doc);
+    if (drawBlocksDialog.exec() == QDialog::Accepted)
+    {
+        displayPoints();
     }
 }
 

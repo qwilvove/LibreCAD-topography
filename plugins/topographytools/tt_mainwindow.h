@@ -66,6 +66,7 @@ private slots:
     void on_actionpoints_triggered();
 
     void on_actiondraw_triggered();
+    void on_actionDrawBlocks_triggered();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };

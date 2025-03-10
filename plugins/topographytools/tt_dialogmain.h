@@ -19,6 +19,11 @@ public:
     ~TT_DialogMain();
 
 private:
+    Ui::TT_DialogMain *ui;
+    Document_Interface *doc;
+    QString fileName;
+    QList<TT::Point*> points;
+
     void readSettings();
     void writeSettings();
 
@@ -41,11 +46,6 @@ private:
     int drawPoints();
     void drawPoint(TT::Point *point);
 
-    Ui::TT_DialogMain *ui;
-    Document_Interface *doc;
-    QString fileName;
-    QList<TT::Point*> points;
-
 private slots:
     void on_pbNew_clicked();
     void on_pbOpen_clicked();
@@ -64,6 +64,7 @@ private slots:
     void on_pbPoints_clicked();
 
     void on_pbDraw_clicked();
+    void on_pbDrawBlocks_clicked();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };

@@ -20,6 +20,7 @@ INCLUDEPATH    += ../../librecad/src/plugins
 SOURCES += \
     topographytools.cpp \
     tt_dialogadd.cpp \
+    tt_dialogdrawblocks.cpp \
     tt_dialogedit.cpp \
     tt_dialogmain.cpp \
     tt_dialogpoints.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     topographytools.h \
     tt.h \
     tt_dialogadd.h \
+    tt_dialogdrawblocks.h \
     tt_dialogedit.h \
     tt_dialogmain.h \
     tt_dialogpoints.h \
@@ -53,6 +55,7 @@ unix {
 
 FORMS += \
     tt_dialogadd.ui \
+    tt_dialogdrawblocks.ui \
     tt_dialogedit.ui \
     tt_dialogmain.ui \
     tt_dialogpoints.ui \
@@ -61,4 +64,5 @@ FORMS += \
     tt_mainwindow.ui
 
 RESOURCES += \
-    icons/icons.qrc
+    icons/icons.qrc \
+    thumbnails/thumbnails.qrc

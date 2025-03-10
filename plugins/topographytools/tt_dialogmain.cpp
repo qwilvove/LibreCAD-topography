@@ -8,6 +8,7 @@
 #include "tt_dialogv0.h"
 #include "tt_dialogpolygo.h"
 #include "tt_dialogpoints.h"
+#include "tt_dialogdrawblocks.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -38,6 +39,7 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
         ui->pbPolygo->setEnabled(true);
         ui->pbPoints->setEnabled(true);
         ui->pbDraw->setEnabled(true);
+        ui->pbDrawBlocks->setEnabled(true);
 
         loadPoints();
         displayPoints();
@@ -568,6 +570,7 @@ void TT_DialogMain::on_pbNew_clicked()
     ui->pbPolygo->setEnabled(true);
     ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
+    ui->pbDrawBlocks->setEnabled(true);
 
     points.clear();
     displayPoints();
@@ -604,6 +607,7 @@ void TT_DialogMain::on_pbOpen_clicked()
     ui->pbPolygo->setEnabled(true);
     ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
+    ui->pbDrawBlocks->setEnabled(true);
 
     loadPoints();
     displayPoints();
@@ -711,6 +715,15 @@ void TT_DialogMain::on_pbDraw_clicked()
     else
     {
         ui->label->setText(tr("Active file : %1 | No points drawn.").arg(fileName));
+    }
+}
+
+void TT_DialogMain::on_pbDrawBlocks_clicked()
+{
+    TT_DialogDrawBlocks drawBlocksDialog(this, doc);
+    if (drawBlocksDialog.exec() == QDialog::Accepted)
+    {
+        displayPoints();
     }
 }
 

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/thumbnails">
+        <file>tree.svg</file>
+        <file>electrical_box.svg</file>
+        <file>electrical_box_2p.svg</file>
+        <file>electrical_box_3p.svg</file>
+    </qresource>
+</RCC>
