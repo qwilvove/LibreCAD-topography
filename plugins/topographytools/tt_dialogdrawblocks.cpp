@@ -92,15 +92,25 @@ void TT_DialogDrawBlocks::drawBlockThreePoints(QString name, QString layer)
     while ( this->doc->getPoint(point1) == true && this->doc->getPoint(point2) == true && this->doc->getPoint(point3) == true )
     {
         double distance = std::sqrt( std::pow(point2->x() - point1->x(), 2.0) + std::pow(point2->y() - point1->y(), 2.0) );
-        double distance2 = std::sqrt( std::pow(point3->x() - point2->x(), 2.0) + std::pow(point3->y() - point2->y(), 2.0) );
-        if (distance > 0 && distance2 > 0)
-        {
-            // TODO : use vectors to calculate projected point
-            QPointF *scale = new QPointF(distance, distance2);
-            qreal rotation = std::atan2( point2->y() - point1->y(), point2->x() - point1->x() );
 
-            this->doc->addInsert(name, *point1, *scale, rotation);
-            this->doc->updateView();
+        if (distance > 0)
+        {
+            QPointF *vector1 = new QPointF( point2->x() - point1->x(), point2->y() - point1->y() );
+            QPointF *vector2 = new QPointF( point3->x() - point1->x(), point3->y() - point1->y() );
+            double innerProduct = vector1->x() * vector2->x() + vector1->y() * vector2->y();
+            double magnitudePow2 = std::pow( vector1->x(), 2.0 ) + std::pow( vector1->y(), 2.0 );
+            QPointF *vector3 = new QPointF( vector1->x() * innerProduct / magnitudePow2, vector1->y() * innerProduct / magnitudePow2 );
+            QPointF *projectedPoint = new QPointF( point1->x() + vector3->x(), point1->y() + vector3->y() );
+            double distance2 = std::sqrt( std::pow(projectedPoint->x() - point3->x(), 2.0) + std::pow(projectedPoint->y() - point3->y(), 2.0) );
+
+            if (distance2 > 0)
+            {
+                QPointF *scale = new QPointF(distance, distance2);
+                qreal rotation = std::atan2( point2->y() - point1->y(), point2->x() - point1->x() );
+
+                this->doc->addInsert(name, *point1, *scale, rotation);
+                this->doc->updateView();
+            }
         }
     }
 
