@@ -1,7 +1,7 @@
 #include "tt_dialogdrawblocks.h"
 #include "ui_tt_dialogdrawblocks.h"
 
-#include <QDir>
+#include <QTemporaryDir>
 
 TT_DialogDrawBlocks::TT_DialogDrawBlocks(QWidget *parent, Document_Interface *doc):
     ui(new Ui::TT_DialogDrawBlocks),
@@ -16,6 +16,33 @@ TT_DialogDrawBlocks::~TT_DialogDrawBlocks()
     delete ui;
 }
 
+void TT_DialogDrawBlocks::createBlockIfNotExists(QString name)
+{
+    // Extract block from ressources
+    QTemporaryDir tempDir;
+    if (tempDir.isValid())
+    {
+        const QString tempFile = tempDir.path() + "/" + name + ".dxf";
+        if (QFile::copy(":/blocks/" + name + ".dxf", tempFile))
+        {
+            // Only create the block if it does not exist
+            bool blockExists = false;
+            foreach (QString blockName, this->doc->getAllBlocks())
+            {
+                if ( blockName == name )
+                {
+                    blockExists = true;
+                    break;
+                }
+            }
+            if ( !blockExists )
+            {
+                this->doc->addBlockfromFromdisk(tempFile);
+            }
+        }
+    }
+}
+
 void TT_DialogDrawBlocks::drawBlockOnePoint(QString name, QString layer)
 {
     this->close();
@@ -25,9 +52,7 @@ void TT_DialogDrawBlocks::drawBlockOnePoint(QString name, QString layer)
 
     this->doc->setLayer(layer);
 
-    QDir dir(QCoreApplication::applicationDirPath());
-    QString absolute_file_path = dir.absoluteFilePath("../plugins/topographytools/blocks/" + name + ".dxf");
-    this->doc->addBlockfromFromdisk(absolute_file_path);
+    createBlockIfNotExists(name);
 
     QPointF *point = new QPointF();
     QPointF *scale = new QPointF(1,1);
@@ -49,9 +74,7 @@ void TT_DialogDrawBlocks::drawBlockTwoPoints(QString name, QString layer)
 
     this->doc->setLayer(layer);
 
-    QDir dir(QCoreApplication::applicationDirPath());
-    QString absolute_file_path = dir.absoluteFilePath("../plugins/topographytools/blocks/" + name + ".dxf");
-    this->doc->addBlockfromFromdisk(absolute_file_path);
+    createBlockIfNotExists(name);
 
     QPointF *point1 = new QPointF();
     QPointF *point2 = new QPointF();
@@ -81,9 +104,7 @@ void TT_DialogDrawBlocks::drawBlockThreePoints(QString name, QString layer)
 
     this->doc->setLayer(layer);
 
-    QDir dir(QCoreApplication::applicationDirPath());
-    QString absolute_file_path = dir.absoluteFilePath("../plugins/topographytools/blocks/" + name + ".dxf");
-    this->doc->addBlockfromFromdisk(absolute_file_path);
+    createBlockIfNotExists(name);
 
     QPointF *point1 = new QPointF();
     QPointF *point2 = new QPointF();

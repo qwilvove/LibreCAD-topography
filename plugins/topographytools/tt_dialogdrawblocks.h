@@ -22,6 +22,8 @@ private:
     QWidget *parent;
     Document_Interface *doc;
 
+    void createBlockIfNotExists(QString name);
+
     void drawBlockOnePoint(QString name, QString layer);
     void drawBlockTwoPoints(QString name, QString layer);
     void drawBlockThreePoints(QString name, QString layer);

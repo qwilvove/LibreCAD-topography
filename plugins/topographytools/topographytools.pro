@@ -64,5 +64,6 @@ FORMS += \
     tt_mainwindow.ui
 
 RESOURCES += \
+    blocks/blocks.qrc \
     icons/icons.qrc \
     thumbnails/thumbnails.qrc

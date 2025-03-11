@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/blocks">
+        <file>electrical_box.dxf</file>
+        <file>electrical_box_2p.dxf</file>
+        <file>electrical_box_3p.dxf</file>
+        <file>tree.dxf</file>
+    </qresource>
+</RCC>
