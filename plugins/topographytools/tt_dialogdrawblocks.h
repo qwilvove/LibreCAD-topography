@@ -2,8 +2,9 @@
 #define TT_DIALOGDRAWBLOCKS_H
 
 #include <QDialog>
+#include <QToolButton>
 
-#include "document_interface.h"
+#include "tt.h"
 
 namespace Ui {
 class TT_DialogDrawBlocks;
@@ -22,18 +23,25 @@ private:
     QWidget *parent;
     Document_Interface *doc;
 
-    void createBlockIfNotExists(QString name);
+    QList<QList<TT::BLOCK>> blocks;
+    QList<QList<QToolButton *>> buttons;
+    TT::BLOCK_INSERTION_TYPE currentInsertionType = TT::BLOCK_INSERTION_TYPE::P1;
 
-    void drawBlockOnePoint(QString name, QString layer);
-    void drawBlockTwoPoints(QString name, QString layer);
-    void drawBlockThreePoints(QString name, QString layer);
+    void setupUi();
+    void updateUi(TT::BLOCK_INSERTION_TYPE insertionType);
+
+    void createBlockIfNotExists(QString file);
+
+    void drawBlockOnePoint(TT::BLOCK block);
+    void drawBlockTwoPoints(TT::BLOCK block);
+    void drawBlockThreePoints(TT::BLOCK block);
+    void drawBlockTwoPointsPlusValue(TT::BLOCK block);
 
 private slots:
-    void on_tbTree_clicked();
-
-    void on_tbElectricalBox_clicked();
-    void on_tbElectricalBox_2points_clicked();
-    void on_tbElectricalBox_3points_clicked();
+    void on_rb1p_clicked();
+    void on_rb2p_clicked();
+    void on_rb3p_clicked();
+    void on_rb2pv_clicked();
 };
 
 #endif // TT_DIALOGDRAWBLOCKS_H

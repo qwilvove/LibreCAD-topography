@@ -15,118 +15,52 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Insertion type :</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QRadioButton" name="rb1p">
+       <property name="text">
+        <string>1 point</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="rb2p">
+       <property name="text">
+        <string>2 points</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="rb3p">
+       <property name="text">
+        <string>3 points</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="rb2pv">
+       <property name="text">
+        <string>2 points + value</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>-1</number>
      </property>
-     <widget class="QWidget" name="tabVegetation">
-      <attribute name="title">
-       <string>Vegetation</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QScrollArea" name="scrollArea">
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>358</width>
-            <height>198</height>
-           </rect>
-          </property>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
-            <widget class="QToolButton" name="tbTree">
-             <property name="icon">
-              <iconset resource="thumbnails/thumbnails.qrc">
-               <normaloff>:/thumbnails/tree.svg</normaloff>:/thumbnails/tree.svg</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>64</width>
-               <height>64</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabElectricity">
-      <attribute name="title">
-       <string>Electricity</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QScrollArea" name="scrollArea_2">
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents_2">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>358</width>
-            <height>198</height>
-           </rect>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="1">
-            <widget class="QToolButton" name="tbElectricalBox_2points">
-             <property name="icon">
-              <iconset resource="thumbnails/thumbnails.qrc">
-               <normaloff>:/thumbnails/electrical_box_2p.svg</normaloff>:/thumbnails/electrical_box_2p.svg</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>64</width>
-               <height>64</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QToolButton" name="tbElectricalBox">
-             <property name="icon">
-              <iconset resource="thumbnails/thumbnails.qrc">
-               <normaloff>:/thumbnails/electrical_box.svg</normaloff>:/thumbnails/electrical_box.svg</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>64</width>
-               <height>64</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QToolButton" name="tbElectricalBox_3points">
-             <property name="icon">
-              <iconset resource="thumbnails/thumbnails.qrc">
-               <normaloff>:/thumbnails/electrical_box_3p.svg</normaloff>:/thumbnails/electrical_box_3p.svg</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>64</width>
-               <height>64</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </widget>
-       </item>
-      </layout>
-     </widget>
     </widget>
    </item>
    <item>
@@ -141,9 +75,7 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="thumbnails/thumbnails.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
