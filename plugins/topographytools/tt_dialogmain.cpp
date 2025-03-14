@@ -711,10 +711,7 @@ void TT_DialogMain::on_pbDraw_clicked()
 void TT_DialogMain::on_pbDrawBlocks_clicked()
 {
     TT_DialogDrawBlocks drawBlocksDialog(this, doc);
-    if (drawBlocksDialog.exec() == QDialog::Accepted)
-    {
-        displayPoints();
-    }
+    drawBlocksDialog.exec();
 }
 
 void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)

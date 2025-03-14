@@ -39,7 +39,8 @@ enum LAYER
     ALTI,
 
     VEGETATION,
-    ELECTRICITY
+    ELECTRICITY,
+    ROAD
 };
 
 struct LayerProperties
@@ -56,7 +57,8 @@ inline const QMap<LAYER, LayerProperties> LAYERS = {
     { ALTI,        { QObject::tr("TT_ALTI"),        0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
 
     { VEGETATION,  { QObject::tr("TT_VEGETATION"),  0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
-    { ELECTRICITY, { QObject::tr("TT_ELECTRICITY"), 0xFF0000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } }
+    { ELECTRICITY, { QObject::tr("TT_ELECTRICITY"), 0xFF0000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { ROAD,        { QObject::tr("TT_ROAD"),        0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } }
 };
 
 enum BLOCK_INSERTION_TYPE
@@ -73,8 +75,12 @@ enum BLOCK_INSERTION_TYPE
 enum BLOCK
 {
     TREE,
+
     ELECTRICAL_BOX,
-    ELECTRICAL_BOX_MULTI
+    ELECTRICAL_BOX_MULTI,
+
+    SIGN_TURN_LEFT,
+    SIGN_TURN_RIGHT
 };
 
 struct BlockProperties
@@ -88,7 +94,9 @@ struct BlockProperties
 inline const QMap<BLOCK, BlockProperties> BLOCKS = {
     { TREE,                 { "tree",                 QObject::tr("Vegetation"),  LAYER::VEGETATION,  BLOCK_INSERTION_TYPE::P1    } },
     { ELECTRICAL_BOX,       { "electrical_box",       QObject::tr("Electricity"), LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::P1    } },
-    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", QObject::tr("Electricity"), LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } }
+    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", QObject::tr("Electricity"), LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } },
+    { SIGN_TURN_LEFT,       { "tt_sign_turn_left",    QObject::tr("Road"),        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } },
+    { SIGN_TURN_RIGHT,      { "tt_sign_turn_right",   QObject::tr("Road"),        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } }
 };
 
 }
