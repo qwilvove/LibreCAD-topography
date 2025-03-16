@@ -9,6 +9,7 @@
 #include "tt_dialogpolygo.h"
 #include "tt_dialogpoints.h"
 #include "tt_dialogdrawblocks.h"
+#include "tt_dialoggrid.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -40,6 +41,7 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
         ui->pbPoints->setEnabled(true);
         ui->pbDraw->setEnabled(true);
         ui->pbDrawBlocks->setEnabled(true);
+        ui->pbGrid->setEnabled(true);
 
         loadPoints();
         displayPoints();
@@ -561,6 +563,7 @@ void TT_DialogMain::on_pbNew_clicked()
     ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
     ui->pbDrawBlocks->setEnabled(true);
+    ui->pbGrid->setEnabled(true);
 
     points.clear();
     displayPoints();
@@ -598,6 +601,7 @@ void TT_DialogMain::on_pbOpen_clicked()
     ui->pbPoints->setEnabled(true);
     ui->pbDraw->setEnabled(true);
     ui->pbDrawBlocks->setEnabled(true);
+    ui->pbGrid->setEnabled(true);
 
     loadPoints();
     displayPoints();
@@ -712,6 +716,12 @@ void TT_DialogMain::on_pbDrawBlocks_clicked()
 {
     TT_DialogDrawBlocks drawBlocksDialog(this, doc);
     drawBlocksDialog.exec();
+}
+
+void TT_DialogMain::on_pbGrid_clicked()
+{
+    TT_DialogGrid gridDialog(this, doc);
+    gridDialog.exec();
 }
 
 void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)

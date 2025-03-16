@@ -3,6 +3,8 @@
         <file>electrical_box.dxf</file>
         <file>electrical_box_multi.dxf</file>
         <file>tree.dxf</file>
+        <file>tt_grid.dxf</file>
+        <file>tt_grid_cross.dxf</file>
         <file>tt_sign_turn_left.dxf</file>
         <file>tt_sign_turn_right.dxf</file>
     </qresource>

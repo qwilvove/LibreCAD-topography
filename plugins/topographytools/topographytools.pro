@@ -22,6 +22,7 @@ SOURCES += \
     tt_dialogadd.cpp \
     tt_dialogdrawblocks.cpp \
     tt_dialogedit.cpp \
+    tt_dialoggrid.cpp \
     tt_dialogmain.cpp \
     tt_dialogpoints.cpp \
     tt_dialogpolygo.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     tt_dialogadd.h \
     tt_dialogdrawblocks.h \
     tt_dialogedit.h \
+    tt_dialoggrid.h \
     tt_dialogmain.h \
     tt_dialogpoints.h \
     tt_dialogpolygo.h \
@@ -57,6 +59,7 @@ FORMS += \
     tt_dialogadd.ui \
     tt_dialogdrawblocks.ui \
     tt_dialogedit.ui \
+    tt_dialoggrid.ui \
     tt_dialogmain.ui \
     tt_dialogpoints.ui \
     tt_dialogpolygo.ui \

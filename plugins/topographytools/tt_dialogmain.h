@@ -65,6 +65,7 @@ private slots:
 
     void on_pbDraw_clicked();
     void on_pbDrawBlocks_clicked();
+    void on_pbGrid_clicked();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };
