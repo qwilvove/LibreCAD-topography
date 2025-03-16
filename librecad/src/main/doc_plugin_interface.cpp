@@ -319,6 +319,10 @@ void Plugin_Entity::getData(QHash<int, QVariant> *data){
         data->insert(DPI::STARTANGLE, d.angle );
         data->insert(DPI::XSCALE, d.scaleFactor.x );
         data->insert(DPI::YSCALE, d.scaleFactor.y );
+        data->insert(DPI::COLSPACE, d.spacing.x);
+        data->insert(DPI::ROWSPACE, d.spacing.y);
+        data->insert(DPI::COLCOUNT, d.cols);
+        data->insert(DPI::ROWCOUNT, d.rows);
         break;}
     case RS2::EntityMText: {
         data->insert(DPI::ETYPE, DPI::MTEXT);
@@ -556,6 +560,32 @@ void Plugin_Entity::updateData(QHash<int, QVariant> *data){
         break;
 //EntityContainer
     case RS2::EntityInsert: {
+        RS_Insert *insert = static_cast<RS_Insert*>(ec);
+        vec = insert->getInsertionPoint();
+        if (hash.contains(DPI::STARTX)) {
+            vec.x = (hash.take(DPI::STARTX)).toDouble();
+        }
+        if (hash.contains(DPI::STARTY)) {
+            vec.y = (hash.take(DPI::STARTY)).toDouble();
+        }
+        insert->setInsertionPoint(vec);
+        if (hash.contains(DPI::STARTANGLE)) {
+            insert->setAngle( (hash.take(DPI::STARTANGLE)).toDouble() );
+        }
+        vec = insert->getSpacing();
+        if (hash.contains(DPI::COLSPACE)) {
+            vec.x = (hash.take(DPI::COLSPACE)).toDouble();
+        }
+        if (hash.contains(DPI::ROWSPACE)) {
+            vec.y = (hash.take(DPI::ROWSPACE)).toDouble();
+        }
+        insert->setSpacing(vec);
+        if (hash.contains(DPI::COLCOUNT)) {
+            insert->setCols( (hash.take(DPI::COLCOUNT)).toInt() );
+        }
+        if (hash.contains(DPI::ROWCOUNT)) {
+            insert->setRows( (hash.take(DPI::ROWCOUNT)).toInt() );
+        }
         break;}
     case RS2::EntityMText: {
         RS_MText *txt = static_cast<RS_MText*>(ec);
@@ -717,6 +747,10 @@ void Plugin_Entity::move(QPointF offset, DPI::Disposition disp) {
         this->entity = ne;
 }
 
+void Plugin_Entity::moveWithoutUndo(QPointF offset) {
+    entity->move( RS_Vector(offset.x(), offset.y()) );
+}
+
 void Plugin_Entity::moveRotate(QPointF const& offset, QPointF const& center, double angle, DPI::Disposition disp) {
 	RS_Entity *ne = entity->clone();
 	ne->move( RS_Vector(offset.x(), offset.y()) );
@@ -741,6 +775,10 @@ void Plugin_Entity::rotate(QPointF center, double angle, DPI::Disposition disp) 
         delete ne;
     } else
         this->entity = ne;
+}
+
+void Plugin_Entity::rotateWithoutUndo(QPointF center, double angle) {
+    entity->rotate( RS_Vector(center.x(), center.y()) , angle);
 }
 
 void Plugin_Entity::scale(QPointF center, QPointF factor, DPI::Disposition disp) {
@@ -1006,9 +1044,9 @@ void Doc_plugin_interface::addInsert(QString name, QPointF ins, QPointF scale, q
 }
 
 /*TODO RLZ: add undo support in this method*/
-QString Doc_plugin_interface::addBlockfromFromdisk(QString fullName){
-	if (fullName.isEmpty() || !doc)
-		return nullptr;
+QString Doc_plugin_interface::addBlockfromFromdisk(QString fullName, QString displayName){
+    if (fullName.isEmpty() || !doc)
+        return nullptr;
     RS_BlockList* blockList = doc->getBlockList();
 	if (!blockList)
 		return nullptr;
@@ -1016,7 +1054,15 @@ QString Doc_plugin_interface::addBlockfromFromdisk(QString fullName){
     QFileInfo fi(fullName);
     QString s = fi.completeBaseName();
 
-	QString name = blockList->newName(s);
+    QString name;
+    if (displayName == nullptr || displayName == "")
+    {
+        name = blockList->newName(s);
+    }
+    else
+    {
+        name = blockList->newName(displayName);
+    }
 
     if (fi.isReadable()) {
         RS_BlockData d(name, RS_Vector(0,0), false);
@@ -1345,6 +1391,13 @@ bool Doc_plugin_interface::addVariable(const QString& key, double value, int cod
    if (key.startsWith("$DIM"))
        doc->updateDimensions(true);
    return true;
+}
+
+bool Doc_plugin_interface::removeVariable(const QString& key){
+    docGr->removeVariable(key);
+    if (key.startsWith("$DIM"))
+        doc->updateDimensions(true);
+    return true;
 }
 
 bool Doc_plugin_interface::getInt(int *num, const QString& message, const QString& title){

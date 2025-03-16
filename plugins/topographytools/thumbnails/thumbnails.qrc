@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/thumbnails">
+        <file>electrical_box.svg</file>
+        <file>electrical_box_multi.svg</file>
+        <file>tree.svg</file>
+        <file>tt_sign_turn_left.svg</file>
+        <file>tt_sign_turn_right.svg</file>
+    </qresource>
+</RCC>

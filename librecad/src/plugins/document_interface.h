@@ -252,6 +252,7 @@ public:
     *  \param disp whether to delete the original entity or keep it
     */
     virtual void move(QPointF offset, DPI::Disposition disp = DPI::DELETE_ORIGINAL ) = 0;
+    virtual void moveWithoutUndo(QPointF offset) = 0;
 
     //! Move and rotate the entity.
     /*!
@@ -269,6 +270,7 @@ public:
     *  \param disp whether to delete the original entity or keep it
     */
     virtual void rotate(QPointF center, double angle, DPI::Disposition disp = DPI::DELETE_ORIGINAL) = 0;
+    virtual void rotateWithoutUndo(QPointF center, double angle) = 0;
 
     //! Scale the entity.
     /*!
@@ -393,9 +395,10 @@ public:
     //! Add block definition from disk to current document.
     /*! Add block definition from disk to current document.
     *  \param fullName path+name of dxf file to add.
+    *  \param displayName name displayed to the user.
     *  \return name of created block or NULL if fail.
     */
-    virtual QString addBlockfromFromdisk(QString fullName) = 0;
+    virtual QString addBlockfromFromdisk(QString fullName, QString displayName = nullptr) = 0;
 
     //! Add a entity to current document.
     /*! Add a entity to current document with the data sets with Plug_Entity.updateData().
@@ -509,6 +512,7 @@ public:
     virtual bool getVariableDouble(const QString& key, double *num) = 0;
     virtual bool addVariable(const QString& key, int value, int code=70) = 0;
     virtual bool addVariable(const QString& key, double value, int code=40) = 0;
+    virtual bool removeVariable(const QString& key) = 0;
 
     virtual bool getInt(int *num, const QString& message = "", const QString& title = "") = 0;
     virtual bool getReal(qreal *num, const QString& message = "", const QString& title = "") = 0;

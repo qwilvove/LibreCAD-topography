@@ -62,8 +62,10 @@ public:
     virtual void updatePolylineData(QList<Plug_VertexData> *data);
 
     virtual void move(QPointF offset, DPI::Disposition disp = DPI::DELETE_ORIGINAL);
+    virtual void moveWithoutUndo(QPointF offset);
     virtual void moveRotate(QPointF const& offset, QPointF const& center, double angle, DPI::Disposition disp = DPI::DELETE_ORIGINAL);
     virtual void rotate(QPointF center, double angle, DPI::Disposition disp = DPI::DELETE_ORIGINAL);
+    virtual void rotateWithoutUndo(QPointF center, double angle);
     virtual void scale(QPointF center, QPointF factor, DPI::Disposition disp = DPI::DELETE_ORIGINAL);
     virtual QString intColor2str(int color);
 private:
@@ -93,7 +95,7 @@ public:
     void addImage(int handle, QPointF *start, QPointF *uvr, QPointF *vvr,
                   int w, int h, QString name, int br, int con, int fade) override;
     void addInsert(QString name, QPointF ins, QPointF scale, qreal rot) override;
-    QString addBlockfromFromdisk(QString fullName) override;
+    QString addBlockfromFromdisk(QString fullName, QString displayName = nullptr) override;
     void addEntity(Plug_Entity *handle) override;
     Plug_Entity *newEntity( enum DPI::ETYPE type) override;
     void removeEntity(Plug_Entity *ent) override;
@@ -122,6 +124,7 @@ public:
     bool getVariableDouble(const QString& key, double *num) override;
     bool addVariable(const QString& key, int value, int code=70) override;
     bool addVariable(const QString& key, double value, int code=40) override;
+    bool removeVariable(const QString& key) override;
 
     bool getInt(int *num, const QString& message, const QString& title) override;
     bool getReal(qreal *num, const QString& message, const QString& title) override;

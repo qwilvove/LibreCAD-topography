@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="2000mm"
+   height="2000mm"
+   viewBox="0 0 2000.0001 2000"
+   version="1.1"
+   id="svg19"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs19" />
+  <g
+     id="g19"
+     transform="matrix(-1,0,0,1,1367.5427,26.453125)">
+    <path
+       id="line1"
+       style="fill:none;stroke:#000000;stroke-width:6"
+       d="M 367.54263,1950 V 650" />
+    <path
+       id="path4"
+       d="M 410.84393,25 C 391.59891,-8.3333327 343.48639,-8.3333327 324.24137,25 L 6.6987299,575 C -12.546279,608.33333 11.509982,650 50,650 h 635.08528 c 38.49004,0 62.5463,-41.66667 43.30131,-75 z"
+       style="fill:none;stroke:#000000;stroke-width:6" />
+    <path
+       id="path13"
+       d="m 317.43075,373.8651 -19.99999,1e-5 -30,-30 30,-30 19.99999,-1e-5 c 99.41125,0 180,80.58875 180,180 l 1e-5,30.00001 -30,-30 -30,30 -1e-5,-30.00001 c 0,-66.27417 -53.72583,-120 -120,-120 z"
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:6" />
+    <path
+       id="path19"
+       style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:6"
+       d="M 393.52341,45 C 381.9764,25.000005 353.1089,25.000005 341.56189,45 L 32.679493,580 c -11.547006,20 2.88675,45 25.980761,45 H 676.42504 c 23.09401,0 37.52776,-25 25.98077,-45 z M 93.30127,575 H 641.784 L 367.54263,100 Z" />
+  </g>
+</svg>
