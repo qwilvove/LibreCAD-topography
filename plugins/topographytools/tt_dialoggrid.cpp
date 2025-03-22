@@ -191,15 +191,13 @@ void TT_DialogGrid::on_pbPreparePrint_clicked()
     this->doc->getAllEntities(sel);
     for (int i = 0; i < sel->size(); i++)
     {
-        //sel->at(i)->rotate(rotationCentre, -angle);
-        sel->at(i)->move(-rotationCentre, DPI::DELETE_ORIGINAL);
+        sel->at(i)->rotateWithoutUndo(rotationCentre, -angle);
+        sel->at(i)->moveWithoutUndo(-rotationCentre);
     }
 
     this->doc->addVariable("TT_GRID_ROTATION", angle);
     this->doc->addVariable("TT_GRID_X", rotationCentre.x());
     this->doc->addVariable("TT_GRID_Y", rotationCentre.y());
-
-    //addVariable("$PINSBASE", p, 10);
 }
 
 void TT_DialogGrid::on_pbRestoreDrawing_clicked()
@@ -220,12 +218,12 @@ void TT_DialogGrid::on_pbRestoreDrawing_clicked()
     this->doc->getAllEntities(sel);
     for (int i = 0; i < sel->size(); i++)
     {
-        sel->at(i)->move(rotationCentre, DPI::DELETE_ORIGINAL);
-        //sel->at(i)->rotate(rotationCentre, angle);
+        sel->at(i)->moveWithoutUndo(rotationCentre);
+        sel->at(i)->rotateWithoutUndo(rotationCentre, angle);
     }
 
-    this->doc->addVariable("TT_GRID_ROTATION", 0.0);
-    this->doc->addVariable("TT_GRID_X", 0.0);
-    this->doc->addVariable("TT_GRID_Y", 0.0);
+    this->doc->removeVariable("TT_GRID_ROTATION");
+    this->doc->removeVariable("TT_GRID_X");
+    this->doc->removeVariable("TT_GRID_Y");
 }
 
