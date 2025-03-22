@@ -18,7 +18,6 @@ public:
     ~TT_DialogAdd();
 
 private slots:
-    void loadData();
     void saveData();
     void on_cbType_currentIndexChanged(int index);
     void on_leName_textChanged(const QString &arg1);
