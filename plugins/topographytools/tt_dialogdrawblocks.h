@@ -18,9 +18,10 @@ public:
     explicit TT_DialogDrawBlocks(QWidget *parent = nullptr, Document_Interface *doc = nullptr);
     ~TT_DialogDrawBlocks();
 
+    void loadPreviousState(int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType);
+
 private:
     Ui::TT_DialogDrawBlocks *ui;
-    QWidget *parent;
     Document_Interface *doc;
 
     QList<QList<TT::BLOCK>> blocks;

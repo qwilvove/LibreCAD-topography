@@ -10,6 +10,22 @@ namespace Ui {
 class TT_DialogMain;
 }
 
+enum DIALOG
+{
+    NONE,
+    DRAW_BLOCKS,
+    DRAW_GRID
+};
+
+struct State
+{
+    DIALOG dialog;
+    // If DRAW_BLOCKS
+    int tabIndex;
+    int insertTypeIndex;
+    TT::BLOCK_INSERTION_TYPE insertType;
+};
+
 class TT_DialogMain : public QDialog
 {
     Q_OBJECT
@@ -18,11 +34,20 @@ public:
     explicit TT_DialogMain(QWidget *parent = nullptr, Document_Interface *doc = nullptr);
     ~TT_DialogMain();
 
+    bool isRunning;
+
+    void savePreviousState(DIALOG dialog = DIALOG::NONE, int tabIndex = 0, int insertTypeIndex = 0, TT::BLOCK_INSERTION_TYPE insertType = TT::BLOCK_INSERTION_TYPE::P1);
+
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private:
     Ui::TT_DialogMain *ui;
     Document_Interface *doc;
     QString fileName;
     QList<TT::Point*> points;
+
+    State previousState;
 
     void readSettings();
     void writeSettings();
@@ -68,6 +93,8 @@ private slots:
     void on_pbGrid_clicked();
 
     void on_tableWidget_cellDoubleClicked(int row, int column);
+
+    void loadPreviousState();
 };
 
 #endif // TT_DIALOGMAIN_H

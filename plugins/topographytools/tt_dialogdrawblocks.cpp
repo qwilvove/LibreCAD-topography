@@ -1,13 +1,15 @@
 #include "tt_dialogdrawblocks.h"
 #include "ui_tt_dialogdrawblocks.h"
 
+#include "tt_dialogmain.h"
+
 #include <cmath>
 #include <QTemporaryDir>
 #include <QScrollArea>
 
 TT_DialogDrawBlocks::TT_DialogDrawBlocks(QWidget *parent, Document_Interface *doc):
+    QDialog(parent),
     ui(new Ui::TT_DialogDrawBlocks),
-    parent(parent),
     doc(doc)
 {
     ui->setupUi(this);
@@ -18,6 +20,13 @@ TT_DialogDrawBlocks::TT_DialogDrawBlocks(QWidget *parent, Document_Interface *do
 TT_DialogDrawBlocks::~TT_DialogDrawBlocks()
 {
     delete ui;
+}
+
+void TT_DialogDrawBlocks::loadPreviousState(int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
+{
+    this->ui->tabWidget->setCurrentIndex(tabIndex);
+    this->ui->buttonGroup->button(insertTypeIndex)->setChecked(true);
+    updateUi(insertType);
 }
 
 void TT_DialogDrawBlocks::setupUi()
@@ -186,8 +195,10 @@ void TT_DialogDrawBlocks::createBlockIfNotExists(QString file)
 
 void TT_DialogDrawBlocks::drawBlockOnePoint(TT::BLOCK block)
 {
+    ((TT_DialogMain *)this->parentWidget())->savePreviousState(DIALOG::DRAW_BLOCKS, this->ui->tabWidget->currentIndex(), this->ui->buttonGroup->checkedId(), this->currentInsertionType);
+
     this->close();
-    this->parent->close();
+    ((QDialog *)this->parentWidget())->accept();
 
     QString initialLayer = this->doc->getCurrentLayer();
 
@@ -215,8 +226,10 @@ void TT_DialogDrawBlocks::drawBlockOnePoint(TT::BLOCK block)
 
 void TT_DialogDrawBlocks::drawBlockTwoPoints(TT::BLOCK block)
 {
+    ((TT_DialogMain *)this->parentWidget())->savePreviousState(DIALOG::DRAW_BLOCKS, this->ui->tabWidget->currentIndex(), this->ui->buttonGroup->checkedId(), this->currentInsertionType);
+
     this->close();
-    this->parent->close();
+    ((QDialog *)this->parentWidget())->accept();
 
     QString initialLayer = this->doc->getCurrentLayer();
 
@@ -252,8 +265,10 @@ void TT_DialogDrawBlocks::drawBlockTwoPoints(TT::BLOCK block)
 
 void TT_DialogDrawBlocks::drawBlockThreePoints(TT::BLOCK block)
 {
+    ((TT_DialogMain *)this->parentWidget())->savePreviousState(DIALOG::DRAW_BLOCKS, this->ui->tabWidget->currentIndex(), this->ui->buttonGroup->checkedId(), this->currentInsertionType);
+
     this->close();
-    this->parent->close();
+    ((QDialog *)this->parentWidget())->accept();
 
     QString initialLayer = this->doc->getCurrentLayer();
 
@@ -302,8 +317,10 @@ void TT_DialogDrawBlocks::drawBlockThreePoints(TT::BLOCK block)
 
 void TT_DialogDrawBlocks::drawBlockTwoPointsPlusValue(TT::BLOCK block)
 {
+    ((TT_DialogMain *)this->parentWidget())->savePreviousState(DIALOG::DRAW_BLOCKS, this->ui->tabWidget->currentIndex(), this->ui->buttonGroup->checkedId(), this->currentInsertionType);
+
     this->close();
-    this->parent->close();
+    ((QDialog *)this->parentWidget())->accept();
 
     QString initialLayer = this->doc->getCurrentLayer();
 

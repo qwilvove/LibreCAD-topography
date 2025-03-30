@@ -32,7 +32,10 @@ void LC_Topographytools::execComm(Document_Interface *doc, QWidget *parent, QStr
     Q_UNUSED(cmd);
 
     TT_DialogMain mainDialog(parent, doc);
-    mainDialog.exec();
+    while (mainDialog.isRunning)
+    {
+        mainDialog.exec();
+    }
     /*TT_MainWindow *mainWindow = new TT_MainWindow(parent, doc);
     mainWindow->show();*/
 }
