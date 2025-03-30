@@ -19,7 +19,6 @@ public:
 
 private:
     Ui::TT_DialogGrid *ui;
-    QWidget *parent;
     Document_Interface *doc;
 
 private slots:

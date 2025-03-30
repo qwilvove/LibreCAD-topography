@@ -14,6 +14,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QMessageBox>
+#include <QTimer>
 
 // Constructor
 TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
@@ -21,6 +22,9 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     ui(new Ui::TT_DialogMain),
     doc(doc)
 {
+    this->isRunning = true;
+    connect(this, &QDialog::rejected, this, [this]{this->isRunning = false;});
+
     ui->setupUi(this);
 
     readSettings();
@@ -52,6 +56,12 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 TT_DialogMain::~TT_DialogMain()
 {
     delete ui;
+}
+
+void TT_DialogMain::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    QTimer::singleShot(0, this, SLOT(loadPreviousState()));
 }
 
 // Read setting to find current .tt file
@@ -729,4 +739,32 @@ void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
     Q_UNUSED(column);
 
     editPoint(points.at(row));
+}
+
+void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
+{
+    this->previousState.dialog = dialog;
+    this->previousState.tabIndex = tabIndex;
+    this->previousState.insertTypeIndex = insertTypeIndex;
+    this->previousState.insertType = insertType;
+}
+
+void TT_DialogMain::loadPreviousState()
+{
+    switch (this->previousState.dialog)
+    {
+    case DIALOG::NONE:
+        break;
+    case DIALOG::DRAW_BLOCKS:
+    {
+        TT_DialogDrawBlocks drawBlocksDialog(this, doc);
+        drawBlocksDialog.loadPreviousState(this->previousState.tabIndex, this->previousState.insertTypeIndex, this->previousState.insertType);
+        drawBlocksDialog.exec();
+        break;
+    }
+    case DIALOG::DRAW_GRID:
+        break;
+    default:
+        break;
+    }
 }

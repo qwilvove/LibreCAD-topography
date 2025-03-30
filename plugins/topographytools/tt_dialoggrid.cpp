@@ -4,8 +4,8 @@
 #include <QTemporaryDir>
 
 TT_DialogGrid::TT_DialogGrid(QWidget *parent, Document_Interface *doc):
+    QDialog(parent),
     ui(new Ui::TT_DialogGrid),
-    parent(parent),
     doc(doc)
 {
     ui->setupUi(this);
@@ -19,7 +19,7 @@ TT_DialogGrid::~TT_DialogGrid()
 void TT_DialogGrid::on_pbInsertGrid_clicked()
 {
     this->close();
-    this->parent->close();
+    this->parentWidget()->close();
 
     QString initialLayer = this->doc->getCurrentLayer();
 
@@ -112,7 +112,7 @@ void TT_DialogGrid::on_pbInsertGrid_clicked()
 void TT_DialogGrid::on_pbMoveGrid_clicked()
 {
     this->close();
-    this->parent->close();
+    this->parentWidget()->close();
 
     Plug_Entity *ent = this->doc->getEnt();
     //Plug_Entity *newEnt = this->doc->newEntity(DPI::ETYPE::CIRCLE);
@@ -142,7 +142,7 @@ void TT_DialogGrid::on_pbMoveGrid_clicked()
 void TT_DialogGrid::on_pbRotateGrid_clicked()
 {
     this->close();
-    this->parent->close();
+    this->parentWidget()->close();
 
     Plug_Entity *grid = this->doc->getEnt("Select grid");
     double angle = 0;
@@ -176,7 +176,7 @@ void TT_DialogGrid::on_pbRotateGrid_clicked()
 void TT_DialogGrid::on_pbPreparePrint_clicked()
 {
     this->close();
-    this->parent->close();
+    this->parentWidget()->close();
 
     qInfo() << "test1";
     Plug_Entity *grid = this->doc->getEnt("Select grid");
@@ -207,7 +207,7 @@ void TT_DialogGrid::on_pbPreparePrint_clicked()
 void TT_DialogGrid::on_pbRestoreDrawing_clicked()
 {
     this->close();
-    this->parent->close();
+    this->parentWidget()->close();
 
     double angle = 0.0;
     double x = 0.0;
