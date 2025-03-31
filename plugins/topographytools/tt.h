@@ -61,6 +61,19 @@ inline const QMap<LAYER, LayerProperties> LAYERS = {
     { ROAD,        { QObject::tr("TT_ROAD"),        0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } }
 };
 
+enum TAB
+{
+    TAB_VEGETATION,
+    TAB_ELECTRICITY,
+    TAB_ROAD
+};
+
+inline const QMap<TAB, QString> TABS = {
+    { TAB_VEGETATION,  QObject::tr("Vegetation")  },
+    { TAB_ELECTRICITY, QObject::tr("Electricity") },
+    { TAB_ROAD,        QObject::tr("Road")        }
+};
+
 enum BLOCK_INSERTION_TYPE
 {
     ALL,
@@ -86,17 +99,17 @@ enum BLOCK
 struct BlockProperties
 {
     QString file;
-    QString tabName;
+    TAB tab;
     LAYER layer;
     BLOCK_INSERTION_TYPE type;
 };
 
 inline const QMap<BLOCK, BlockProperties> BLOCKS = {
-    { TREE,                 { "tree",                 QObject::tr("Vegetation"),  LAYER::VEGETATION,  BLOCK_INSERTION_TYPE::P1    } },
-    { ELECTRICAL_BOX,       { "electrical_box",       QObject::tr("Electricity"), LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::P1    } },
-    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", QObject::tr("Electricity"), LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } },
-    { SIGN_TURN_LEFT,       { "tt_sign_turn_left",    QObject::tr("Road"),        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } },
-    { SIGN_TURN_RIGHT,      { "tt_sign_turn_right",   QObject::tr("Road"),        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } }
+    { TREE,                 { "tree",                 TAB::TAB_VEGETATION,  LAYER::VEGETATION,  BLOCK_INSERTION_TYPE::P1    } },
+    { ELECTRICAL_BOX,       { "electrical_box",       TAB::TAB_ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::P1    } },
+    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", TAB::TAB_ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } },
+    { SIGN_TURN_LEFT,       { "tt_sign_turn_left",    TAB::TAB_ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } },
+    { SIGN_TURN_RIGHT,      { "tt_sign_turn_right",   TAB::TAB_ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } }
 };
 
 }
