@@ -30,23 +30,23 @@ void TT_DialogDrawBlocks::loadPreviousState(int tabIndex, int insertTypeIndex, T
 
 void TT_DialogDrawBlocks::setupUi()
 {
-    // Collect tab names
-    QList<QString> tabNames;
+    // Collect tabs
+    QList<TT::TAB> tabs;
     for (auto [key, value] : TT::BLOCKS.asKeyValueRange())
     {
-        if ( !tabNames.contains(value.tabName) )
+        if ( !tabs.contains(value.tab) )
         {
-            tabNames.append(value.tabName);
+            tabs.append(value.tab);
         }
     }
 
     // Collect blocks
-    for ( int i = 0; i < tabNames.size(); i++ )
+    for ( int i = 0; i < tabs.size(); i++ )
     {
         QList<TT::BLOCK> blocksOfThisTab;
         for (auto [key, value] : TT::BLOCKS.asKeyValueRange())
         {
-            if ( value.tabName == tabNames.at(i) )
+            if ( value.tab == tabs.at(i) )
             {
                 blocksOfThisTab.append(key);
             }
@@ -55,8 +55,8 @@ void TT_DialogDrawBlocks::setupUi()
     }
 
     // For each tab name, create a QWidget and populate it with buttons
-    QList<QWidget*> tabs;
-    for ( int i = 0; i < tabNames.size(); i++ )
+    QList<QWidget*> tabWidgets;
+    for ( int i = 0; i < tabs.size(); i++ )
     {
         QList<QToolButton *> tabButtons;
 
@@ -110,9 +110,9 @@ void TT_DialogDrawBlocks::setupUi()
         scrollArea->setWidget(scrollAreaContent);
 
         buttons.append(tabButtons);
-        tabs.append(newTab);
+        tabWidgets.append(newTab);
 
-        ui->tabWidget->addTab(newTab, tabNames.at(i));
+        ui->tabWidget->addTab(newTab, TT::TABS[tabs.at(i)]);
     }
     updateUi(TT::BLOCK_INSERTION_TYPE::P1);
 }
