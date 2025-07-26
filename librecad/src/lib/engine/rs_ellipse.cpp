@@ -153,7 +153,7 @@ class ClosestEllipticPoint {
 public:
     ClosestEllipticPoint(double a, double b, const RS_Vector& point):
         m_point{point}
-      , c2{a*a-b*b}
+      , c2{b * b - a * a}
       , ax2{2.*a*point.x}
       , by2{2.*b*point.y}
     {}
@@ -394,7 +394,7 @@ double RS_Ellipse::getLength() const
 double RS_Ellipse::getEllipseLength(double x1, double x2) const
 {
     double a(getMajorRadius()),k(getRatio());
-    k= 1-k*k;//elliptic modulus, or eccentricity
+    k= std::sqrt(1-k*k);//elliptic modulus, or eccentricity
 //    std::cout<<"1, angle1="<<x1/M_PI<<" angle2="<<x2/M_PI<<std::endl;
 //    if(isReversed())  std::swap(x1,x2);
     x1=RS_Math::correctAngle(x1);
