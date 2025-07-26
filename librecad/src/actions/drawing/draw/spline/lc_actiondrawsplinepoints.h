@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_ACTIONDRAWSPLINEPOINTS_H
 #define LC_ACTIONDRAWSPLINEPOINTS_H
 
-#include "rs_previewactioninterface.h"
+
 #include "rs_actiondrawspline.h"
 
 /**
@@ -33,15 +33,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @author Pavel Krejcir
  */
 class LC_ActionDrawSplinePoints:public RS_ActionDrawSpline {
-Q_OBJECT
+    Q_OBJECT
 public:
-    LC_ActionDrawSplinePoints(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    LC_ActionDrawSplinePoints(LC_ActionContext *actionContext);
     ~LC_ActionDrawSplinePoints() override;
     void reset();
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     void setClosed(bool c) override;
     bool isClosed() override;
@@ -49,12 +46,13 @@ public:
     //using degree=2 only
     void setDegree(int /*deg*/) override{}
 protected:
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
 
     void redo();
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;

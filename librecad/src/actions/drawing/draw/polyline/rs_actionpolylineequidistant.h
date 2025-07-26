@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
@@ -27,6 +28,7 @@
 #define RS_ACTIONPOLYLINEEQUIDISTANT_H
 
 #include "rs_previewactioninterface.h"
+class RS_Polyline;
 
 /**
  * This action class can handle user events to move entities.
@@ -36,16 +38,13 @@
 class RS_ActionPolylineEquidistant:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionPolylineEquidistant(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionPolylineEquidistant(LC_ActionContext *actionContext);
     ~RS_ActionPolylineEquidistant() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
-    void setDist(const double &d){dist = d;}
-    double getDist() const{return dist;}
-    void setNumber(unsigned n){number = n;}
-    int getNumber() const{return number;}
+    void setDist(const double &d){m_dist = d;}
+    double getDist() const{return m_dist;}
+    void setNumber(unsigned n){m_number = n;}
+    int getNumber() const{return m_number;}
 protected:
     /**
  * Action States.
@@ -54,18 +53,19 @@ protected:
         ChooseEntity   /**< Choosing the original polyline. */
     };
 
-    RS_Polyline *originalEntity = nullptr;
-    double dist = 0.;
-    int number = 0;
-    bool bRightSide = false;
+    RS_Polyline *m_originalEntity = nullptr;
+    double m_dist = 0.;
+    int m_number = 0;
+    bool m_bRightSide = false;
 
     RS_Entity *calculateOffset(RS_Entity *newEntity, RS_Entity *orgEntity, double dist);
     RS_Vector calculateIntersection(RS_Entity *first, RS_Entity *last);
     void makeContour(RS_Polyline *originalPolyline, bool contourOnRightSide, QList<RS_Polyline *> &createdPolylines);
     bool isPointOnRightSideOfPolyline(const RS_Polyline *polyline, const RS_Vector &snapPoint) const;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     void doTrigger() override;

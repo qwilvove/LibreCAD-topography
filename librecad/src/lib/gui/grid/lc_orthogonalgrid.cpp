@@ -20,15 +20,11 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
 
-#include <QImageCleanupFunction>
-#include <QActionEvent>
-#include "lc_orthogonalgrid.h"
-#include "rs_vector.h"
-#include "rs_graphicview.h"
-#include "rs_math.h"
-#include "rs.h"
-#include "lc_gridsystem.h"
 
+#include "lc_orthogonalgrid.h"
+
+#include "lc_lattice.h"
+#include "rs_math.h"
 
 LC_OrthogonalGrid::LC_OrthogonalGrid(LC_GridSystem::LC_GridOptions *options):LC_GridSystem(options) {}
 
@@ -323,24 +319,24 @@ void LC_OrthogonalGrid::createMetaGridLines(const RS_Vector& min, const RS_Vecto
     metaGridLattice->update(0, 0, metaGridCellSize, numMetaX * numMetaY * 4);
     // draw vertical lines
     if (numMetaX > 0) {
-        doCreateVerticalLines(metaGridLattice, min.y, max.y, metaGridMin.x, metaGridCellSize.x, numMetaX);
+        doCreateVerticalLines(metaGridLattice.get(), min.y, max.y, metaGridMin.x, metaGridCellSize.x, numMetaX);
         metaGridLattice->addLine(metaGridMin.x, min.y, metaGridMin.x, max.y);
     }
 
     // draw horizontal line for orthogonal grid
 
     if (numMetaY > 0) {
-        doCreateHorizontalLines(metaGridLattice, min.x, max.x, metaGridMin.y, metaGridCellSize.y, numMetaY);
+        doCreateHorizontalLines(metaGridLattice.get(), min.x, max.x, metaGridMin.y, metaGridCellSize.y, numMetaY);
         metaGridLattice->addLine(min.x, metaGridMin.y, max.x, metaGridMin.y);
     }
 }
 
 #define DEBUG_META_GRID_
 
-void LC_OrthogonalGrid::drawMetaGridLines(RS_Painter *painter, RS_GraphicView *view) {
+void LC_OrthogonalGrid::drawMetaGridLines(RS_Painter *painter, LC_GraphicViewport *view) {
 
     // draw meta grid:
-    doDrawLines(painter, view, metaGridLattice);
+    doDrawLines(painter, view, metaGridLattice.get());
 
 #ifdef DEBUG_META_GRID
     RS2::LineType penLineType = gridOptions->metaGridLineType;
@@ -614,7 +610,7 @@ void LC_OrthogonalGrid::doCreateVerticalLines(LC_Lattice* lattice, const double 
 }
 
 void LC_OrthogonalGrid::createVerticalLines(const double &start, const double &end, const double &baseX, const double &delta, const int &pointsToDraw) const {
-    doCreateVerticalLines(gridLattice, start, end, baseX, delta, pointsToDraw);
+    doCreateVerticalLines(gridLattice.get(), start, end, baseX, delta, pointsToDraw);
 }
 
 void LC_OrthogonalGrid::doCreateHorizontalLines(LC_Lattice* lattice, const double &start, const double &end, const double &baseY, const double &delta, const int &pointsToDraw) const {
@@ -626,5 +622,5 @@ void LC_OrthogonalGrid::doCreateHorizontalLines(LC_Lattice* lattice, const doubl
 }
 
 void LC_OrthogonalGrid::createHorizontalLines(const double &start, const double &end, const double &baseY, const double &delta, const int &pointsToDraw) const {
-    doCreateHorizontalLines(gridLattice, start, end, baseY, delta, pointsToDraw);
+    doCreateHorizontalLines(gridLattice.get(), start, end, baseY, delta, pointsToDraw);
 }

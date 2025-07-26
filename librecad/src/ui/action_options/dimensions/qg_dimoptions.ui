@@ -74,12 +74,15 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>Prefix character</string>
+     </property>
      <property name="text">
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../../../../res/extui/extui.qrc">
-       <normaloff>:/extui/char_diameter.png</normaloff>:/extui/char_diameter.png</iconset>
+      <iconset resource="../../../../res/icons/icons.qrc">
+       <normaloff>:/icons/char_diameter.lci</normaloff>:/icons/char_diameter.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -94,6 +97,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>User-specified dimension's label. Enter value or either &quot;&lt;&gt;&quot; or just leave empty for automatic measurement.</string>
+     </property>
     </widget>
    </item>
    <item>
@@ -103,6 +109,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Suffix symbol</string>
      </property>
      <item>
       <property name="text">
@@ -148,8 +157,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset resource="../../../../res/extui/extui.qrc">
-       <normaloff>:/extui/tolerance1.png</normaloff>:/extui/tolerance1.png</iconset>
+      <iconset resource="../../../../res/icons/icons.qrc">
+       <normaloff>:/icons/tolerance1.lci</normaloff>:/icons/tolerance1.lci</iconset>
      </property>
     </widget>
    </item>
@@ -160,6 +169,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Tolerance - Upper Limit</string>
      </property>
     </widget>
    </item>
@@ -175,8 +187,8 @@
       <string>...</string>
      </property>
      <property name="icon">
-      <iconset resource="../../../../res/extui/extui.qrc">
-       <normaloff>:/extui/tolerance2.png</normaloff>:/extui/tolerance2.png</iconset>
+      <iconset resource="../../../../res/icons/icons.qrc">
+       <normaloff>:/icons/tolerance2.lci</normaloff>:/icons/tolerance2.lci</iconset>
      </property>
     </widget>
    </item>
@@ -187,6 +199,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Tolerance - Lower Limit</string>
      </property>
     </widget>
    </item>
@@ -261,8 +276,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../../../../res/extui/extui.qrc">
-       <normaloff>:/extui/dimhor.png</normaloff>:/extui/dimhor.png</iconset>
+      <iconset resource="../../../../res/icons/icons.qrc">
+       <normaloff>:/icons/dim_horizontal.lci</normaloff>:/icons/dim_horizontal.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -290,8 +305,8 @@
       <string/>
      </property>
      <property name="icon">
-      <iconset resource="../../../../res/extui/extui.qrc">
-       <normaloff>:/extui/dimver.png</normaloff>:/extui/dimver.png</iconset>
+      <iconset resource="../../../../res/icons/icons.qrc">
+       <normaloff>:/icons/dim_vertical.lci</normaloff>:/icons/dim_vertical.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -375,7 +390,7 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources>
-  <include location="../../../../res/extui/extui.qrc"/>
+  <include location="../../../../res/icons/icons.qrc"/>
  </resources>
  <connections/>
  <slots>

@@ -24,36 +24,33 @@
 **
 **********************************************************************/
 
-#include <QMouseEvent>
+#include <QLineF>
 
 #include "rs_actiondrawlinefree.h"
 #include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
 #include "rs_polyline.h"
 #include "rs_preview.h"
 
-RS_ActionDrawLineFree::RS_ActionDrawLineFree(RS_EntityContainer& container,
-        RS_GraphicView& graphicView)
-        :RS_PreviewActionInterface("Draw freehand lines",
-					container, graphicView)
-		,vertex(new RS_Vector{}){
-	preview->setOwner(false);
-	actionType=RS2::ActionDrawLineFree;
+RS_ActionDrawLineFree::RS_ActionDrawLineFree(LC_ActionContext *actionContext)
+        :RS_PreviewActionInterface("Draw freehand lines", actionContext,RS2::ActionDrawLineFree)
+    ,m_vertex(std::make_unique<RS_Vector>()){
+	m_preview->setOwner(false);
 }
 
 RS_ActionDrawLineFree::~RS_ActionDrawLineFree() = default;
 
 void RS_ActionDrawLineFree::doTrigger() {
-    if (polyline.get() != nullptr){
-        polyline->endPolyline();
-        RS_VectorSolutions sol = polyline->getRefPoints();
+    if (m_polyline != nullptr){
+        m_polyline->endPolyline();
+        RS_VectorSolutions sol = m_polyline->getRefPoints();
         if (sol.getNumber() > 2){
-            RS_Entity *ent = polyline->clone();
-            undoCycleAdd(ent);
-            RS_DEBUG->print("RS_ActionDrawLineFree::trigger(): polyline added: %lu", ent->getId());
+            RS_Entity *entity = m_polyline->clone();
+            entity->reparent(m_container);
+            entity->calculateBorders();
+            undoCycleAdd(entity);
+            LC_LOG<<"RS_ActionDrawLineFree::trigger(): polyline added: "<< entity->getId();
         }
-        polyline.reset();
+        m_polyline.reset();
     }
     setStatus(SetStartpoint);
 }
@@ -63,57 +60,53 @@ void RS_ActionDrawLineFree::doTrigger() {
  */
 // todo - relative point snap?
 // fixme - sand - review drawing line free
-void RS_ActionDrawLineFree::mouseMoveEvent(QMouseEvent* e) {
-    RS_Vector v = snapPoint(e);
+void RS_ActionDrawLineFree::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector v = e->snapPoint;
     drawSnapper();
-    if (getStatus()==Dragging && polyline.get()) {
-        if( (graphicView->toGui(v) - graphicView->toGui(*vertex)).squared()< 1. ){
+    if (status==Dragging && m_polyline != nullptr)     {
+        const QPointF mousePosition = e->uiPosition;
+        if (QLineF(mousePosition,m_oldMousePosition).length() < 1) {
             //do not add the same mouse position
             return;
         }
-        auto ent = static_cast<RS_Polyline*>(polyline->addVertex(v));
-        if (ent->count()){
-            preview->addCloneOf(ent, graphicView);
+        auto ent = static_cast<RS_Polyline*>(m_polyline->addVertex(v));
+
+        if (ent->count()) {
+            deletePreview();
+            m_preview->addCloneOf(m_polyline.get(), m_viewport);
             drawPreview();
         }
 
-        *vertex = v;
-
-        RS_DEBUG->print("RS_ActionDrawLineFree::%s:"
-                        " line added: %lu", __func__, ent->getId());
+        *m_vertex = v;
+        m_oldMousePosition = mousePosition;
     }
 }
 
-void RS_ActionDrawLineFree::mousePressEvent(QMouseEvent* e) {
-    if (e->button()==Qt::LeftButton) {
-        switch(getStatus()){
-            case SetStartpoint:
-                setStatus(Dragging);
-                // fall-through
-            case Dragging:
-                *vertex = snapPoint(e);
-                polyline.reset(new RS_Polyline(container, RS_PolylineData(*vertex, *vertex, false)));
-                setPenAndLayerToActive(polyline.get());
-                break;
-            default:
-                break;
-
-        }
+void RS_ActionDrawLineFree::onMouseLeftButtonPress([[maybe_unused]]int status, LC_MouseEvent *e) {
+    switch(getStatus()){
+        case SetStartpoint:
+            setStatus(Dragging);
+            // fall-through
+        case Dragging:
+            *m_vertex = e->snapPoint;
+            m_polyline = std::make_unique<RS_Polyline>(m_container, RS_PolylineData(*m_vertex, *m_vertex, false));
+            setPenAndLayerToActive(m_polyline.get());
+            break;
+        default:
+            break;
     }
-    //else if (RS2::qtToRsButtonState(e->button())==RS2::RightButton && !vertex.valid) {
-    //}
 }
 
-void RS_ActionDrawLineFree::onMouseLeftButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionDrawLineFree::onMouseLeftButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     if(status==Dragging){
-        *vertex = {};
+        *m_vertex = {};
         trigger();
     }
 }
 
-void RS_ActionDrawLineFree::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
-    if (polyline.get() != nullptr) {
-        polyline.reset();
+void RS_ActionDrawLineFree::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
+    if (m_polyline.get() != nullptr) {
+        m_polyline.reset();
     }
     initPrevious(status);
 }

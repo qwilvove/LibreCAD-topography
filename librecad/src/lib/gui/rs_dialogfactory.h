@@ -28,8 +28,7 @@
 #ifndef RS_DIALOGFACTORY_H
 #define RS_DIALOGFACTORY_H
 
-#include "rs_dialogfactoryadapter.h"
-
+class QString;
 class RS_DialogFactoryInterface;
 
 #define RS_DIALOGFACTORY RS_DialogFactory::instance()->getFactoryObject()
@@ -38,23 +37,17 @@ class RS_DialogFactoryInterface;
  * Interface for objects that can create and show dialogs.
  */
 class RS_DialogFactory {
-
 private:
     RS_DialogFactory();
-
+    virtual ~RS_DialogFactory();
 public:
-	virtual ~RS_DialogFactory() = default;
-
     static RS_DialogFactory* instance();
-
-	void setFactoryObject(RS_DialogFactoryInterface* fo);
-	RS_DialogFactoryInterface* getFactoryObject();
-
-	void commandMessage(const QString& m);
-
+    void setFactoryObject(RS_DialogFactoryInterface* fo);
+    RS_DialogFactoryInterface* getFactoryObject();
+    void commandMessage(const QString& m);
 private:
-	RS_DialogFactoryInterface* factoryObject;
-	RS_DialogFactoryAdapter factoryAdapter;
+    RS_DialogFactoryInterface* factoryObject;
+    RS_DialogFactoryInterface*  factoryAdapter;
 };
 
 

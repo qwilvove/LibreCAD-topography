@@ -25,17 +25,16 @@
 **
 **********************************************************************/
 
-#include<cmath>
-#include<iostream>
 
-#include <QPolygonF>
+#include<iostream>
+#include "rs_solid.h"
+
+#include <array>
 
 #include "rs_debug.h"
-#include "rs_graphicview.h"
 #include "rs_information.h"
 #include "rs_line.h"
 #include "rs_painter.h"
-#include "rs_solid.h"
 
 namespace {
 /**
@@ -134,8 +133,6 @@ RS_Solid::RS_Solid(RS_EntityContainer* parent,
 RS_Entity* RS_Solid::clone() const
 {
     RS_Solid* s = new RS_Solid(*this);
-    s->initId();
-
     return s;
 }
 
@@ -308,9 +305,7 @@ bool RS_Solid::isInCrossWindow(const RS_Vector& v1, const RS_Vector& v2) const
 */
 bool RS_Solid::sign (const RS_Vector& v1, const RS_Vector& v2, const RS_Vector& v3) const
 {
-    double res = (v1.x - v3.x) * (v2.y - v3.y) - (v2.x - v3.x) * (v1.y - v3.y);
-
-    return (res >= 0.0);
+    return ! std::signbit(RS_Vector::crossP(v1 - v3, v2 - v3).z);
 }
 
 /**
@@ -345,12 +340,18 @@ RS_Vector RS_Solid::getNearestPointOnEntity(const RS_Vector& coord,
     double currDist {RS_MAXDOUBLE};
     double tmpDist {0.0};
     int totalV {isTriangle() ? RS_SolidData::Triangle : RS_SolidData::MaxCorners};
-    for (int i = RS_SolidData::FirstCorner, next = i + 1; i <= totalV; ++i, ++next) {
+
+    // fixme - sand - check the logic of solid nearestPoint()!!!
+    // IF THERE is <=, i might be 4 and assert in MSVC implementation of stl::vector occurs... on
+    // not sure actually, how this will affect the logic, need more changes.
+    // for (int i = RS_SolidData::FirstCorner, next = i + 1; i <= totalV; ++i, ++next) {
+    for (int i = RS_SolidData::FirstCorner, next = i + 1; i < totalV; ++i, ++next) {
         //closing edge
         if (next == totalV) {
             next = RS_SolidData::FirstCorner;
         }
 
+        // fixme - stl:vector assert occured for data.corner[i]
         RS_Vector direction {data.corner[next] - data.corner[i]};
         RS_Vector vpc {coord-data.corner[i]};
         double a {direction.squared()};
@@ -382,28 +383,22 @@ RS_Vector RS_Solid::getNearestPointOnEntity(const RS_Vector& coord,
 }
 
 RS_Vector RS_Solid::getNearestCenter([[maybe_unused]] const RS_Vector& coord,
-                                     double* dist /*= nullptr*/) const
-{
+                                     double* dist /*= nullptr*/) const{
     setDistPtr( dist, RS_MAXDOUBLE);
-
     return RS_Vector(false);
 }
 
 RS_Vector RS_Solid::getNearestMiddle([[maybe_unused]] const RS_Vector& coord,
                                      double* dist /*= nullptr*/,
-                                     [[maybe_unused]] const int middlePoints /*= 1*/) const
-{
+                                     [[maybe_unused]] const int middlePoints /*= 1*/) const{
     setDistPtr( dist, RS_MAXDOUBLE);
-
     return RS_Vector(false);
 }
 
 RS_Vector RS_Solid::getNearestDist([[maybe_unused]] double distance,
                                    [[maybe_unused]] const RS_Vector& coord,
-                                   double* dist /*= nullptr*/) const
-{
+                                   double* dist /*= nullptr*/) const{
     setDistPtr( dist, RS_MAXDOUBLE);
-
     return RS_Vector(false);
 }
 
@@ -414,20 +409,17 @@ RS_Vector RS_Solid::getNearestDist([[maybe_unused]] double distance,
 double RS_Solid::getDistanceToPoint(const RS_Vector& coord,
                                     RS_Entity** entity /*= nullptr*/,
                                     [[maybe_unused]] RS2::ResolveLevel level /*= RS2::ResolveNone*/,
-                                    [[maybe_unused]] double solidDist /*= RS_MAXDOUBLE*/) const
-{
+                                    [[maybe_unused]] double solidDist /*= RS_MAXDOUBLE*/) const{
     if (nullptr != entity) {
         *entity = const_cast<RS_Solid*>(this);
     }
 
     double ret {0.0};
     getNearestPointOnEntity( coord, true, &ret, entity);
-
     return ret;
 }
 
-void RS_Solid::move(const RS_Vector& offset)
-{
+void RS_Solid::move(const RS_Vector& offset){
     for (int i = RS_SolidData::FirstCorner; i < RS_SolidData::MaxCorners; ++i) {
         if (data.corner[i].valid) {
             data.corner[i].move(offset);
@@ -436,8 +428,7 @@ void RS_Solid::move(const RS_Vector& offset)
     calculateBorders();
 }
 
-void RS_Solid::rotate(const RS_Vector& center, const double& angle)
-{
+void RS_Solid::rotate(const RS_Vector& center, double angle){
     RS_Vector angleVector(angle);
     for (int i = RS_SolidData::FirstCorner; i < RS_SolidData::MaxCorners; ++i) {
         if (data.corner[i].valid) {
@@ -447,8 +438,7 @@ void RS_Solid::rotate(const RS_Vector& center, const double& angle)
     calculateBorders();
 }
 
-void RS_Solid::rotate(const RS_Vector& center, const RS_Vector& angleVector)
-{
+void RS_Solid::rotate(const RS_Vector& center, const RS_Vector& angleVector){
     for (int i = RS_SolidData::FirstCorner; i < RS_SolidData::MaxCorners; ++i) {
         if (data.corner[i].valid) {
             data.corner[i].rotate( center, angleVector);
@@ -457,8 +447,7 @@ void RS_Solid::rotate(const RS_Vector& center, const RS_Vector& angleVector)
     calculateBorders();
 }
 
-void RS_Solid::scale(const RS_Vector& center, const RS_Vector& factor)
-{
+void RS_Solid::scale(const RS_Vector& center, const RS_Vector& factor){
     for (int i = RS_SolidData::FirstCorner; i < RS_SolidData::MaxCorners; ++i) {
         if (data.corner[i].valid) {
             data.corner[i].scale( center, factor);
@@ -467,8 +456,7 @@ void RS_Solid::scale(const RS_Vector& center, const RS_Vector& factor)
     calculateBorders();
 }
 
-void RS_Solid::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2)
-{
+void RS_Solid::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2){
     for (int i = RS_SolidData::FirstCorner; i < RS_SolidData::MaxCorners; ++i) {
         if (data.corner[i].valid) {
             data.corner[i].mirror( axisPoint1, axisPoint2);
@@ -477,29 +465,11 @@ void RS_Solid::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2)
     calculateBorders();
 }
 
-void RS_Solid::draw(RS_Painter* painter,
-                    RS_GraphicView* view,
-                    [[maybe_unused]] double& patternOffset){
-    /*if (nullptr == painter
-        || nullptr == view) {
-        return;
-    }*/
-
-    const RS_Vector &c0 = view->toGui(data.corner[0]);
-    const RS_Vector &c1 = view->toGui(data.corner[1]);
-    const RS_Vector &c2 = view->toGui(data.corner[2]);
-
-//    LC_ERR << "Graph" << data.corner[0].x << "  " << data.corner[0].y << "  " << data.corner[1].x << "  " << data.corner[1].y << "  " << data.corner[2].x << "  " << data.corner[2].y;
-
-    painter->fillTriangle(c0,c1,c2);
-    if (!isTriangle()) {
-        painter->fillTriangle(c1,c2,
-                              view->toGui(data.corner[3]));
-    }
+void RS_Solid::draw(RS_Painter* painter){
+    painter->drawSolidWCS(std::vector(data.corner.cbegin(), data.corner.cend()));
 }
 
-void RS_Solid::setDistPtr(double *dist, const double value) const
-{
+void RS_Solid::setDistPtr(double *dist, double value) const{
     if (nullptr != dist) {
         *dist = value;
     }
@@ -508,8 +478,7 @@ void RS_Solid::setDistPtr(double *dist, const double value) const
 /**
  * Dumps the point's data to stdout.
  */
-std::ostream& operator << (std::ostream& os, const RS_Solid& p)
-{
+std::ostream& operator << (std::ostream& os, const RS_Solid& p){
     os << " Solid: " << p.getData() << "\n";
     return os;
 }

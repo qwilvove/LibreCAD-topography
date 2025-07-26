@@ -26,7 +26,7 @@
 
 #ifndef RS_ACTIONDRAWIMAGE_H
 #define RS_ACTIONDRAWIMAGE_H
-#include<memory>
+
 #include "rs_previewactioninterface.h"
 
 struct RS_ImageData;
@@ -41,24 +41,23 @@ class QImage;
 class RS_ActionDrawImage : public RS_PreviewActionInterface {
 Q_OBJECT
 public:
-    RS_ActionDrawImage(RS_EntityContainer& container,
-                       RS_GraphicView& graphicView);
+    RS_ActionDrawImage(LC_ActionContext *actionContext);
     ~RS_ActionDrawImage() override;
 
     void init(int status) override;
     void reset();
-    void mouseMoveEvent(QMouseEvent* e) override;
     QStringList getAvailableCommands() override;
 //    void updateToolBar() override;
-    double getAngle() const;
-    void setAngle(double a) const;
+    double getUcsAngleDegrees() const;
+    void setUcsAngleDegrees(double ucsRelAngleDegrees);
+    void setAngle(double wcsAngle) const;
     double getFactor() const;
     void setFactor(double f) const;
     double dpiToScale(double dpi) const;
     double scaleToDpi(double scale) const;
 protected:
     struct ImageData;
-    std::unique_ptr<ImageData> pImg;
+    std::unique_ptr<ImageData> m_imageData;
 /**
      * Action States.
      */
@@ -75,12 +74,12 @@ protected:
     };
 
 /** Last status before entering option. */
-    Status lastStatus = ShowDialog;
+    Status m_lastStatus = ShowDialog;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
-
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;

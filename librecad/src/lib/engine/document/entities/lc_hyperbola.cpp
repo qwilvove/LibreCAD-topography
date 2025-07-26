@@ -25,10 +25,9 @@
 **********************************************************************/
 
 #include "lc_hyperbola.h"
+
 #include "lc_quadratic.h"
 #include "rs_debug.h"
-#include "rs_graphicview.h"
-#include "rs_information.h"
 
 LC_HyperbolaData::LC_HyperbolaData(const RS_Vector& _center,
 			   const RS_Vector& _majorP,
@@ -214,7 +213,6 @@ void LC_Hyperbola::calculateEndpoints() {
 
 RS_Entity* LC_Hyperbola::clone() const {
 	LC_Hyperbola* e = new LC_Hyperbola(*this);
-	e->initId();
 	return e;
 }
 
@@ -286,4 +284,3 @@ std::ostream& operator << (std::ostream& os, const LC_Hyperbola& a) {
     os << " Hyperbola: " << a.data << "\n";
     return os;
 }
-

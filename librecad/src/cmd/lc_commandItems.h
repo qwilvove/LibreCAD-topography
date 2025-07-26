@@ -76,7 +76,16 @@ const LC_CommandItem g_commandList[] = {
             RS2::ActionCommand
         },
 */
-
+        {
+            {{"cnlayer", QObject::tr("cnlayer")}},
+            {{"cnly", QObject::tr("cnly")}},
+            RS2::ActionLayersAddCmd
+        },
+        {
+            {{"cslayer", QObject::tr("cslayer")}},
+            {{"csly", QObject::tr("csly")}},
+            RS2::ActionLayersActivateCmd
+        },
         /* LINE COMMANDS */
         // draw line
         {
@@ -528,7 +537,7 @@ const LC_CommandItem g_commandList[] = {
         // draw angle line from line
         {
             {{"angleline", QObject::tr("angleline", "draw angle from line")}},
-            {{"aline", QObject::tr("angleline", "draw angle from line")}},
+            {{"aline", QObject::tr("aline", "draw angle from line")}},
             RS2::ActionDrawLineAngleRel
         },
         // draw orthogonal line from line
@@ -622,6 +631,17 @@ const LC_CommandItem g_commandList[] = {
             {{"dl", QObject::tr("dl", "dimension - linear")}},
             RS2::ActionDimLinear
         },
+        // dimension ordinate
+        {
+            {{"dimord", QObject::tr("dimord", "dimension - ordinate")}},
+            {{"do", QObject::tr("do", "dimension - ordinate")}},
+            RS2::ActionDimOrdinate
+        },
+        {
+                {{"dimordrebase", QObject::tr("dimordrebase", "dimension - ordinate")}},
+                {{"dor", QObject::tr("dor", "dimension - ordinate")}},
+                RS2::ActionDimOrdinateRebase
+            },
         // dimension horizontal
         {
             {{"dimhorizontal", QObject::tr("dimhorizontal", "dimension - horizontal")}},
@@ -1031,6 +1051,8 @@ const LC_CommandItem g_commandList[] = {
     // translations
 std::vector<std::pair<QString, QString>> g_transList={
         {"angle",QObject::tr("angle")},
+        {"angle1",QObject::tr("angle1")},
+        {"angle2",QObject::tr("angle2")},
         {"dpi",QObject::tr("dpi")},
         {"close",QObject::tr("close")},
         {"chordlen",QObject::tr("chordlen")},
@@ -1124,6 +1146,8 @@ std::vector<std::pair<QString, QString>> g_transList={
         //not used as command keywords
         // used in function,checkCommand()
         {QObject::tr("angle"),"angle"},
+        {QObject::tr("angle1"),"angle1"},
+        {QObject::tr("angle2"),"angle2"},
         {QObject::tr("ang", "angle"),"angle"},
         {QObject::tr("an", "angle"),"angle"},
 
@@ -1191,11 +1215,11 @@ std::vector<std::pair<QString, QString>> g_transList={
         {QObject::tr("through"),"through"},
         {QObject::tr("t","through"),"through"},
 
-        {QObject::tr("undo"),"undo"},
-        {QObject::tr("u","undo"),"undo"},
+        {QObject::tr("undo"),"undo cycle"},
+        {QObject::tr("u","undo cycle"),"undo"},
 
-        {QObject::tr("redo"),"redo"},
-        {QObject::tr("r","redo"),"redo"},
+        {QObject::tr("redo"),"redo cycle"},
+        {QObject::tr("r","redo redo cycle"),"redo"},
 
         {QObject::tr("back"),"back"},
         {QObject::tr("b","back"),"back"},

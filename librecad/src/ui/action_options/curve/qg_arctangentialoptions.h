@@ -27,32 +27,31 @@
 #define QG_ARCTANGENTIALOPTIONS_H
 
 #include<memory>
-#include<QWidget>
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionInterface;
 class RS_ActionDrawArcTangential;
+
 namespace Ui {
-class Ui_ArcTangentialOptions;
+    class Ui_ArcTangentialOptions;
 }
 
-class QG_ArcTangentialOptions : public LC_ActionOptionsWidgetBase
-{
+class QG_ArcTangentialOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
 public:
     QG_ArcTangentialOptions();
     ~QG_ArcTangentialOptions() override;
 public slots:
-    virtual void onRadiusEditingFinished();
-    virtual void onAngleEditingFinished();
-    virtual void onRadiusClicked(bool checked);
-    virtual void onAngleClicked(bool checked);
+    void onRadiusEditingFinished();
+    void onAngleEditingFinished();
+    void onRadiusClicked(bool checked);
+    void onAngleClicked(bool checked);
     void languageChange() override;
 public:
     void updateRadius(double d);
     void updateAngle(double a);
 protected:
-    RS_ActionDrawArcTangential* action = nullptr;
+    RS_ActionDrawArcTangential* m_action = nullptr;
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
     void setRadiusToActionAndView(const QString& s  );

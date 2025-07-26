@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
@@ -22,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_ACTIONPENPICK_H
 #define LC_ACTIONPENPICK_H
 
-#include "rs_pen.h"
 #include "rs_previewactioninterface.h"
 
 /**
@@ -32,27 +32,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class LC_ActionPenPick:public RS_PreviewActionInterface {
        Q_OBJECT
 public:
-
     enum {
           SelectEntity
      };
-    LC_ActionPenPick(RS_EntityContainer& container,
-    RS_GraphicView& graphicView,
-        bool resolve);
-
+    LC_ActionPenPick(LC_ActionContext *actionContext,bool resolve);
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
     void finish(bool updateTB) override;
 private:
     /**
      * flag that indicates whether pen from entity should be resolved
      */
-    bool resolveMode;
+    bool m_resolveMode;
     void applyPenToPenToolBar(RS_Entity* entity);
 protected:
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
 };
 #endif // LC_ACTIONPENPICK_H

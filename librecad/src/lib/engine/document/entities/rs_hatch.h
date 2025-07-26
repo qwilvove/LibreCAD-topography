@@ -28,7 +28,8 @@
 #ifndef RS_HATCH_H
 #define RS_HATCH_H
 
-#include "rs_entity.h"
+#include <QString>
+
 #include "rs_entitycontainer.h"
 
 /**
@@ -48,7 +49,7 @@ struct RS_HatchData {
 	RS_HatchData(bool solid,
 				 double scale,
 				 double angle,
-				 const QString& pattern);
+                 QString pattern);
 
 
     bool solid = false;
@@ -110,27 +111,30 @@ public:
             data.solid = solid;
     }
 
-    QString getPattern() {
+    QString getPattern() const
+    {
             return data.pattern;
     }
     void setPattern(const QString& pattern) {
             data.pattern = pattern;
     }
 
-    double getScale() {
+    double getScale() const
+    {
             return data.scale;
     }
     void setScale(double scale) {
             data.scale = scale;
     }
 
-    double getAngle() {
+    double getAngle() const
+    {
             return data.angle;
     }
     void setAngle(double angle) {
             data.angle = angle;
     }
-    double getTotalArea();
+    double getTotalArea() const;
 
     void calculateBorders() override;
     void update() override;
@@ -139,8 +143,7 @@ public:
     }
     void activateContour(bool on);
 
-    void draw(RS_Painter* painter, RS_GraphicView* view,
-                      double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
 
     double getDistanceToPoint(const RS_Vector& coord,
                                       RS_Entity** entity = NULL,
@@ -149,7 +152,7 @@ public:
 
 
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     void mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) override;
@@ -160,21 +163,23 @@ public:
     friend std::ostream& operator << (std::ostream& os, const RS_Hatch& p);
 
 private:
-    double getTotalAreaImpl();
+    double getTotalAreaImpl() const;
     RS_EntityContainer trimPattern(const RS_EntityContainer& patternEntities) const;
-    RS_HatchData data;
-    RS_EntityContainer* hatch = nullptr;
-    double m_area = RS_MAXDOUBLE;
-    int  updateError = 0;
-    bool updateRunning = false;
-    bool needOptimization = false;
-    bool m_updated=false;
 
-    void drawSolidFill(RS_Painter *painter, const RS_GraphicView *view);
+    void drawSolidFill(RS_Painter *painter);
 
     void debugOutPath(const QPainterPath &tmpPath) const;
 
-    void createSolidFillPath( RS_Painter *painter, const RS_GraphicView *view, QPainterPath &path);
+    QPainterPath createSolidFillPath( RS_Painter *painter) const;
+
+    RS_HatchData data;
+    RS_EntityContainer* hatch = nullptr;
+    mutable double m_area = RS_MAXDOUBLE;
+    RS_HatchError updateError = HATCH_UNDEFINED;
+    bool updateRunning = false;
+    bool needOptimization = true;
+    bool m_updated=false;
+    std::shared_ptr<RS_EntityContainer> m_orderedLoops;
 };
 
 #endif

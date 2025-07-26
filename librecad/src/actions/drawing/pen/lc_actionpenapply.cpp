@@ -20,52 +20,43 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
 #include "lc_actionpenapply.h"
-#include "rs_dialogfactory.h"
-#include "qg_pentoolbar.h"
-#include "qc_applicationwindow.h"
-#include "rs_graphicview.h"
-#include "rs_modification.h"
-#include <QMouseEvent>
 
-LC_ActionPenApply::LC_ActionPenApply(RS_EntityContainer &container, RS_GraphicView &graphicView, bool copy):
-  RS_PreviewActionInterface(copy? "PenCopy" : "PenApply", container, graphicView){
-    copyMode  = copy;
-    if (copy){
-        actionType = RS2::ActionPenCopy;
-    }
-    else{
-        actionType = RS2::ActionPenApply;
-    }
-    srcEntity = nullptr;
+#include "qc_applicationwindow.h"
+#include "qg_pentoolbar.h"
+#include "rs_entity.h"
+#include "rs_modification.h"
+#include "rs_pen.h"
+
+class QG_PenToolBar;
+
+LC_ActionPenApply::LC_ActionPenApply(LC_ActionContext *actionContext, bool copy):
+    RS_PreviewActionInterface(copy? "PenCopy" : "PenApply", actionContext, copy? RS2::ActionPenCopy :  RS2::ActionPenApply),
+    m_copyMode{copy}{
 }
 
 void LC_ActionPenApply::init(int status){
-    if (status == SelectEntity && !copyMode){
+    if (status == SelectEntity && !m_copyMode){
         status = ApplyToEntity;
     }
     RS_PreviewActionInterface::init(status);
     if (status < 0){
-        srcEntity = nullptr;
+        m_srcEntity = nullptr;
     }
 }
 
-void LC_ActionPenApply::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    deleteHighlights();
-
-    snapPoint(e);
-
-    switch (getStatus()){
+void LC_ActionPenApply::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    switch (status){
         case SelectEntity:
-        case ApplyToEntity:
-            RS_Entity* en = catchEntityOnPreview(e, RS2::ResolveNone);
-            if (en != nullptr && en != srcEntity){ // exclude entity we use as source, if any
+        case ApplyToEntity:{
+            RS_Entity* en = catchAndDescribe(e, RS2::ResolveNone);
+            if (en != nullptr && en != m_srcEntity){ // exclude entity we use as source, if any
                 highlightHover(en);
             }
             break;
+        }
+        default:
+            break;
     }
-    drawPreview();
-    drawHighlights();
 }
 
 /**
@@ -74,27 +65,27 @@ void LC_ActionPenApply::mouseMoveEvent(QMouseEvent *e){
  */
 void LC_ActionPenApply::finish(bool updateTB){
     RS_PreviewActionInterface::finish(updateTB);
-    srcEntity = nullptr;
+    m_srcEntity = nullptr;
 }
 
-void LC_ActionPenApply::onMouseLeftButtonRelease([[maybe_unused]]int status, QMouseEvent *e) {
-    RS_Entity* en= catchEntity(e, RS2::ResolveNone);
+void LC_ActionPenApply::onMouseLeftButtonRelease([[maybe_unused]]int status, LC_MouseEvent *e) {
+    RS_Entity* en= catchEntityByEvent(e, RS2::ResolveNone);
 
     if(en != nullptr){
         switch (getStatus()){
             case SelectEntity:{
                 // selection of entity that will be used as source for pen
-                srcEntity = en;
+                m_srcEntity = en;
                 setStatus(ApplyToEntity);
                 break;
             }
             case ApplyToEntity:{
-                if (!en->isLocked() && en != srcEntity){
+                if (!en->isLocked() && en != m_srcEntity){
                     RS_Pen penToApply;
-                    if (copyMode){
+                    if (m_copyMode){
                         // we apply pen from source entity, if Shift is pressed - resolved pen is used.
-                        bool resolvePen = e->modifiers() & Qt::ShiftModifier;
-                        penToApply = srcEntity->getPen(resolvePen);
+                        bool resolvePen = e->isShift;
+                        penToApply = m_srcEntity->getPen(resolvePen);
 
                     } else {
                         // we apply active pen from pen toolbar
@@ -117,26 +108,26 @@ void LC_ActionPenApply::onMouseLeftButtonRelease([[maybe_unused]]int status, QMo
                     // fixme - sand - replace by version with explicitly provided entity rather than one that relies on selection
                     en->setSelected(true);
 
-                    RS_Modification m(*container, graphicView);
+                    RS_Modification m(*m_container, m_viewport);
                     m.changeAttributes(data, false);
                 }
                 break;
             }
         }
     }
-    graphicView->redraw();
+    redraw();
 }
 
-void LC_ActionPenApply::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void LC_ActionPenApply::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     switch (status){
         case SelectEntity:{
             init(-1);
             break;
         }
         case ApplyToEntity:{
-            if (copyMode){
+            if (m_copyMode){
                 setStatus(SelectEntity);
-                srcEntity = nullptr;
+                m_srcEntity = nullptr;
             }
             else{
                 init(-1);
@@ -146,7 +137,7 @@ void LC_ActionPenApply::onMouseRightButtonRelease(int status, [[maybe_unused]]QM
         default:
             break;
     }
-    graphicView->redraw();
+    redraw();
 }
 
 void LC_ActionPenApply::updateMouseButtonHints(){
@@ -155,7 +146,7 @@ void LC_ActionPenApply::updateMouseButtonHints(){
             updateMouseWidgetTRCancel(tr("Specify entity to pick the pen"));
             break;
         case ApplyToEntity:
-            updateMouseWidgetTRCancel(tr("Specify entity to apply pen"), copyMode? MOD_SHIFT_LC(tr("Apply Resolved Pen")) : MOD_NONE);
+            updateMouseWidgetTRCancel(tr("Specify entity to apply pen"), m_copyMode? MOD_SHIFT_LC(tr("Apply Resolved Pen")) : MOD_NONE);
             break;
         default:
             RS_ActionInterface::updateMouseButtonHints();

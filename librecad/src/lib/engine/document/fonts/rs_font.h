@@ -28,10 +28,13 @@
 #ifndef RS_FONT_H
 #define RS_FONT_H
 
-#include <QStringList>
 #include <QMap>
+#include <QStringList>
+
 #include "rs_blocklist.h"
 
+
+class RS_BlockList;
 /**
  * Class for representing a font. This is implemented as a RS_Graphic
  * with a name (the font name) and several blocks, one for each letter
@@ -46,7 +49,7 @@ public:
 
     /** @return the fileName of this font. */
     QString getFileName() const {
-        return fileName;
+        return m_fileName;
     }
 
     /** @return the fileLicense of this font. */
@@ -101,20 +104,16 @@ public:
     //    RS_Block* findLetter(const QString& name) {
     //		return letterList.find(name);
     //	}
-    unsigned countLetters() const {
-        return letterList.count();
-    }
-    RS_Block* letterAt(unsigned i) {
-        return letterList.at(i);
-    }
+    unsigned countLetters() const;
+    RS_Block* letterAt(unsigned i);
 
     friend std::ostream& operator << (std::ostream& os, const RS_Font& l);
 
     friend class RS_FontList;
 
 private:
-    void readCXF(QString path);
-    void readLFF(QString path);
+    void readCXF(const QString& path);
+    void readLFF(const QString& path);
     RS_Block* generateLffFont(const QString& key);
 
 private:
@@ -125,7 +124,7 @@ private:
     RS_BlockList letterList;
 
     //! Font file name
-    QString fileName;
+    QString m_fileName;
 
     //! Font file license
     QString fileLicense;
@@ -156,4 +155,3 @@ private:
 };
 
 #endif
-

@@ -24,16 +24,13 @@
 **
 **********************************************************************/
 
-#include <cmath>
+#include "rs_arc.h"
 
 #include "lc_quadratic.h"
 #include "lc_rect.h"
-#include "rs_arc.h"
 #include "rs_debug.h"
-#include "rs_graphicview.h"
 #include "rs_information.h"
 #include "rs_line.h"
-#include "rs_linetypepattern.h"
 #include "rs_math.h"
 #include "rs_painter.h"
 
@@ -41,11 +38,6 @@
 #include "emu_c99.h"
 #endif
 
-namespace {
-// Issue #2035: if the arc radius in GUI is larger than the viewport size by this factor,
-// the arc is considered a tiny arc, and tiny arcs are rendered as spline
-constexpr int g_tinyArcRadiusFactor = 10.;
-}
 
 RS_ArcData::RS_ArcData(const RS_Vector& _center,
 					   double _radius,
@@ -65,6 +57,40 @@ void RS_ArcData::reset() {
 	angle1 = 0.0;
 	angle2 = 0.0;
 	reversed = false;
+}
+
+void RS_Arc::setCenter(const RS_Vector& center) {
+    data.center = center;
+    calculateBorders();
+}
+
+void RS_Arc::setRadius(double radius) {
+    if (!RS_Math::equal(data.radius, radius)) {
+        data.radius = radius;
+        calculateBorders();
+    }
+}
+
+void RS_Arc::setAngle1(double a1) {
+    if (!RS_Math::equal(data.angle1, a1)) {
+        data.angle1 = a1;
+        calculateBorders();
+    }
+}
+
+/** Sets new end angle. */
+void RS_Arc::setAngle2(double a2) {
+    if (!RS_Math::equal(data.angle2, a2)) {
+        data.angle2 = a2;
+        calculateBorders();
+    }
+}
+
+void RS_Arc::setReversed(bool r) {
+    if (data.reversed != r) {
+        data.reversed = r;
+        std::swap(m_startPoint, m_endPoint);
+    }
 }
 
 bool RS_ArcData::isValid() const{
@@ -91,7 +117,6 @@ RS_Arc::RS_Arc(RS_EntityContainer* parent,
 
 RS_Entity* RS_Arc::clone() const {
 	RS_Arc* a = new RS_Arc(*this);
-	a->initId();
 	return a;
 }
 
@@ -213,8 +238,6 @@ bool RS_Arc::createFrom2PDirectionAngle(
     return true;
 }
 
-
-
 /**
  * Creates an arc from its startpoint, endpoint and bulge.
  */
@@ -246,10 +269,10 @@ bool RS_Arc::createFrom2PBulge(const RS_Vector& startPoint, const RS_Vector& end
     return true;
 }
 
-void RS_Arc::calculateBorders() {    
-    startPoint = data.center + RS_Vector::polar(data.radius, data.angle1);
-    endPoint = data.center + RS_Vector::polar(data.radius, data.angle2);
-    LC_Rect const rect{startPoint, endPoint};
+void RS_Arc::calculateBorders() {
+    m_startPoint = data.center.relative(data.radius, data.angle1);
+    m_endPoint = data.center.relative(data.radius, data.angle2);
+    LC_Rect const rect{m_startPoint, m_endPoint};
 
     double minX = rect.lowerLeftCorner().x;
     double minY = rect.lowerLeftCorner().y;
@@ -300,13 +323,12 @@ void RS_Arc::updatePaintingInfo() {
 }
 
 RS_Vector RS_Arc::getStartpoint() const{
-    return startPoint;    
+    return m_startPoint;
 }
 
 /** @return End point of the entity. */
 RS_Vector RS_Arc::getEndpoint() const{
-    return endPoint;
-    return data.center + RS_Vector::polar(data.radius, data.angle2);
+    return m_endPoint;
 }
 
 RS_VectorSolutions RS_Arc::getRefPoints() const{
@@ -651,6 +673,7 @@ std::vector<RS_Entity* > RS_Arc::offsetTwoSides(const double& distance) const
 void RS_Arc::revertDirection(){
     std::swap(data.angle1,data.angle2);
     data.reversed = ! data.reversed;
+    std::swap(m_startPoint, m_endPoint);
 }
 
 /**
@@ -757,9 +780,11 @@ RS_Vector RS_Arc::prepareTrim(const RS_Vector& trimCoord,
             if(irev) {
                 setAngle2(ia);
                 setAngle1(ia2);
+                calculateBorders();
             } else {
                 setAngle1(ia);
                 setAngle2(ia2);
+                calculateBorders();
             }
             da1=fabs(remainder(getAngle1()-am,2*M_PI));
             da2=fabs(remainder(getAngle2()-am,2*M_PI));
@@ -782,6 +807,7 @@ RS_Vector RS_Arc::prepareTrim(const RS_Vector& trimCoord,
             } else {
                 setAngle1(ia);
             }
+            calculateBorders();
         }
     }
     LC_LOG<<"RS_Arc::prepareTrim(): line "<<__LINE__<<": angle1="<<getAngle1()<<" angle2="<<getAngle2()<<" am="<< am<<" is="<<getArcAngle(is)<<" ia2="<<ia2;
@@ -800,7 +826,7 @@ void RS_Arc::move(const RS_Vector& offset) {
     calculateBorders();
 }
 
-void RS_Arc::rotate(const RS_Vector& center, const double& angle) {
+void RS_Arc::rotate(const RS_Vector& center, double angle) {
     RS_DEBUG->print("RS_Arc::rotate");
     data.center.rotate(center, angle);
     data.angle1 = RS_Math::correctAngle(data.angle1+angle);
@@ -920,114 +946,8 @@ void RS_Arc::stretch(const RS_Vector& firstCorner,
     calculateBorders();
 }
 
-/** find the visible part of the arc, and call drawVisible() to draw */
-void RS_Arc::draw(RS_Painter* painter, RS_GraphicView* view,
-                  double& patternOffset) {
-    if (painter == nullptr || view == nullptr)
-        return;
-
-    //only draw the visible portion of line
-    RS_Vector vpMin(view->toGraph(0,view->getHeight()));
-    RS_Vector vpMax(view->toGraph(view->getWidth(),0));
-    QPolygonF visualBox(QRectF(vpMin.x,vpMin.y,vpMax.x-vpMin.x, vpMax.y-vpMin.y));
-
-    RS_Vector vpStart(isReversed()?getEndpoint():getStartpoint());
-    RS_Vector vpEnd(isReversed()?getStartpoint():getEndpoint());
-
-    std::vector<RS_Vector> vertex(0);
-    for(unsigned short i=0;i<4;i++){
-        const QPointF& vp(visualBox.at(i));
-        vertex.push_back(RS_Vector(vp.x(),vp.y()));
-    }
-    /** angles at cross points */
-    std::vector<double> crossPoints(0);
-
-    double baseAngle=isReversed()?getAngle2():getAngle1();
-    for(unsigned short i=0;i<4;i++){
-        RS_Line line{vertex.at(i),vertex.at((i+1)%4)};
-        auto vpIts=RS_Information::getIntersection(
-            static_cast<RS_Entity*>(this),
-            &line,
-            true);
-        if( vpIts.size()==0) continue;
-        for(const RS_Vector& vp: vpIts){
-            auto ap1=getTangentDirection(vp).angle();
-            auto ap2=line.getTangentDirection(vp).angle();
-            //ignore tangent points, because the arc doesn't cross over
-            if (std::abs(std::remainder(ap2 - ap1, M_PI) ) >= RS_TOLERANCE_ANGLE)
-                crossPoints.push_back(
-                    RS_Math::getAngleDifference(baseAngle, getCenter().angleTo(vp))
-                    );
-        }
-    }
-    if (vpStart.isInWindowOrdered(vpMin, vpMax))
-        crossPoints.push_back(0.);
-    if (vpEnd.isInWindowOrdered(vpMin, vpMax))
-        crossPoints.push_back(getAngleLength());
-
-    //sorting
-    std::sort(crossPoints.begin(),crossPoints.end());
-    //draw visible
-    RS_Arc arc(*this);
-    arc.setPen(getPen());
-    arc.setSelected(isSelected());
-    arc.setReversed(false);
-    for(size_t i=1;i<crossPoints.size();i+=2){
-        arc.setAngle1(baseAngle+crossPoints[i-1]);
-        arc.setAngle2(baseAngle+crossPoints[i]);
-        arc.drawVisible(painter,view,patternOffset);
-    }
-
-}
-
-
-/** directly draw the arc, assuming the whole arc is within visible window */
-void RS_Arc::drawVisible(RS_Painter* painter, RS_GraphicView* view,
-                         double& patternOffset) {
-
-    if (painter == nullptr || view == nullptr)
-        return;
-    //visible in graphic view
-    if(!isVisibleInWindow(view))
-        return;
-
-    // Adjust dash offset
-    updateDashOffset(*painter, *view, patternOffset);
-
-    const double angularLength = RS_Math::getAngleDifference(getAngle1(), getAngle2());
-    const double radiusGui = view->toGuiDX(getRadius());
-
-    // Issue #2035: when the arc radius is much larger than the viewport size, QPainter::arcTo()
-    // rendering precision may fail to maintain pixel-level precisions.
-    // Only call painter->drawArcEntity(), which is based on QPainter::arcTo(), if the arc center
-    // close to the viewport sizes.
-    if (int(radiusGui) <= g_tinyArcRadiusFactor * (painter->getWidth() + painter->getHeight())) {
-        painter->drawArcEntity(view->toGui(getCenter()),
-                         radiusGui,
-                         radiusGui,
-                         RS_Math::rad2deg(getAngle1()),
-                         RS_Math::rad2deg(angularLength));
-    } else {
-        // Issue #2035
-        // Estimate the rendering error by using a quadratic bezier to render an arc. The bezier
-        // curve(lc_splinepoints) is defined by a set of equidistant arc points
-        // Second order error of bezier approximation:
-        // r sin^4(dA/2)/2
-        // with the radius r, and dA as the line segment spanning angle around the arc center
-        // for maximum error up to 1 pixel: 1 > r sin^4(dA/2)/2,
-        // dA < 2 (2/r)^{1/4}
-        // The number of points needed is by angularLength/dA
-        const double dA = 2. * std::pow(2./radiusGui, 1./4.);
-        int arcPoints = int(std::ceil(angularLength/dA));
-        // At minimum control points: 4
-        arcPoints = std::max(3, arcPoints);
-        std::vector<RS_Vector> uiPoints;
-        for (int i = 0; i <= arcPoints; ++i) {
-            const double angle = (getAngle1() * i  + getAngle2() * (arcPoints - i))/arcPoints;
-            uiPoints.push_back(view->toGui(getCenter() + RS_Vector{angle} * getRadius()));
-        }
-        painter->drawSplinePoints(uiPoints, false);
-    }
+void RS_Arc::draw(RS_Painter* painter) {
+    painter->drawEntityArc(this);
 }
 
 /**
@@ -1125,13 +1045,12 @@ void RS_Arc::updateMiddlePoint() {
     } else {
         a += RS_Math::correctAngle(b - a) * 0.5;
     }
-    RS_Vector ret(a);
-    middlePoint =  getCenter() + ret * getRadius();
+    middlePoint =  getCenter() + RS_Vector::polar(getRadius(), a);
 }
 
-void RS_Arc::moveMiddlePoint(RS_Vector vector) {
-    auto arc = RS_Arc(nullptr, RS_ArcData());    
-    bool suc = arc.createFrom3P(startPoint, vector,endPoint);
+void RS_Arc::moveMiddlePoint(const RS_Vector& vector) {
+    auto arc = RS_Arc(nullptr, RS_ArcData());
+    bool suc = arc.createFrom3P(m_startPoint, vector,m_endPoint);
     if (suc) {
         RS_ArcData &arcData = arc.data;
         data.center = arcData.center;

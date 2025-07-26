@@ -23,37 +23,27 @@
 #ifndef LC_CURSOROVERLAYINFO_H
 #define LC_CURSOROVERLAYINFO_H
 
-#include "rs_point.h"
+#include <QString>
+
+#include "rs_vector.h"
+#include "lc_overlayentity.h"
 
 struct  LC_InfoCursorOptions{
+    struct ZoneSetup;
+    LC_InfoCursorOptions();
+    ~LC_InfoCursorOptions();
+    void setFontSize(int size);
+    const ZoneSetup& zone(int index) const;
+    ZoneSetup& zone(int index);
     int offset = 10;
     int fontSize = 10;
     QString fontName = "Verdana";
 
-    struct ZoneSetup{
-        QColor color;
-        int fontSize = 10;
-        ZoneSetup(const QColor &color, int fontSize):color(color), fontSize(fontSize) {};
-    };
-
-    void setFontSize(int size){
-        fontSize = size;
-        // todo - potentally, later we may use different font sizes for different zones?
-
-        zone1Settings.fontSize = size;
-        zone2Settings.fontSize = size;
-        zone3Settings.fontSize = size;
-        zone4Settings.fontSize = size;
-    }
-
-    ZoneSetup zone1Settings = ZoneSetup(Qt::green, 10);
-    ZoneSetup zone2Settings = ZoneSetup(Qt::cyan, 10);
-    ZoneSetup zone3Settings = ZoneSetup(Qt::magenta, 10);
-    ZoneSetup zone4Settings  = ZoneSetup(Qt::gray, 10);
+    struct Impl;
+    const std::unique_ptr<Impl> m_pImpl;
 };
 
 class LC_InfoMessageBuilder{
-    QString msg;
 
 public:
     LC_InfoMessageBuilder() {}
@@ -74,8 +64,13 @@ public:
         }
         msg.append("\n");
     }
-};
 
+  protected:
+    void clear() {
+        msg.clear();
+    }
+    QString msg;
+};
 
 
 struct LC_InfoCursorData{
@@ -134,6 +129,7 @@ protected:
 struct LC_InfoCursorOverlayPrefs{
     bool enabled = true;
     bool showAbsolutePosition = false;
+    bool showAbsolutePositionWCS = false;
     bool showRelativePositionDistAngle = false;
     bool showRelativePositionDeltas = true;
     bool showCommandPrompt = false;
@@ -145,26 +141,25 @@ struct LC_InfoCursorOverlayPrefs{
     bool multiLine = false;
     bool showCurrentActionName = true;
     LC_InfoCursorOptions options = LC_InfoCursorOptions();
+
+    void loadSettings();
 };
 
-class LC_InfoCursor:public RS_Point
-{
+class LC_OverlayInfoCursor:public LC_OverlayDrawable{
 public:
-    LC_InfoCursor(RS_EntityContainer *parent, const RS_Vector &coord, LC_InfoCursorOptions* cursorOverlaySettings);
+    LC_OverlayInfoCursor(const RS_Vector &coord, LC_InfoCursorOptions* cursorOverlaySettings);
     void setZonesData(LC_InfoCursorData *data);
-    void draw(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) override;
+    void draw(RS_Painter *painter) override;
     void clear();
     LC_InfoCursorData* getData(){return zonesData;}
-
     LC_InfoCursorData *getZonesData() const;
-
     LC_InfoCursorOptions *getOptions() const;
-
     void setOptions(LC_InfoCursorOptions *options);
-
+    void setPos(const RS_Vector wPos){wcsPos = wPos;};
 protected:
     LC_InfoCursorData* zonesData = nullptr;
     LC_InfoCursorOptions* options = nullptr;
+    RS_Vector wcsPos;
 };
 
 #endif // LC_CURSOROVERLAYINFO_H

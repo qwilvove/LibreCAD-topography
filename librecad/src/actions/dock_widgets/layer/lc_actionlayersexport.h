@@ -31,44 +31,34 @@
 
 #include "rs_actioninterface.h"
 
-
 class QString;
 class RS_EntityContainer;
 class RS_GraphicView;
 class RS_LayerList;
-
+struct LC_LayersExportOptions;
 
 /*
     This action class exports the current selected layers as a drawing file, 
     either as individual files, or combined within a single file.
 */
+class LC_ActionLayersExport : public RS_ActionInterface{
+Q_OBJECT
+public:
+    enum Mode
+    {
+        SelectedMode = 0,
+        VisibleMode
+    };
 
-
-class LC_ActionLayersExport : public RS_ActionInterface
-{
-    Q_OBJECT
-
-    public:
-
-        enum Mode
-        {
-            SelectedMode = 0,
-            VisibleMode 
-        };
-
-        LC_ActionLayersExport( RS_EntityContainer& document, 
-                               RS_GraphicView& graphicView, 
-                               RS_LayerList* inputLayersList, 
-                               Mode inputExportMode);
-
-        void init(int status) override;
-
-        void trigger() override;
-
-    private:
-
-        RS_LayerList* layersList = nullptr;
-
-        Mode exportMode = SelectedMode;
+    LC_ActionLayersExport( LC_ActionContext *actionContext,
+                           Mode inputExportMode);
+    void init(int status) override;
+    bool collectLayersToExport(LC_LayersExportOptions* exportOptions);
+    void exportLayers(LC_LayersExportOptions& exportOptions, RS_Graphic* sourceGraphic);
+    void performExport();
+    void trigger() override;
+private:
+    RS_LayerList* m_layersList = nullptr;
+    Mode m_exportMode = SelectedMode;
 };
 #endif // LC_ACTIONLAYERSEXPORT_H

@@ -42,21 +42,20 @@
 class RS_Pen : public RS_Flags {
 public:
     /**
-     * Creates a default pen (black, solid, width 0).
+     * Creates a default pen (color, width, type) by layer
      */
-    RS_Pen() = default;
+    RS_Pen();
 
     /**
      * Creates a pen with the given attributes.
      */
     RS_Pen(const RS_Color& c,
            RS2::LineWidth w,
-           RS2::LineType t) : RS_Flags() {
+           RS2::LineType t)
+    {
         setColor(c);
         setWidth(w);
         setLineType(t);
-		      setScreenWidth(0);
-        setAlpha(1.0);
     }
     /**
      * Creates a default pen with the given flags. This is 
@@ -68,11 +67,6 @@ public:
      * </pre>
      */
     RS_Pen(unsigned int f) : RS_Flags(f) {
-        setColor(RS_Color(0,0,0));
-        setWidth(RS2::Width00);
-        setLineType(RS2::SolidLine);
-		      setScreenWidth(0);
-        setAlpha(1.0);
     }
     //RS_Pen(const RS_Pen& pen) : RS_Flags(pen.getFlags()) {
     //    lineType = pen.lineType;
@@ -98,6 +92,7 @@ public:
     void setScreenWidth(double w) {
         screenWidth = w;
     }
+
     RS_Color getColor() const {
         return color;
     }
@@ -118,35 +113,35 @@ public:
         lineType = pen.lineType;
     }
 
-    inline bool isColorByLayer(){
+    inline bool isColorByLayer() const {
         return color.getFlag(RS2::FlagByLayer);
     }
 
-    inline bool isColorByBlock(){
+    inline bool isColorByBlock() const {
         return color.getFlag(RS2::FlagByBlock);
     }
 
-    inline bool isWidthByLayer(){
+    inline bool isWidthByLayer() const {
         return width == RS2::WidthByLayer;
     }
 
-    inline bool isWidthByBlock(){
+    inline bool isWidthByBlock() const {
         return width == RS2::WidthByBlock;
     }
 
-    inline bool isLineTypeByLayer(){
+    inline bool isLineTypeByLayer() const {
         return lineType == RS2::LineByLayer;
     }
 
-    inline bool isLineTypeByBlock(){
+    inline bool isLineTypeByBlock() const {
         return lineType == RS2::LineByBlock;
     }
 
-    bool hasByLayerAttributes(){
+    bool hasByLayerAttributes() const {
         return color.getFlag(RS2::FlagByLayer) ||  width == RS2::WidthByLayer || lineType == RS2::LineByLayer;
     }
 
-    bool isValid() {
+    bool isValid() const {
         return !getFlag(RS2::FlagInvalid);
     }
 
@@ -193,14 +188,15 @@ public:
         m_dashOffset = offset;
     }
 
-    double dashOffset() const{
+    double dashOffset() const
+    {
         return m_dashOffset;
     }
 
     friend std::ostream& operator << (std::ostream& os, const RS_Pen& p);
 
 
-protected:
+private:
     RS2::LineType lineType = RS2::SolidLine;
     RS2::LineWidth width = RS2::Width00;
     double screenWidth = 0.;

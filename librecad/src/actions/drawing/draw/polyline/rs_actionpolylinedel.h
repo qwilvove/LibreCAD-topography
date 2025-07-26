@@ -26,7 +26,6 @@
 #ifndef RS_ACTIONPOLYLINEDEL_H
 #define RS_ACTIONPOLYLINEDEL_H
 
-
 #include "lc_actionpolylinedeletebase.h"
 
 /**
@@ -35,19 +34,16 @@
  * @author Andrew Mustun
  */
 class RS_ActionPolylineDel:public LC_ActionPolylineDeleteBase {
-Q_OBJECT
+    Q_OBJECT
 public:
-    RS_ActionPolylineDel(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionPolylineDel(LC_ActionContext *actionContext);
     ~RS_ActionPolylineDel() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     void drawSnapper() override;
 protected:
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
     void updateMouseButtonHints() override;
     void doTrigger() override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
 };
-
 #endif

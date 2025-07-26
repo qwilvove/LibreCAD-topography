@@ -26,18 +26,15 @@
 #ifndef QG_SNAPTOOLBAR_H
 #define QG_SNAPTOOLBAR_H
 
-class QG_ActionHandler;
-class LC_ActionGroupManager;
-
 #include <QToolBar>
-
 #include "rs_snapper.h"
 
-#include "ui_qg_snaptoolbar.h"
-#include "lc_snapoptionswidgetsholder.h"
+class LC_SnapOptionsWidgetsHolder;
+class QG_ActionHandler;
 
-class QG_SnapToolBar : public QToolBar
-{
+class LC_ActionGroupManager;
+
+class QG_SnapToolBar : public QToolBar{
     Q_OBJECT
 public:
     QG_SnapToolBar(QWidget* parent
@@ -50,6 +47,7 @@ public:
     void saveSnapMode();
     bool lockedRelativeZero() const;
     void setLockedRelativeZero(bool on);
+    void setUCSActive(bool on);
     LC_SnapOptionsWidgetsHolder *getSnapOptionsHolder();
 
 public slots:
@@ -66,27 +64,27 @@ private:
     QAction* addOwnAction(QString name, const QMap<QString, QAction*> &actionsMap);
     QAction* justAddAction(QString name, const QMap<QString, QAction*> &actionsMap);
 
-    QG_ActionHandler* actionHandler;
+    QG_ActionHandler* m_actionHandler;
 
-    QAction *snapFree;
-    QAction *snapGrid;
-    QAction *snapEnd;
-    QAction *snapOnEntity;
-    QAction *snapCenter;
-    QAction *snapMiddle;
-    QAction *snapDistance;
-    QAction *snapIntersection;
-    QAction *snapMiddleManual;
+    QAction *m_actionSnapFree;
+    QAction *m_actionSnapGrid;
+    QAction *m_actionSnapEnd;
+    QAction *m_actionSnapOnEntity;
+    QAction *m_actionSnapCenter;
+    QAction *m_actionSnapMiddle;
+    QAction *m_actionSnapDistance;
+    QAction *m_actionSnapIntersection;
+    QAction *m_actionSnapMiddleManual;
 
+    QAction *m_actionRestrictHorizontal;
+    QAction *m_actionRestrictVertical;
+    QAction *m_actionRestrictOrthogonal;
+    QAction *m_actionRestrictNothing;
+    QAction *m_actionRelZero;
+    QAction *m_actionLockRelZero;
 
-    QAction *restrictHorizontal;
-    QAction *restrictVertical;
-    QAction *restrictOrthogonal;
-    QAction *restrictNothing;
-    QAction *bRelZero;
-    QAction *bLockRelZero;
-    RS_SnapMode snapMode;
-
+    QAction *ucsMode;
+    RS_SnapMode m_snapMode;
 };
 
 #endif // QG_SNAPTOOLBAR_H

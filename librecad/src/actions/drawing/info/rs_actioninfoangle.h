@@ -38,12 +38,9 @@
 class RS_ActionInfoAngle:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionInfoAngle(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionInfoAngle(LC_ActionContext *actionContext);
     ~RS_ActionInfoAngle() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
     void drawSnapper() override;
 protected:
     /**
@@ -53,14 +50,16 @@ protected:
         SetEntity1,    /**< Setting the 1st entity. */
         SetEntity2     /**< Setting the 2nd entity. */
     };
-    RS_Entity *entity1 = nullptr;
-    RS_Entity *entity2 = nullptr;
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    RS_Entity *m_entity1 = nullptr;
+    RS_Entity *m_entity2 = nullptr;
+
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
     void updateInfoCursor(const RS_Vector &mouse, const RS_Vector &intersection);
     void doTrigger() override;

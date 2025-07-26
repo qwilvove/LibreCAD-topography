@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
@@ -38,13 +39,10 @@ struct RS_RoundData;
 class RS_ActionModifyRound:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionModifyRound(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionModifyRound(LC_ActionContext *actionContext);
     ~RS_ActionModifyRound() override;
     void init(int status) override;
     void finish(bool updateTB) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     void setRadius(double r);
     double getRadius() const;
@@ -62,21 +60,22 @@ protected:
         SetTrim    /**< Setting trim flag in command line. */
     };
 
-    RS_Entity *entity1 = nullptr;
-    RS_Entity *entity2 = nullptr;
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    RS_Entity *m_entity1 = nullptr;
+    RS_Entity *m_entity2 = nullptr;
+    struct RoundActionData;
+    std::unique_ptr<RoundActionData> m_actionData;
     /** Last status before entering angle. */
-    Status lastStatus = SetEntity1;
+    Status m_lastStatus = SetEntity1;
 
     bool removeOldFillet(RS_Entity *e, const bool &isPolyline);
     LC_ActionOptionsWidget* createOptionsWidget() override;
     void previewEntityModifications(const RS_Entity *original, RS_Entity *modified, RS_Vector& roundPoint, int mode);
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
     bool doProcessCommand(int status, const QString &command) override;
     void updateMouseButtonHints() override;
     void doTrigger() override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
 };
 #endif

@@ -23,7 +23,6 @@
 #ifndef RS_ACTIONDRAWELLIPSEAXIS_H
 #define RS_ACTIONDRAWELLIPSEAXIS_H
 
-
 #include "lc_actiondrawcirclebase.h"
 
 /**
@@ -35,12 +34,10 @@
 class RS_ActionDrawEllipseAxis : public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawEllipseAxis(RS_EntityContainer& container,
-                             RS_GraphicView& graphicView,
+    RS_ActionDrawEllipseAxis(LC_ActionContext *actionContext,
                              bool isArc);
     ~RS_ActionDrawEllipseAxis() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
     bool isReversed() const override;
     void setReversed(bool b) const override;
 protected:
@@ -55,10 +52,11 @@ protected:
         SetAngle2    /**< Setting end angle. */
     };
 
-    struct Points;
-    std::unique_ptr<Points> pPoints;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;

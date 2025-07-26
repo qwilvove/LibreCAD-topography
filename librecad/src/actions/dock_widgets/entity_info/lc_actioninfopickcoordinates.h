@@ -26,28 +26,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "lc_abstractactionwithpreview.h"
 
-class LC_ActionInfoPickCoordinates:public LC_AbstractActionWithPreview
-{
+class LC_ActionInfoPickCoordinates:public LC_AbstractActionWithPreview{
     Q_OBJECT
 public:
-    LC_ActionInfoPickCoordinates(RS_EntityContainer &container, RS_GraphicView &graphicView);
+    LC_ActionInfoPickCoordinates(LC_ActionContext *actionContext);
     void init(int status) override;
     void resume() override;
 protected:
-    void doPreparePreviewEntities(QMouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status) override;
-    void doOnLeftMouseButtonRelease(QMouseEvent *e, int status, const RS_Vector &snapPoint) override;
-    RS_Vector doGetMouseSnapPoint(QMouseEvent *e) override;
+    void doPreparePreviewEntities(LC_MouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status) override;
+    void doOnLeftMouseButtonRelease(LC_MouseEvent *e, int status, const RS_Vector &snapPoint) override;
+    RS_Vector doGetMouseSnapPoint(LC_MouseEvent *e) override;
     void doFinish(bool updateTB) override;
     void updateMouseButtonHints() override;
 private:
     /**
      * collected points
      */
-    QVector<RS_Vector> points;
+    QVector<RS_Vector> m_points;
     /*
      * flag from options that indicates whether a line between points should be drawsn
      */
-    bool drawPointsPath = true;
+    bool m_drawPointsPath = true;
 
     void updateQuickInfoWidget(const RS_Vector &coord);
     void updateCollectedPointsByWidget();

@@ -37,7 +37,7 @@ struct RS_DimAlignedData {
 	/**
 	 * Default constructor
 	 */
-	RS_DimAlignedData();
+    RS_DimAlignedData() = default;;
 	/**
 	 * Constructor with initialisation.
 	 *
@@ -82,7 +82,6 @@ public:
     RS_DimAlignedData const &getEData() const;
     RS_VectorSolutions getRefPoints() const override;
     QString getMeasuredLabel() override;
-    void updateDim(bool autoText = false) override;
     RS_Vector const &getExtensionPoint1() const;
     RS_Vector const &getExtensionPoint2() const;
     /**
@@ -91,11 +90,11 @@ public:
      */
     void updateDimPoint();
     void move(const RS_Vector &offset) override;
-    void rotate(const RS_Vector &center, const double &angle) override;
+    void rotate(const RS_Vector &center, double angle) override;
     void rotate(const RS_Vector &center, const RS_Vector &angleVector) override;
     void scale(const RS_Vector &center, const RS_Vector &factor) override;
     void mirror(const RS_Vector &axisPoint1, const RS_Vector &axisPoint2) override;
-    bool hasEndpointsWithinWindow(const RS_Vector &v1, const RS_Vector &v2) override;
+    bool hasEndpointsWithinWindow(const RS_Vector &v1, const RS_Vector &v2) const override;
     void stretch(
         const RS_Vector &firstCorner,
         const RS_Vector &secondCorner,
@@ -105,9 +104,15 @@ public:
         std::ostream &os,
         const RS_DimAligned &d);
     void getDimPoints(RS_Vector &dimP1, RS_Vector &dimP2);
-protected:
+
+    double getDistanceToPoint(const RS_Vector& coord,
+                              RS_Entity** entity,
+                              RS2::ResolveLevel level=RS2::ResolveNone,
+                              double solidDist = RS_MAXDOUBLE) const override;
+private:
     /** Extended data. */
-    RS_DimAlignedData edata;
+    RS_DimAlignedData m_dimAlignedData;
+    void doUpdateDim() override;
 };
 
 #endif

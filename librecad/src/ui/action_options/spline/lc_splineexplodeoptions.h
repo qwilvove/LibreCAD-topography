@@ -23,22 +23,18 @@
 #ifndef LC_SPLINEEXPLODEOPTIONS_H
 #define LC_SPLINEEXPLODEOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "lc_actionsplineexplode.h"
 
+class LC_ActionSplineExplode;
 namespace Ui {
-class LC_SplineExplodeOptions;
+    class LC_SplineExplodeOptions;
 }
 
 class LC_SplineExplodeOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
-
 public:
     explicit LC_SplineExplodeOptions();
-    ~LC_SplineExplodeOptions();
-
+    ~LC_SplineExplodeOptions() override;
 public slots:
     void languageChange() override;
     void cbKeepOriginalsClicked(bool val);
@@ -48,21 +44,16 @@ public slots:
     void cbPolylineClicked(bool val);
     void sbSegmentsCountValueChanged(int value);
 protected:
+    Ui::LC_SplineExplodeOptions *ui;
+    LC_ActionSplineExplode* m_action = nullptr;
+    int m_segmentsCountFromDrawing;
     void doSetAction(RS_ActionInterface *a, bool update) override;
     void doSaveSettings() override;
-private:
-    Ui::LC_SplineExplodeOptions *ui;
-    LC_ActionSplineExplode* action;
-
-    int segmentsCountFromDrawing;
-
     void setKeepOriginalsToActionAndView(bool val);
     void setUseCurrentAttributesToActionAndView(bool val);
     void setUseCurrentLayerToActionAndView(bool val);
     void setUseCustomSegmentCount(bool val);
     void setPolylineToActionAndView(bool val);
-
     void setSegmentsCountValueToActionAndView(int value);
 };
-
 #endif // LC_SPLINEEXPLODEOPTIONS_H

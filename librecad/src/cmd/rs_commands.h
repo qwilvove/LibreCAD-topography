@@ -67,6 +67,8 @@ public:
                              RS2::ActionType action=RS2::ActionNone);
 
     static QString msgAvailableCommands();
+
+    static QString getAliasFile();
     void updateAlias();
 
     ~RS_Commands()=delete;
@@ -78,7 +80,7 @@ public:
 private:
     RS_Commands() ;
 
-    std::map<QString, QString> readAliasFile(QFile& aliasFile);
+    std::map<QString, QString> readAliasFile(const QString& aliasName);
 
     std::map<QString, RS2::ActionType> m_mainCommands;
     std::map<QString, RS2::ActionType> m_shortCommands;

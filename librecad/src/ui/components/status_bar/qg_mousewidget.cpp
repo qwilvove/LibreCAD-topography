@@ -25,12 +25,9 @@
 **********************************************************************/
 #include "qg_mousewidget.h"
 
-#include <QVariant>
-#include <QSettings>
-
-#include "rs_settings.h"
 #include "lc_modifiersinfo.h"
 #include "lc_shortcuts_manager.h"
+#include "rs_settings.h"
 
 /*
  *  Constructs a QG_MouseWidget as a child of 'parent', with the
@@ -49,8 +46,6 @@ QG_MouseWidget::QG_MouseWidget(QWidget* parent, const char* name, Qt::WindowFlag
         int height{64};
 
         if (useClassicalStatusBar) {
-            QSettings settings;
-
             int allow_statusbar_height = LC_GET_BOOL("AllowStatusbarHeight", false);
             if (allow_statusbar_height) {
                 height = LC_GET_INT("StatusbarHeight", 64);
@@ -74,7 +69,19 @@ QG_MouseWidget::QG_MouseWidget(QWidget* parent, const char* name, Qt::WindowFlag
 
     lLeftButton->setText("");
     lRightButton->setText("");
-    lMousePixmap->setPixmap(QPixmap(":/icons/mouse.svg")/*.scaled(height, height)*/);
+    lMousePixmap->setPixmap(QPixmap(":/icons/mouse.lci")/*.scaled(height, height)*/);
+}
+
+void QG_MouseWidget::updatePixmap(QString iconName, QLabel *label){
+    int width = label->pixmap().width();
+    int height = label->pixmap().height();
+    label->setPixmap(QIcon(iconName).pixmap(width, height));
+}
+
+void QG_MouseWidget::onIconsRefreshed(){
+    updatePixmap(":/icons/mouse.lci", lMousePixmap);
+    updatePixmap(":/icons/state-shift_yes.lci", lblShift);
+    updatePixmap(":/icons/state_ctrl_yes.lci", lblCtrl);
 }
 
 /*

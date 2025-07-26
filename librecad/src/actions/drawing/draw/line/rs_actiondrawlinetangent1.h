@@ -39,14 +39,13 @@ class RS_Line;
 class RS_ActionDrawLineTangent1 : public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionDrawLineTangent1(RS_EntityContainer& container,
-                              RS_GraphicView& graphicView);
+    RS_ActionDrawLineTangent1(LC_ActionContext *actionContext);
     ~RS_ActionDrawLineTangent1() override;
-    void mouseMoveEvent(QMouseEvent* e) override;
 protected:
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
     void doTrigger() override;
@@ -57,12 +56,12 @@ private:
     };
 
     /** Closest tangent. */
-    std::unique_ptr<RS_Line> tangent;
+    std::unique_ptr<RS_Line> m_tangent; // fixme sand - files - remove and rework to data.
     /** Chosen startpoint */
-    std::unique_ptr<RS_Vector> point;
+    std::unique_ptr<RS_Vector> m_point;
 
     //list of entity types supported by current action
-    const EntityTypeList circleType = EntityTypeList{ RS2::EntityArc,
+    const EntityTypeList m_circleType = EntityTypeList{ RS2::EntityArc,
                                                       RS2::EntityCircle,
                                                       RS2::EntityEllipse,
                                                       RS2::EntityParabola,

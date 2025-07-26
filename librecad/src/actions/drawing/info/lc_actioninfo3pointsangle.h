@@ -28,11 +28,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class LC_ActionInfo3PointsAngle :public RS_PreviewActionInterface{
 Q_OBJECT
 public:
-    LC_ActionInfo3PointsAngle(RS_EntityContainer &container,
-                                  RS_GraphicView &graphicView);
-
+    LC_ActionInfo3PointsAngle(LC_ActionContext *actionContext);
     ~LC_ActionInfo3PointsAngle() override;
-    void mouseMoveEvent(QMouseEvent *event) override;
 protected:
     enum Status{
         SetPoint1,
@@ -40,13 +37,14 @@ protected:
         SetPoint3
     };
 
-    RS_Vector point1{false};
-    RS_Vector point2{false};
-    RS_Vector point3{false};
+    RS_Vector m_point1{false};
+    RS_Vector m_point2{false};
+    RS_Vector m_point3{false};
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
     void updateInfoCursor(const RS_Vector &mouse, const RS_Vector &startPoint);

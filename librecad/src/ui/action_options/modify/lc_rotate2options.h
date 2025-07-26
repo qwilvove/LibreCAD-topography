@@ -23,9 +23,9 @@
 #ifndef LC_ROTATE2OPTIONS_H
 #define LC_ROTATE2OPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "rs_actionmodifyrotate2.h"
+
+class RS_ActionModifyRotate2;
 
 namespace Ui {
     class LC_Rotate2Options;
@@ -33,11 +33,9 @@ namespace Ui {
 
 class LC_Rotate2Options : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     explicit LC_Rotate2Options();
     ~LC_Rotate2Options();
-
 public slots:
     void languageChange() override;
     void cbKeepOriginalsClicked(bool val);
@@ -54,7 +52,7 @@ protected:
     void doSetAction(RS_ActionInterface *a, bool update) override;
 private:
     Ui::LC_Rotate2Options *ui;
-    RS_ActionModifyRotate2* action = nullptr;
+    RS_ActionModifyRotate2* m_action = nullptr;
     void setUseMultipleCopiesToActionAndView(bool copies);
     void setUseCurrentLayerToActionAndView(bool val);
     void setUseCurrentAttributesToActionAndView(bool val);

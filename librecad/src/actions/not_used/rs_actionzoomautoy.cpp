@@ -27,13 +27,11 @@
 #include "rs_actionzoomautoy.h"
 #include "rs_graphicview.h"
 
-
-RS_ActionZoomAutoY::RS_ActionZoomAutoY(RS_EntityContainer& container,
-                                       RS_GraphicView& graphicView)
-        :RS_ActionInterface("Auto zoom Y", container, graphicView) {}
+RS_ActionZoomAutoY::RS_ActionZoomAutoY(LC_ActionContext *actionContext)
+        :RS_ActionInterface("Auto zoom Y", actionContext) {}
 
 void RS_ActionZoomAutoY::trigger() {
-    graphicView->zoomAutoY(false);
+//    viewport->zoomAutoY(false);
     finish(false);
 }
 

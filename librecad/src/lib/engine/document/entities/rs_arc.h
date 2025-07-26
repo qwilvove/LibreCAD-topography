@@ -27,9 +27,6 @@
 #ifndef RS_ARC_H
 #define RS_ARC_H
 
-#include <iosfwd>
-
-#include "rs_atomicentity.h"
 #include "lc_cachedlengthentity.h"
 
 class LC_Quadratic;
@@ -89,7 +86,10 @@ public:
     }
 
     /** @return Copy of data that defines the arc. **/
-    RS_ArcData getData() const {
+    const RS_ArcData& getData() const {
+        return data;
+    }
+    RS_ArcData& getData() {
         return data;
     }
 
@@ -105,9 +105,7 @@ public:
         return data.center;
     }
     /** Sets new center. */
-    void setCenter(const RS_Vector& c) {
-        data.center = c;
-    }
+    void setCenter(const RS_Vector& c);
 
     /** @return The radius of this arc */
     double getRadius() const override {
@@ -115,30 +113,37 @@ public:
     }
 
     /** Sets new radius. */
-    void setRadius(double r) override {
-        data.radius = r;
-    }
+    void setRadius(double r) override;
 
     /** @return The start angle of this arc */
     double getAngle1() const {
         return data.angle1;
     }
+
     /** Sets new start angle. */
-    void setAngle1(double a1) {
-        data.angle1 = a1;
-    }
+    void setAngle1(double a1);
+
     /** @return The end angle of this arc */
     double getAngle2() const {
         return data.angle2;
     }
     /** Sets new end angle. */
-    void setAngle2(double a2) {
-        data.angle2 = a2;
-    }
+    void setAngle2(double a2);
+
     /** get angle relative arc center*/
     double getArcAngle(const RS_Vector& vp) {
         return (vp - data.center).angle();
     }
+
+    /**
+     * @brief getPointAtParameter - get arc point at the given angle
+     * @param angle - arc angle
+     * @return RS_Vector - arc point, which may not be within the arc angular range
+     */
+    RS_Vector getPointAtParameter(double angle) const {
+        return getCenter() + RS_Vector::polar(getRadius(), angle);
+    }
+
     /**
      * @return Direction 1. The angle at which the arc starts at
      * the startpoint.
@@ -158,9 +163,7 @@ public:
         return data.reversed;
     }
     /** sets the reversed status. */
-    void setReversed(bool r) {
-        data.reversed = r;
-    }
+    void setReversed(bool r);
 
     /** @return Start point of the entity. */
     RS_Vector getStartpoint() const override;
@@ -225,7 +228,7 @@ public:
     RS_VectorSolutions getTangentPoint(const RS_Vector& point) const override;//find the tangential points seeing from given point
     RS_Vector getTangentDirection(const RS_Vector& point) const override;
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     /**
@@ -245,7 +248,7 @@ public:
                  const RS_Vector& offset) override;
 
 
-    void draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
 
     friend std::ostream& operator << (std::ostream& os, const RS_Arc& a);
 
@@ -268,23 +271,18 @@ m0 x + m1 y + m2 =0
      */
     double areaLineIntegral() const override;
 
+    void updateMiddlePoint();
 protected:
     RS_ArcData data{};
+private:
     // cached values for performance
     RS_Vector middlePoint;
-    RS_Vector startPoint;
-    RS_Vector endPoint;
+    RS_Vector m_startPoint;
+    RS_Vector m_endPoint;
 
     void updateLength() override;
     void updatePaintingInfo();
-
-    void updateMiddlePoint();
-
-    void moveMiddlePoint(RS_Vector vector);
-
-private:
-    void drawVisible(RS_Painter* painter, RS_GraphicView* view,
-                             double& patternOffset);
+    void moveMiddlePoint(const RS_Vector& vector);
 };
 
 #endif

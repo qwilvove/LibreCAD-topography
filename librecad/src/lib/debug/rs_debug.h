@@ -24,16 +24,14 @@
 **
 **********************************************************************/
 
-
 #ifndef RS_DEBUG_H
 #define RS_DEBUG_H
-
-#include "rs_vector.h"
 
 #ifdef __hpux
 #include <sys/_size_t.h>
 #endif
 
+class RS_Vector;
 class QByteArray;
 class QChar;
 class QLatin1String;
@@ -76,13 +74,13 @@ public:
      *  <li>D_DEBUGGING: very verbose
      * </ul>
      */
-    enum RS_DebugLevel { D_NOTHING,
-                         D_CRITICAL,
-                         D_ERROR,
-                         D_WARNING,
-                         D_NOTICE,
-                         D_INFORMATIONAL,
-                         D_DEBUGGING };
+    enum RS_DebugLevel: char { D_NOTHING=0,
+                         D_CRITICAL=1,
+                         D_ERROR=2,
+                         D_WARNING=3,
+                         D_NOTICE=4,
+                         D_INFORMATIONAL=5,
+                         D_DEBUGGING=6 };
 
     ~RS_Debug();
     RS_Debug(const RS_Debug&)=delete;
@@ -148,7 +146,7 @@ public:
 private:
     RS_Debug();
 
-    RS_DebugLevel debugLevel = D_INFORMATIONAL;
+    RS_DebugLevel m_debugLevel = D_INFORMATIONAL;
 };
 
 #endif

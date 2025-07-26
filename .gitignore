@@ -1,9 +1,11 @@
 # LibreCAD root folder
 /*.dxf
 /*.sh
-!/CMakeLists.txt
 /*.txt
 /\.*
+!/CMakeLists.txt
+!/.github
+!/librecad/src/lib/debug/
 
 # Apple generated directories
 build/
@@ -51,7 +53,6 @@ debug/
 *.exe
 *.exp
 *.ilk
-*.rc
 *.bak
 *.obj
 object_script.LibreCAD.*

@@ -26,18 +26,17 @@
 #ifndef QG_BEVELOPTIONS_H
 #define QG_BEVELOPTIONS_H
 
-#include<memory>
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionModifyBevel;
 class RS_ActionInterface;
+
 namespace Ui {
-class Ui_BevelOptions;
+    class Ui_BevelOptions;
 }
 
 class QG_BevelOptions:public LC_ActionOptionsWidgetBase {
-Q_OBJECT
-
+    Q_OBJECT
 public:
     QG_BevelOptions();
     ~QG_BevelOptions() override;
@@ -49,7 +48,7 @@ public slots:
 protected:
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
-    RS_ActionModifyBevel *action = nullptr;
+    RS_ActionModifyBevel *m_action = nullptr;
     std::unique_ptr<Ui::Ui_BevelOptions> ui;
     void setLength1ToActionAndView(QString val);
     void setLength2ToActionAndView(QString val);

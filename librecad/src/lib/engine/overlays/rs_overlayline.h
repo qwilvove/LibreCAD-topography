@@ -30,8 +30,6 @@
 
 #include "rs_line.h"
 
-
-
 /**
  * Class for a overlay line entity. It's used to draw lines on the overlay paint event
  * The main difference is that the coordinates are actual screen coordinates and not real world coordinates
@@ -40,10 +38,8 @@
  */
 class RS_OverlayLine : public RS_Line {
 public:
-	RS_OverlayLine(RS_EntityContainer* parent, const RS_LineData& d);
-	
-     void draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) override;
-
+    RS_OverlayLine(RS_EntityContainer* parent, const RS_LineData& d);
+    void draw(RS_Painter* painter) override;
     RS2::EntityType rtti() const override{
         return RS2::EntityOverlayLine;
     }

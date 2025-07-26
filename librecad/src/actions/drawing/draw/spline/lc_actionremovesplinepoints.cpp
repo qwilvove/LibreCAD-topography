@@ -21,31 +21,30 @@
  ******************************************************************************/
 
 #include "lc_actionremovesplinepoints.h"
-#include "rs_graphicview.h"
+
 #include "lc_splinepoints.h"
-#include "rs_document.h"
+#include "rs_entity.h"
 #include "rs_spline.h"
-#include "lc_actionsplinemodifybase.h"
 
 namespace {
-    const EntityTypeList enTypeList = {RS2::EntitySpline, RS2::EntitySplinePoints};
+    const EntityTypeList g_enTypeList = {RS2::EntitySpline, RS2::EntitySplinePoints};
 }
 
-LC_ActionRemoveSplinePoints::LC_ActionRemoveSplinePoints(RS_EntityContainer &container, RS_GraphicView &graphicView):LC_ActionSplineModifyBase("SplineRemovePoint", container, graphicView) {
-    actionType = RS2::ActionDrawSplinePointRemove;
+LC_ActionRemoveSplinePoints::LC_ActionRemoveSplinePoints(LC_ActionContext *actionContext)
+    :LC_ActionSplineModifyBase("SplineRemovePoint", actionContext,RS2::ActionDrawSplinePointRemove) {
 }
 
 void LC_ActionRemoveSplinePoints::doAfterTrigger() {
-    if (!mayModifySplineEntity(entityToModify)) {
-        entityToModify->setSelected(false);
+    if (!mayModifySplineEntity(m_entityToModify)) {
+        m_entityToModify->setSelected(false);
         setStatus(SetEntity);
     }
 }
 
-void LC_ActionRemoveSplinePoints::onMouseMove(RS_Vector mouse, int status, QMouseEvent *e) {
+void LC_ActionRemoveSplinePoints::onMouseMove(RS_Vector mouse, int status, LC_MouseEvent *e) {
     switch (status) {
         case SetEntity: {
-            auto entity = catchEntity(e, enTypeList);
+            auto entity = catchEntityByEvent(e, g_enTypeList);
             if (entity != nullptr){
                if (mayModifySplineEntity(entity)) {
                    highlightHoverWithRefPoints(entity, true);
@@ -55,10 +54,10 @@ void LC_ActionRemoveSplinePoints::onMouseMove(RS_Vector mouse, int status, QMous
         }
         case SetControlPoint:{
             double dist;
-            RS_Vector nearestPoint = entityToModify->getNearestRef(mouse, &dist);
+            RS_Vector nearestPoint = m_entityToModify->getNearestRef(mouse, &dist);
             if (nearestPoint.valid) {
                 previewRefSelectablePoint(nearestPoint);
-                RS_Entity *previewUpdatedEntity = createModifiedSplineEntity(entityToModify, nearestPoint, directionFromStart);
+                RS_Entity *previewUpdatedEntity = createModifiedSplineEntity(m_entityToModify, nearestPoint, m_directionFromStart);
                 if (previewUpdatedEntity != nullptr) {
                     previewEntity(previewUpdatedEntity);
                 }
@@ -70,24 +69,24 @@ void LC_ActionRemoveSplinePoints::onMouseMove(RS_Vector mouse, int status, QMous
     }
 }
 
-void LC_ActionRemoveSplinePoints::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
+void LC_ActionRemoveSplinePoints::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
     switch (status){
         case SetEntity:{
-            auto entity = catchEntity(e, enTypeList);
+            auto entity = catchEntityByEvent(e, g_enTypeList);
             if (entity != nullptr && mayModifySplineEntity(entity)){
-                entityToModify = entity;
-                entityToModify->setSelected(true);
-                graphicView->redraw(RS2::RedrawDrawing);
+                m_entityToModify = entity;
+                m_entityToModify->setSelected(true);
+                redrawDrawing();
                 setStatus(SetControlPoint);
             }
             break;
         }
         case SetControlPoint: {
-            RS_Vector mouse = snapPoint(e);
+            RS_Vector mouse = e->snapPoint;
             double dist;
-            RS_Vector nearestPoint = entityToModify->getNearestRef(mouse, &dist);
+            RS_Vector nearestPoint = m_entityToModify->getNearestRef(mouse, &dist);
             if (nearestPoint.valid){
-                vertexPoint = nearestPoint;
+                m_vertexPoint = nearestPoint;
                 trigger();
             }
             break;

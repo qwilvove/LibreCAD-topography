@@ -30,13 +30,13 @@
 
 class RS_ActionInterface;
 class RS_ActionPrintPreview;
+
 namespace Ui {
-class Ui_PrintPreviewOptions;
+    class Ui_PrintPreviewOptions;
 }
 
 class QG_PrintPreviewOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     QG_PrintPreviewOptions();
     ~QG_PrintPreviewOptions() override;
@@ -45,7 +45,6 @@ public:
         MODE_UPDATE_ORIENTATION,
         MODE_UPDATE_PAGE_NUMBERS
     };
-
 public slots:
     void updateUI(int mode) override;
     void onCenterClicked();
@@ -66,13 +65,13 @@ public slots:
     void onVerticalPagesValueChanges(int value);
     void onHorizontalPagesValueChanges(int value);
 protected:
-    RS_ActionPrintPreview* action = nullptr;
+    RS_ActionPrintPreview* m_action = nullptr;
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
 protected slots:
     void languageChange() override;
 private:
-    int defaultScalesStartIndex = 1;
+    int m_defaultScalesStartIndex = 1;
     std::unique_ptr<Ui::Ui_PrintPreviewOptions> ui;
     bool isUseImperialScales();
     void initializeScaleBoxItems();
@@ -85,7 +84,5 @@ private:
     void saveCustomRatios();
     void fitPage();
     void updatePageNumbers();
-
 };
-
 #endif // QG_PRINTPREVIEWOPTIONS_H

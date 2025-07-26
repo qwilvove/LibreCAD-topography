@@ -21,7 +21,8 @@
  ******************************************************************************/
 
 #include "lc_highlight.h"
-#include "rs_entity.h"
+
+#include "rs_pen.h"
 
 LC_Highlight::LC_Highlight()= default;
 
@@ -40,7 +41,7 @@ void LC_Highlight::addEntity(RS_Entity* entity, bool selected) {
 
     entitiesMap.insert(entity, duplicatedEntity);
 //    entity->setTransparent(true);
-    entities.append(duplicatedEntity);
+    push_back(duplicatedEntity);
 }
 
 bool LC_Highlight::removeEntity(RS_Entity *entity){
@@ -49,7 +50,7 @@ bool LC_Highlight::removeEntity(RS_Entity *entity){
         RS_Entity *duplicate = entitiesMap.value(entity, nullptr);
         if (duplicate != nullptr){
             entity->setTransparent(false);
-            bool ret = entities.removeOne(duplicate);
+            bool ret = removeEntity(duplicate);
             if (ret) {
                 delete duplicate;
             }
@@ -72,14 +73,15 @@ void LC_Highlight::clear(){
         }
     }
     entitiesMap.clear();
-    while (!entities.isEmpty()) {
-        delete entities.takeFirst();
+    while (!isEmpty()) {
+        delete last();
+        pop_back();
     }
 }
 
 void LC_Highlight::addEntitiesToContainer(RS_EntityContainer *container){
     // fixme - sand - review foreach cycles and replace to range-based
-    for (const auto e: std::as_const(entities)) {
+    for (RS_Entity* e: *this) {
         e->reparent(container);
         container->addEntity(e);
     }

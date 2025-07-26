@@ -29,11 +29,10 @@
 class LC_ActionSplineModifyBase:public RS_PreviewActionInterface{
     Q_OBJECT
 public:
-    LC_ActionSplineModifyBase(const char* name, RS_EntityContainer &container, RS_GraphicView &graphicView);
+    LC_ActionSplineModifyBase(const char* name, LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionNone);
     ~LC_ActionSplineModifyBase() override = default;
     void drawSnapper() override;
     void finish(bool updateTB) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
 protected:
     enum State{
         SetEntity,
@@ -41,10 +40,10 @@ protected:
         SetControlPoint
     };
 
-    RS_Entity *entityToModify = nullptr;
-    RS_Vector vertexPoint = RS_Vector(false);
-    RS_Vector selectedVertexPoint = RS_Vector(false);
-    bool directionFromStart = false;
+    RS_Entity *m_entityToModify = nullptr;
+    RS_Vector m_vertexPoint = RS_Vector(false);
+    RS_Vector m_selectedVertexPoint = RS_Vector(false);
+    bool m_directionFromStart = false;
 
     void clean();
     virtual bool mayModifySplineEntity([[maybe_unused]]RS_Entity *pEntity) {return true;};
@@ -53,9 +52,10 @@ protected:
     virtual void doCompleteTrigger();
     virtual void doAfterTrigger();
     virtual RS_Entity *createModifiedSplineEntity(RS_Entity *e, RS_Vector controlPoint, bool startDirection)=0;
-    virtual void onMouseMove(RS_Vector mouse, int status, QMouseEvent *e) = 0;
+    virtual void onMouseMove(RS_Vector mouse, int status, LC_MouseEvent *e) = 0;
     virtual void doOnEntityNotCreated();
     void doTrigger() override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
 };
 
 #endif // LC_ACTIONSPLINEMODIFYBASE_H

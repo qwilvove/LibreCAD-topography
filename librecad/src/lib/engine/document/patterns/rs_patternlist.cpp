@@ -25,12 +25,15 @@
 **********************************************************************/
 
 #include<iostream>
-#include<QString>
+#include "rs_patternlist.h"
+
+#include <QFileInfo>
+#include <QStringList>
 
 #include "rs_debug.h"
 #include "rs_dialogfactory.h"
+#include "rs_dialogfactoryinterface.h"
 #include "rs_pattern.h"
-#include "rs_patternlist.h"
 #include "rs_system.h"
 
 RS_PatternList* RS_PatternList::instance() {
@@ -122,4 +125,3 @@ std::ostream& operator << (std::ostream& os, RS_PatternList& l) {
 
     return os;
 }
-

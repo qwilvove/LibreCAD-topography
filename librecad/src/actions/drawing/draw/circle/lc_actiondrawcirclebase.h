@@ -23,24 +23,23 @@
 #ifndef LC_ACTIONDRAWCIRCLEBASE_H
 #define LC_ACTIONDRAWCIRCLEBASE_H
 
-#include <QMouseEvent>
 #include "rs_previewactioninterface.h"
 
 class LC_ActionDrawCircleBase:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    LC_ActionDrawCircleBase(const char* name, RS_EntityContainer &container, RS_GraphicView &graphicView);
+    LC_ActionDrawCircleBase(const char* name, LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionNone);
     ~LC_ActionDrawCircleBase() override;
     void init(int status) override;
     virtual bool isReversed() const{return false;}
     virtual void setReversed ([[maybe_unused]]bool b) const{};
 protected:
     virtual void reset();
-    bool moveRelPointAtCenterAfterTrigger = true; // todo - move to options?
+    bool m_moveRelPointAtCenterAfterTrigger = true; // todo - move to options?
     void previewEllipseReferencePoints(const RS_Ellipse *ellipse, bool drawAxises = false,  bool allPointsNotSelectable = false, RS_Vector mouse=RS_Vector(false));
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
 };
 
 #endif // LC_ACTIONDRAWCIRCLEBASE_H

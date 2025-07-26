@@ -24,15 +24,16 @@
 **
 **********************************************************************/
 
-#include <QMouseEvent>
-
 #include "rs_actionmodifytrim.h"
+
+#include "lc_actioninfomessagebuilder.h"
+#include "rs_arc.h"
+#include "rs_atomicentity.h"
 #include "rs_debug.h"
 #include "rs_ellipse.h"
-#include "rs_graphicview.h"
 #include "rs_modification.h"
 
-struct RS_ActionModifyTrim::Points {
+struct RS_ActionModifyTrim::TrimActionData {
     RS_Vector limitCoord;
     RS_Vector trimCoord;
 };
@@ -40,19 +41,17 @@ struct RS_ActionModifyTrim::Points {
 /**
  * @param both Trim both entities.
  */
-RS_ActionModifyTrim::RS_ActionModifyTrim(RS_EntityContainer &container,
-                                         RS_GraphicView &graphicView, bool both)
-        : RS_PreviewActionInterface("Trim Entity",
-                                    container, graphicView), trimEntity{nullptr}, limitEntity{nullptr},
-          pPoints(std::make_unique<Points>()), both{both} {
-    this->actionType = both ? RS2::ActionModifyTrim2 : RS2::ActionModifyTrim;
+RS_ActionModifyTrim::RS_ActionModifyTrim(LC_ActionContext *actionContext, bool both)
+    : RS_PreviewActionInterface("Trim Entity",actionContext, both ? RS2::ActionModifyTrim2 : RS2::ActionModifyTrim)
+    , m_trimEntity{nullptr}, m_limitEntity{nullptr}
+    , m_actionData(std::make_unique<TrimActionData>()), m_both{both} {
 }
 
 RS_ActionModifyTrim::~RS_ActionModifyTrim() = default;
 
 void RS_ActionModifyTrim::init(int status) {
-    snapMode.clear();
-    snapMode.restriction = RS2::RestrictNothing;
+    m_snapMode.clear();
+    m_snapMode.restriction = RS2::RestrictNothing;
     RS_PreviewActionInterface::init(status);
 }
 
@@ -63,17 +62,17 @@ void RS_ActionModifyTrim::finish(bool updateTB) {
 void RS_ActionModifyTrim::doTrigger() {
     RS_DEBUG->print("RS_ActionModifyTrim::trigger()");
 
-    if (trimEntity && trimEntity->isAtomic() &&
-        limitEntity /* && limitEntity->isAtomic()*/) {
+    if (m_trimEntity && m_trimEntity->isAtomic() &&
+        m_limitEntity /* && limitEntity->isAtomic()*/) {
 
-        RS_Modification m(*container, graphicView);
-        [[maybe_unused]] LC_TrimResult trimResult =  m.trim(pPoints->trimCoord,  trimEntity,
-               pPoints->limitCoord, /*(RS_AtomicEntity*)*/limitEntity,
-               both);
+        RS_Modification m(*m_container, m_viewport);
+        [[maybe_unused]] LC_TrimResult trimResult =  m.trim(m_actionData->trimCoord,  m_trimEntity,
+               m_actionData->limitCoord, /*(RS_AtomicEntity*)*/m_limitEntity,
+               m_both);
 
-        trimEntity = nullptr;
-        if (both) {
-            limitEntity = nullptr;
+        m_trimEntity = nullptr;
+        if (m_both) {
+            m_limitEntity = nullptr;
             setStatus(ChooseLimitEntity);
         } else {
             setStatus(ChooseTrimEntity);
@@ -82,92 +81,85 @@ void RS_ActionModifyTrim::doTrigger() {
 }
 
 // todo - check trim both mode - it seems that limiting entity should be atomic too...
-void RS_ActionModifyTrim::mouseMoveEvent(QMouseEvent *e) {
-    RS_DEBUG->print("RS_ActionModifyTrim::mouseMoveEvent begin");
-    deleteHighlights();
-    deletePreview();
-    RS_Vector mouse = toGraph(e);
-    snapFree(e);
-    int status = getStatus();
+void RS_ActionModifyTrim::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->graphPoint;
     switch (status) {
         case ChooseLimitEntity: {
-            RS_Entity *se = catchEntityOnPreview(e, RS2::ResolveAllButTextImage);
+            RS_Entity *se = catchAndDescribe(e, RS2::ResolveAllButTextImage);
             if (se != nullptr) {
                 highlightHover(se);
             }
             break;
         }
         case ChooseTrimEntity: {
-            RS_Entity *se = catchEntityOnPreview(e, RS2::ResolveNone);
+            RS_Entity *se = catchAndDescribe(e, RS2::ResolveNone);
             bool trimInvalid = true;
 
-            if (se != nullptr && se != limitEntity) {
+            if (se != nullptr && se != m_limitEntity) {
                 if (se->isAtomic()) {
 
                     auto *atomicTrimCandidate = dynamic_cast<RS_AtomicEntity *>(se);
 
-                    RS_Modification m(*container, graphicView);
+                    RS_Modification m(*m_container, m_viewport);
                     LC_TrimResult trimResult = m.trim(mouse, atomicTrimCandidate,
-                                                      pPoints->limitCoord, limitEntity,
-                                                      both, true);
+                                                      m_actionData->limitCoord, m_limitEntity,
+                                                      m_both, true);
                     if (trimResult.result) {
                         trimInvalid = false;
                         highlightHover(se);
-                        if (showRefEntitiesOnPreview) {
+                        if (m_showRefEntitiesOnPreview) {
                             previewRefPoint(trimResult.intersection1);
                             previewRefTrimmedEntity(trimResult.trimmed1, se);
                             if (trimResult.intersection2.valid) {
                                 previewRefPoint(trimResult.intersection2);
                             }
-                            if (both) {
-                                previewRefTrimmedEntity(trimResult.trimmed2, limitEntity);
+                            if (m_both) {
+                                if (trimResult.trimmed2 != nullptr) {
+                                    previewRefTrimmedEntity(trimResult.trimmed2, m_limitEntity);
+                                }
                             }
                             if (isInfoCursorForModificationEnabled()){
-                                LC_InfoMessageBuilder msg(tr("Trim"));
-                                msg.add(tr("Intersection:"), formatVector(trimResult.intersection1));
+                                auto builder = msg(tr("Trim"))
+                                    .vector(tr("Intersection:"), trimResult.intersection1);
                                 if (trimResult.intersection2.valid) {
-                                    msg.add(tr("Intersection 2:"), formatVector(trimResult.intersection2));
+                                    builder.vector(tr("Intersection 2:"), trimResult.intersection2);
                                 }
-                                appendInfoCursorZoneMessage(msg.toString(), 2, false);
+                                builder.toInfoCursorZone2(false);
                             }
                         }
                     }
                 }
             }
             if (trimInvalid) {
-                highlightSelected(limitEntity);
+                highlightSelected(m_limitEntity);
             }
             break;
         }
         default:
             break;
     }
-
-    drawHighlights();
-    drawPreview();
-    RS_DEBUG->print("RS_ActionModifyTrim::mouseMoveEvent end");
 }
 
-void RS_ActionModifyTrim::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
-    RS_Vector mouse = toGraph(e);
+void RS_ActionModifyTrim::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->graphPoint;
     switch (status) {
         case ChooseLimitEntity: {
-            RS_Entity *se = catchEntity(e, RS2::ResolveAllButTextImage);
+            RS_Entity *se = catchEntityByEvent(e, RS2::ResolveAllButTextImage);
             if (se != nullptr) {
-                limitEntity = se;
-                if (limitEntity->rtti() != RS2::EntityPolyline/*&& limitEntity->isAtomic()*/) {
-                    pPoints->limitCoord = mouse;
+                m_limitEntity = se;
+                if (m_limitEntity->rtti() != RS2::EntityPolyline/*&& limitEntity->isAtomic()*/) {
+                    m_actionData->limitCoord = mouse;
                     setStatus(ChooseTrimEntity);
                 }
             }
             break;
         }
         case ChooseTrimEntity: {
-            RS_Entity *se = catchEntity(e, RS2::ResolveNone);
+            RS_Entity *se = catchEntityByEvent(e, RS2::ResolveNone);
             if (se != nullptr) {
-                if (se->isAtomic() && se != limitEntity) {
-                    pPoints->trimCoord = mouse;
-                    trimEntity = dynamic_cast<RS_AtomicEntity *>(se);
+                if (se->isAtomic() && se != m_limitEntity) {
+                    m_actionData->trimCoord = mouse;
+                    m_trimEntity = dynamic_cast<RS_AtomicEntity *>(se);
                     trigger();
                 }
             }
@@ -178,30 +170,22 @@ void RS_ActionModifyTrim::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
     }
 }
 
-void RS_ActionModifyTrim::onMouseRightButtonRelease(int status, [[maybe_unused]] QMouseEvent *e) {
+void RS_ActionModifyTrim::onMouseRightButtonRelease(int status, [[maybe_unused]] LC_MouseEvent *e) {
     deletePreview();
     initPrevious(status);
 }
 
-//void RS_ActionModifyTrim::finish(bool updateTB) {
-//    if (limitEntity->isHighlighted()){
-//        limitEntity->setHighlighted(false);
-//        graphicView->drawEntity(limitEntity);
-//    }
-//    RS_PreviewActionInterface::finish(updateTB);
-//}
-
 void RS_ActionModifyTrim::updateMouseButtonHints() {
     switch (getStatus()) {
         case ChooseLimitEntity:
-            if (both) {
+            if (m_both) {
                 updateMouseWidgetTRCancel(tr("Select first trim entity"));
             } else {
                 updateMouseWidgetTRBack(tr("Select limiting entity"));
             }
             break;
         case ChooseTrimEntity:
-            if (both) {
+            if (m_both) {
                 updateMouseWidgetTRCancel(tr("Select second trim entity"));
             } else {
                 updateMouseWidgetTRBack(tr("Select entity to trim"));

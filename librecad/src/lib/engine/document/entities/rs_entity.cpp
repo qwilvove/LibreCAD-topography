@@ -27,7 +27,9 @@
 
 
 #include <iostream>
+#include <map>
 #include <utility>
+
 #include <QPolygon>
 #include <QString>
 
@@ -37,40 +39,92 @@
 #include "rs_ellipse.h"
 #include "rs_entity.h"
 #include "rs_graphic.h"
-#include "rs_graphicview.h"
 #include "rs_information.h"
 #include "rs_insert.h"
 #include "rs_layer.h"
 #include "rs_line.h"
+#include "rs_math.h"
 #include "rs_mtext.h"
+#include "rs_pen.h"
 #include "rs_point.h"
 #include "rs_polyline.h"
 #include "rs_text.h"
-#include "rs_units.h"
 #include "rs_vector.h"
-
 #include "lc_quadratic.h"
 
-namespace {
-// fixme - renderperf - that should be cached as it is set once
-// Whether the entity is a member of cross hatch filling curves
-    bool isHatchMember(const RS_Entity* entity) {
-        if (entity == nullptr || entity->getParent() == nullptr)
-            return false;
-        return entity->rtti() == RS2::EntityHatch || isHatchMember(entity->getParent());
+
+struct RS_Entity::Impl {
+    //! pen (attributes) for this entity
+    RS_Pen pen{};
+    std::map<QString, QString> varList;
+
+    void fromOther(Impl* other) {
+        if (other != nullptr) {
+            pen = other->pen;
+            varList = other->varList;
+        }
     }
-}
+};
 
 /**
- * Default constructor.
  * @param parent The parent entity of this entity.
  *               E.g. a line might have a graphic entity or
  *               a polyline entity as parent.
  */
 RS_Entity::RS_Entity(RS_EntityContainer *parent)
-    : parent{parent}{
+    : parent{parent}
+    , m_pImpl{std::make_unique<Impl>()}
+{
     init();
 }
+
+RS_Entity::RS_Entity(const RS_Entity& other):
+    parent{other.parent}
+    , updateEnabled {other.updateEnabled}
+{
+    init();
+    m_pImpl->fromOther(other.m_pImpl.get());
+    m_layer  = other.m_layer;
+    minV = other.minV;
+    maxV = other.maxV;
+}
+
+RS_Entity& RS_Entity::operator = (const RS_Entity& other)
+{
+    parent = other.parent;
+    updateEnabled = other.updateEnabled;
+    init();
+    m_pImpl->fromOther(other.m_pImpl.get());
+    m_layer  = other.m_layer;
+    minV  = other.minV;
+    maxV  = other.maxV;
+    return *this;
+}
+
+RS_Entity::RS_Entity(RS_Entity&& other):
+    parent{other.parent}
+    , updateEnabled {other.updateEnabled}
+{
+    init();
+    m_pImpl = std::move(other.m_pImpl);
+    m_layer  = other.m_layer;
+    minV  = other.minV;
+    maxV  = other.maxV;
+}
+
+RS_Entity& RS_Entity::operator = (RS_Entity&& other)
+{
+    parent = other.parent;
+    updateEnabled = other.updateEnabled;
+    init();
+    m_pImpl = std::move(other.m_pImpl);
+    m_layer  = other.m_layer;
+    minV  = other.minV;
+    maxV  = other.maxV;
+    return *this;
+}
+
+RS_Entity::~RS_Entity() = default;
 
 /**
  * Copy constructor.
@@ -90,6 +144,9 @@ RS_Entity::RS_Entity(RS_EntityContainer *parent)
  * Initialisation. Called from all constructors.
  */
 void RS_Entity::init() {
+    if (m_pImpl == nullptr) {
+        m_pImpl = std::make_unique<Impl>();
+    }
     resetBorders();
     setFlag(RS2::FlagVisible);
     updateEnabled = true;
@@ -99,14 +156,14 @@ void RS_Entity::init() {
 }
 
 /**
- * Gives this entity a new unique id.
+ * Gives this entity a new unique m_id.
  */
 void RS_Entity::initId() {
     static unsigned long long idCounter=0;
-    id = idCounter++;
+    m_id = ++idCounter;
 }
 
-RS_Entity *RS_Entity::cloneProxy(RS_GraphicView* /*view*/) const {
+RS_Entity *RS_Entity::cloneProxy() const {
     return clone();
 }
 
@@ -153,8 +210,6 @@ bool RS_Entity::setSelected(bool select) {
     return true;
 }
 
-
-
 /**
  * Toggles select on this entity.
  */
@@ -178,14 +233,12 @@ bool RS_Entity::isSelected() const {
  */
 bool RS_Entity::isParentSelected() const{
     RS_Entity const* p = this;
-
     while(p) {
         p = p->getParent();
         if (p && p->isSelected()==true) {
             return true;
         }
     }
-
     return false;
 }
 
@@ -215,8 +268,7 @@ bool RS_Entity::isProcessed() const {
  * @param undone true: entity has become invisible.
  *               false: entity has become visible.
  */
-void RS_Entity::undoStateChanged([[maybe_unused]] bool undone)
-{
+void RS_Entity::undoStateChanged([[maybe_unused]] bool undone){
     setSelected(false);
     update();
 }
@@ -225,33 +277,27 @@ void RS_Entity::undoStateChanged([[maybe_unused]] bool undone)
  * @return true if this entity or any parent entities are undone.
  */
 bool RS_Entity::isUndone() const {
-		if (!parent) {
-                return RS_Undoable::isUndone();
-        }
-        else {
-                return RS_Undoable::isUndone() || parent->isUndone();
-        }
+    if (!parent) {
+        return RS_Undoable::isUndone();
+    }
+    else {
+        return RS_Undoable::isUndone() || parent->isUndone();
+    }
 }
 
 /**
  * @return True if the entity is in the given range.
  */
 bool RS_Entity::isInWindow(RS_Vector v1, RS_Vector v2) const{
-    double right, left, top, bottom;
-
-    right = std::max(v1.x, v2.x);
-    left = std::min(v1.x, v2.x);
-    top = std::max(v1.y, v2.y);
-    bottom = std::min(v1.y, v2.y);
-
-    return (getMin().x>=left &&
-            getMax().x<=right &&
-            getMin().y>=bottom &&
-            getMax().y<=top);
+    return
+        RS_Math::inBetween(getMin().x, v1.x, v2.x)
+        && RS_Math::inBetween(getMax().x, v1.x, v2.x)
+        && RS_Math::inBetween(getMin().y, v1.y, v2.y)
+        && RS_Math::inBetween(getMax().y, v1.y, v2.y);
 }
 
 double RS_Entity::areaLineIntegral() const{
-	return 0.;
+    return 0.;
 }
 
 bool RS_Entity::isArc() const{
@@ -279,7 +325,7 @@ bool RS_Entity::isArcCircleLine() const{
 }
 
 /** whether the entity's bounding box intersects with visible portion of graphic view */
-bool RS_Entity::isVisibleInWindow(RS_GraphicView* view) const{
+/*bool RS_Entity::isVisibleInWindow(RS_GraphicView* view) const{
     RS_Vector vpMin(view->toGraph(0,view->getHeight()));
     RS_Vector vpMax(view->toGraph(view->getWidth(),0));
     if( getStartpoint().isInWindowOrdered(vpMin, vpMax) ) return true;
@@ -296,7 +342,7 @@ bool RS_Entity::isVisibleInWindow(RS_GraphicView* view) const{
     }
     if( minV.isInWindowOrdered(vpMin,vpMax)||maxV.isInWindowOrdered(vpMin,vpMax)) return true;
     return false;
-}
+}*/
 
 /**
  * @param tolerance Tolerance.
@@ -306,7 +352,7 @@ bool RS_Entity::isVisibleInWindow(RS_GraphicView* view) const{
  */
 bool RS_Entity::isPointOnEntity(const RS_Vector& coord,
                                 double tolerance) const {
-	double dist = getDistanceToPoint(coord, nullptr, RS2::ResolveNone);
+    double dist = getDistanceToPoint(coord, nullptr, RS2::ResolveNone);
     return dist <= std::abs(tolerance);
 }
 
@@ -354,8 +400,8 @@ bool RS_Entity::isVisible() const {
     if (isDocument() && (rtti() == RS2::EntityBlock || rtti() == RS2::EntityInsert)) {
         return true;
     }
-    if (layer != nullptr) {
-        return !layer->isFrozen();
+    if (m_layer != nullptr) {
+        return !m_layer->isFrozen();
     } else {
         /*RS_EntityContainer* parent = getParent();
 if (parent && parent->isUndone()) {
@@ -404,7 +450,7 @@ void RS_Entity::setTransparent(bool on) {
 }
 
 RS_Vector RS_Entity::getStartpoint() const {
-	return {};
+    return RS_Vector{false};
 }
 
 RS_Vector RS_Entity::getEndpoint() const {
@@ -426,7 +472,7 @@ bool RS_Entity::isHighlighted() const{
 }
 
 RS_Vector RS_Entity::getSize() const {
-	return maxV-minV;
+    return maxV-minV;
 }
 
 /**
@@ -437,7 +483,7 @@ bool RS_Entity::isLocked() const{
 }
 
 RS_Vector RS_Entity::getCenter() const {
-	return RS_Vector{};
+    return {};
 }
 
 double RS_Entity::getRadius() const {
@@ -453,7 +499,7 @@ void RS_Entity::setRadius([[maybe_unused]] double r){}
  */
 RS_Graphic* RS_Entity::getGraphic() const{
     if (rtti()==RS2::EntityGraphic) {
-        RS_Graphic const* ret=static_cast<RS_Graphic const*>(this);
+        auto const* ret=static_cast<RS_Graphic const*>(this);
         return const_cast<RS_Graphic*>(ret);
     } else if (!parent) {
         return nullptr;
@@ -655,7 +701,7 @@ RS2::Unit RS_Entity::getGraphicUnit() const
 RS_Layer* RS_Entity::getLayerResolved() const {
     // we have no layer but a parent that might have one.
     // return parent's layer instead:
-    if (layer == nullptr /*|| layer->getName()=="ByBlock"*/) {
+    if (m_layer == nullptr /*|| layer->getName()=="ByBlock"*/) {
         if (parent != nullptr) {
             return parent->getLayerResolved();
         } else {
@@ -663,7 +709,7 @@ RS_Layer* RS_Entity::getLayerResolved() const {
         }
     }
     else{
-        return layer;
+        return m_layer;
     }
 }
 
@@ -683,7 +729,7 @@ RS_Layer* RS_Entity::getLayer(bool resolve) const {
     if (resolve) {
         // we have no layer but a parent that might have one.
         // return parent's layer instead:
-        if (layer == nullptr /*|| layer->getName()=="ByBlock"*/) {
+        if (m_layer == nullptr /*|| layer->getName()=="ByBlock"*/) {
             if (parent != nullptr) {
                 return parent->getLayer(true);
             } else {
@@ -693,7 +739,7 @@ RS_Layer* RS_Entity::getLayer(bool resolve) const {
     }
 
 // return our layer. might still be nullptr:
-    return layer;
+    return m_layer;
 }
 
 /**
@@ -702,9 +748,9 @@ RS_Layer* RS_Entity::getLayer(bool resolve) const {
 void RS_Entity::setLayer(const QString& name) {
     RS_Graphic* graphic = getGraphic();
     if (graphic) {
-        layer = graphic->findLayer(name);
+        m_layer = graphic->findLayer(name);
     } else {
-        layer = nullptr;
+        m_layer = nullptr;
     }
 }
 
@@ -712,7 +758,7 @@ void RS_Entity::setLayer(const QString& name) {
  * Sets the layer of this entity to the layer given.
  */
 void RS_Entity::setLayer(RS_Layer* l) {
-    layer = l;
+    m_layer = l;
 }
 
 /**
@@ -724,14 +770,14 @@ void RS_Entity::setLayerToActive() {
     RS_Graphic* graphic = getGraphic();
 
     if (graphic) {
-        layer = graphic->getActiveLayer();
+        m_layer = graphic->getActiveLayer();
     } else {
-        layer = nullptr;
+        m_layer = nullptr;
     }
 }
 
 RS_Pen RS_Entity::getPenResolved() const {
-    RS_Pen p = pen;
+    RS_Pen p = m_pImpl->pen;
     // use parental attributes (e.g. vertex of a polyline, block
     // entities when they are drawn in block documents):
     if (parent != nullptr && parent->rtti() != RS2::EntityGraphic) {
@@ -806,11 +852,11 @@ RS_Pen RS_Entity::getPenResolved() const {
  * @return Pen for this entity.
  */
 RS_Pen RS_Entity::getPen(bool resolve) const {
-    if (resolve) {
-        return getPenResolved();
-    } else {
-        return pen;
-    }
+    return resolve ? getPenResolved() : m_pImpl->pen;
+}
+
+void RS_Entity::setPen(const RS_Pen& pen) {
+    m_pImpl->pen = pen;
 }
 
 /**
@@ -820,8 +866,8 @@ RS_Pen RS_Entity::getPen(bool resolve) const {
  */
 void RS_Entity::setPenToActive() {
     RS_Document* doc = getDocument();
-    if (doc) {
-        pen = doc->getActivePen();
+    if (doc != nullptr) {
+        m_pImpl->pen = doc->getActivePen();
     } else {
         //RS_DEBUG->print(RS_Debug::D_WARNING, "RS_Entity::setPenToActive(): "
         //                "No document / active pen linked to this entity.");
@@ -852,7 +898,7 @@ void RS_Entity::stretch(const RS_Vector& firstCorner,
  * @return Factor for scaling the line styles considering the current
  * paper scaling and the fact that styles are stored in Millimeter.
  */
-double RS_Entity::getStyleFactor(RS_GraphicView* view) {
+/*double RS_Entity::getStyleFactor(RS_GraphicView* view) {
     double styleFactor = 1.0;
     if (!view) return styleFactor;
 
@@ -895,16 +941,16 @@ double RS_Entity::getStyleFactor(RS_GraphicView* view) {
 
     return styleFactor;
 }
-
+*/
 
 /**
  * @return User defined variable connected to this entity or nullptr if not found.
  */
 QString RS_Entity::getUserDefVar(const QString& key) const {
-    auto it=varList.find(key);
-    if(it==varList.end()) return nullptr;
-    return varList.at(key);
+    auto it=m_pImpl->varList.find(key);
+    return (it == m_pImpl->varList.end()) ? QString{} : it->second;
 }
+
 /*
  * @coord
  * @normal
@@ -922,23 +968,23 @@ RS_Vector RS_Entity::getNearestOrthTan(const RS_Vector& /*coord*/,
  * Add a user defined variable to this entity.
  */
 void RS_Entity::setUserDefVar(QString key, QString val) {
-    varList.insert(std::make_pair(key, val));
+    m_pImpl->varList.emplace(key, val);
 }
 
 /**
  * Deletes the given user defined variable.
  */
 void RS_Entity::delUserDefVar(QString key) {
-    varList.erase(key);
+    m_pImpl->varList.erase(key);
 }
 
 /**
  * @return A list of all keys connected to this entity.
  */
 std::vector<QString> RS_Entity::getAllKeys() const{
-    std::vector<QString> ret(0);
-    for(auto const& v: varList){
-        ret.push_back(v.first);
+    std::vector<QString> ret;
+    for(auto const& [key, val]: m_pImpl->varList){
+        ret.push_back(key);
     }
     return ret;
 }
@@ -957,12 +1003,12 @@ bool RS_Entity::isConstruction(bool typeCheck) const{
     /*if (isHatchMember(this))
         return false;*/
 
-    return (layer != nullptr) && layer->isConstruction();
+    return (m_layer != nullptr) && m_layer->isConstruction();
 }
 
 //! whether printing is enabled or disabled for the entity's layer
 bool RS_Entity::isPrint(void) const{
-    return nullptr == layer || layer->isPrint();
+    return nullptr == m_layer || m_layer->isPrint();
 }
 
 bool RS_Entity::trimmable() const{
@@ -1005,7 +1051,7 @@ std::ostream& operator << (std::ostream& os, RS_Entity& e) {
     //os << "Warning: Virtual entity!\n";
     //return os;
 
-    os << " {Entity id: " << e.id;
+    os << " {Entity id: " << e.m_id;
     if (e.parent) {
         os << " | parent id: " << e.parent->getId() << "\n";
     } else {
@@ -1017,17 +1063,17 @@ std::ostream& operator << (std::ostream& os, RS_Entity& e) {
     os << (e.getFlag(RS2::FlagSelected) ? " RS2::FlagSelected" : "");
     os << "\n";
 
-    if (!e.layer) {
+    if (!e.m_layer) {
         os << " layer: nullptr ";
     } else {
-        os << " layer: " << e.layer->getName().toLatin1().data() << " ";
-        os << " layer address: " << e.layer << " ";
+        os << " layer: " << e.m_layer->getName().toLatin1().data() << " ";
+        os << " layer address: " << e.m_layer << " ";
     }
 
-    os << e.pen << "\n";
+    os << e.m_pImpl->pen << "\n";
 
     os << "variable list:\n";
-    for(auto const& v: e.varList){
+    for(auto const& v: e.m_pImpl->varList){
         os << v.first.toLatin1().data()<< ": "
            << v.second.toLatin1().data()
            << ", ";
@@ -1082,4 +1128,10 @@ std::ostream& operator << (std::ostream& os, RS_Entity& e) {
 
 bool RS_Entity::isParentIgnoredOnModifications() const {
      return parent != nullptr && parent->ignoredOnModification();
+}
+
+
+unsigned long long RS_Entity::getId() const
+{
+    return m_pImpl != nullptr ? m_id : 0ULL;
 }

@@ -34,6 +34,7 @@
 #include "drw_interface.h"
 #include "libdxfrw.h"
 
+class LC_DimStyle;
 class RS_Point;
 class RS_Line;
 class RS_Circle;
@@ -89,6 +90,7 @@ public:
     void addDimStyle(const DRW_Dimstyle& data) override;
     void addVport(const DRW_Vport& data) override;
     void addView(const DRW_View &data) override;
+    void addUCS(const DRW_UCS &data) override;
 public:
     void addTextStyle(const DRW_Textstyle& /*data*/) override{}
     void addAppId(const DRW_AppId& /*data*/) override{}
@@ -109,6 +111,7 @@ public:
     void addKnot(const DRW_Entity&) override{}
     void addInsert(const DRW_Insert& data) override;
     void addTrace(const DRW_Trace& data) override;
+    void addTolerance(const DRW_Tolerance& tol) override;
     void addSolid(const DRW_Solid& data) override;
     void addMText(const DRW_MText& data) override;
     RS_DimensionData convDimensionData(const DRW_Dimension* data);
@@ -138,6 +141,7 @@ public:
     void writeLTypes() override;
     void writeLayers() override;
     void writeViews() override;
+    void writeUCSs() override;
     void writeTextstyles() override;
     void writeVports() override;
     void writeBlockRecords() override;
@@ -238,6 +242,7 @@ private:
     QHash<int, RS_EntityContainer*> blockHash;
     /** Pointer to entity container to store possible orphan entities like paper space */
     RS_EntityContainer* dummyContainer;
+    LC_DimStyle *createDimStyle(const DRW_Dimstyle &s);
 };
 
 #endif

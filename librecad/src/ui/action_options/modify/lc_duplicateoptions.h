@@ -22,20 +22,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_DUPLICATEOPTIONS_H
 #define LC_DUPLICATEOPTIONS_H
 
-#include "lc_actionmodifyduplicate.h"
 #include "lc_actionoptionswidgetbase.h"
 
+class LC_ActionModifyDuplicate;
+
 namespace Ui {
-class LC_DuplicateOptions;
+    class LC_DuplicateOptions;
 }
 
 class LC_DuplicateOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     explicit LC_DuplicateOptions();
     ~LC_DuplicateOptions() override;
-
 protected slots:
     void onOffsetXEditingFinished();
     void onOffsetYEditingFinished();
@@ -48,7 +47,7 @@ protected:
     void doSaveSettings() override;
 private:
     Ui::LC_DuplicateOptions *ui;
-    LC_ActionModifyDuplicate * action;
+    LC_ActionModifyDuplicate * m_action = nullptr;
     void setOffsetXToActionAndView(const QString &val);
     void setOffsetYToActionAndView(const QString &val);
     void setInPlaceDuplicateToActionAndView(bool inplace);

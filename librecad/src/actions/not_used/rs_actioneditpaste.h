@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
@@ -42,8 +43,7 @@ class RS_Vector;
 class RS_ActionEditPaste : public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionEditPaste( RS_EntityContainer& container,
-                        RS_GraphicView& graphicView);
+    RS_ActionEditPaste(LC_ActionContext *actionContext);
     ~RS_ActionEditPaste() override;
     void init(int status) override;
     void trigger() override;
@@ -58,8 +58,8 @@ protected:
     bool finishOnTrigger = true;
     std::unique_ptr<RS_Vector> targetPoint;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
 };

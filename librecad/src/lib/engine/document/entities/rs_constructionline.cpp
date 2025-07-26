@@ -27,12 +27,11 @@
 
 #include "rs_constructionline.h"
 
-#include "rs_debug.h"
 #include "lc_quadratic.h"
+#include "rs_debug.h"
 #include "rs_math.h"
-#include "lc_rect.h"
-#include "rs_graphicview.h"
-#include "rs_line.h"
+#include "rs_painter.h"
+
 
 RS_ConstructionLineData::RS_ConstructionLineData(const RS_Vector& point1,
 						const RS_Vector& point2):
@@ -60,9 +59,12 @@ RS_ConstructionLine::RS_ConstructionLine(RS_EntityContainer* parent,
     calculateBorders();
 }
 
+RS_ConstructionLine::RS_ConstructionLine(const RS_Vector& point1, const RS_Vector& point2)
+    :RS_AtomicEntity(nullptr), data(point1, point2){
+}
+
 RS_Entity* RS_ConstructionLine::clone() const {
     RS_ConstructionLine* c = new RS_ConstructionLine(*this);
-    c->initId();
     return c;
 }
 
@@ -238,7 +240,7 @@ void RS_ConstructionLine::move(const RS_Vector& offset) {
     //calculateBorders();
 }
 
-void RS_ConstructionLine::rotate(const RS_Vector& center, const double& angle) {
+void RS_ConstructionLine::rotate(const RS_Vector& center, double angle) {
     RS_Vector angleVector(angle);
     data.point1.rotate(center, angleVector);
     data.point2.rotate(center, angleVector);
@@ -268,8 +270,8 @@ RS_Entity& RS_ConstructionLine::shear(double k){
     return *this;
 }
 
-void RS_ConstructionLine::draw(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) {
-    RS_Line::drawInfinite(painter, view, patternOffset, data.point1, data.point2);
+void RS_ConstructionLine::draw(RS_Painter *painter) {
+    painter->drawInfiniteWCS(data.point1, data.point2);
 }
 
 /**

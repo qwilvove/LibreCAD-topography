@@ -31,6 +31,7 @@
 #include "rs_settings.h"
 #include "rs_graphic.h"
 #include "rs_math.h"
+#include "rs_text.h"
 
 /*
  *  Constructs a QG_DlgText as a child of 'parent', with the
@@ -39,10 +40,11 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgText::QG_DlgText(QWidget* parent)
-    : LC_Dialog(parent, "TextProperties"), saveSettings(true){
+QG_DlgText::QG_DlgText(QWidget *parent, LC_GraphicViewport *pViewport, RS_Text* text, bool forNew)
+    :LC_EntityPropertiesDlg(parent, "TextProperties", pViewport), m_saveSettings(true){
     setupUi(this);
     init();
+    setEntity(text, forNew);
 }
 
 /*
@@ -63,9 +65,9 @@ void QG_DlgText::languageChange(){
 
 void QG_DlgText::init() {
     cbFont->init();
-    font=NULL;
-    text = NULL;
-    isNew = false;
+    font=nullptr;
+    entity = nullptr;
+    m_isNew = false;
     leOblique->setDisabled(true);
     updateUniCharComboBox(0);
     updateUniCharButton(0);
@@ -133,12 +135,12 @@ void QG_DlgText::updateUniCharComboBox(int) {
 
 //set saveText to false, so, settings won't be saved during destroy, feature request#3445306
 void QG_DlgText::reject() {
-    saveSettings=false;
+    m_saveSettings=false;
     QDialog::reject();
 }
 
 void QG_DlgText::destroy() {
-    if (isNew&&saveSettings) {
+    if (m_isNew&&m_saveSettings) {
         LC_GROUP_GUARD("Draw");{
             LC_SET("TextHeight", leHeight->text());
             LC_SET("TextFont", cbFont->currentText());
@@ -153,9 +155,9 @@ void QG_DlgText::destroy() {
 /**
  * Sets the text entity represented by this dialog.
  */
-void QG_DlgText::setText(RS_Text& t, bool isNew) {
-    text = &t;
-    this->isNew = isNew;
+void QG_DlgText::setEntity(RS_Text* t, bool isNew) {
+    entity = t;
+    this->m_isNew = isNew;
 
     QString fon;
     QString height;
@@ -196,24 +198,27 @@ void QG_DlgText::setText(RS_Text& t, bool isNew) {
             angle = LC_GET_STR("TextAngle", "0");
         }
     } else {
-        fon = text->getStyle();
+        fon = entity->getStyle();
         setFont(fon);
-        height = QString("%1").arg(text->getHeight());
-        widthRelation = QString("%1").arg(text->getWidthRel());
-        alignment = QString("%1").arg(text->getAlignment());
-        str = text->getText();
-        angle = QString("%1").arg(RS_Math::rad2deg(text->getAngle()));
+        height = QString("%1").arg(entity->getHeight());
+        widthRelation = QString("%1").arg(entity->getWidthRel());
+        alignment = QString("%1").arg(entity->getAlignment());
+        str = entity->getText();
 
-        RS_Graphic* graphic = text->getGraphic();
+
+        double wcsAngle = entity->getAngle();
+        angle = toUIAngleDeg(wcsAngle);
+
+        RS_Graphic* graphic = entity->getGraphic();
         if (graphic) {
             cbLayer->init(*(graphic->getLayerList()), false, false);
         }
-        RS_Layer* lay = text->getLayer(false);
+        RS_Layer* lay = entity->getLayer(false);
         if (lay) {
             cbLayer->setLayer(*lay);
         }
 
-        wPen->setPen(text, lay, "Pen");
+        wPen->setPen(entity, lay, tr("Pen"));
     }
 
     setFont(fon);
@@ -231,21 +236,24 @@ void QG_DlgText::setText(RS_Text& t, bool isNew) {
 /**
  * Updates the text entity represented by the dialog to fit the choices of the user.
  */
-void QG_DlgText::updateText() {
-    if (text) {
-        text->setStyle(cbFont->currentText());
-        text->setHeight(leHeight->text().toDouble());
-        text->setWidthRel(leWidthRel->text().toDouble());
+void QG_DlgText::updateEntity() {
+    if (entity) {
+        entity->setStyle(cbFont->currentText());
+        entity->setHeight(leHeight->text().toDouble());
+        entity->setWidthRel(leWidthRel->text().toDouble());
 
-        text->setText(teText->text());
-        text->setAlignment(getAlignment());
-        text->setAngle(RS_Math::deg2rad(leAngle->text().toDouble()));
+        entity->setText(teText->text());
+        entity->setAlignment(getAlignment());
+        double wcsAngle = toWCSAngle(leAngle, entity->getAngle());
+        entity->setAngle(wcsAngle);
     }
-    if (text && !isNew) {
-        text->setPen(wPen->getPen());
-        text->setLayer(cbLayer->currentText());
-        text->update();
+    if (entity && !m_isNew) {
+        entity->setPen(wPen->getPen());
+        entity->setLayer(cbLayer->getLayer());
+        entity->update();
     }
+
+    entity->update();
 }
 
 

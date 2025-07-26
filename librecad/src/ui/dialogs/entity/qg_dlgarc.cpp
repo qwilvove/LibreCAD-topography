@@ -24,10 +24,8 @@
 **
 **********************************************************************/
 #include "qg_dlgarc.h"
-
 #include "rs_arc.h"
 #include "rs_graphic.h"
-#include "rs_math.h"
 #include "rs_settings.h"
 
 /*
@@ -37,9 +35,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgArc::QG_DlgArc(QWidget* parent)
-    : LC_Dialog(parent, "ArcProperties"){
+QG_DlgArc::QG_DlgArc(QWidget *parent, LC_GraphicViewport *pViewport, RS_Arc* arc)
+    :LC_EntityPropertiesDlg (parent, "ArcProperties", pViewport){
     setupUi(this);
+    setEntity(arc);
 }
 
 /*
@@ -50,45 +49,46 @@ void QG_DlgArc::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgArc::setArc(RS_Arc& a) {
-    arc = &a;
-    RS_Graphic* graphic = arc->getGraphic();
+void QG_DlgArc::setEntity(RS_Arc* a) {
+    m_entity = a;
+    RS_Graphic* graphic = m_entity->getGraphic();
     if (graphic) {
         cbLayer->init(*(graphic->getLayerList()), false, false);
     }
-    RS_Layer* lay = arc->getLayer(false);
+    RS_Layer* lay = m_entity->getLayer(false);
     if (lay) {
         cbLayer->setLayer(*lay);
     }
 
-    wPen->setPen(arc, lay, "Pen");
+    wPen->setPen(m_entity, lay, tr("Pen"));
 
-    leCenterX->setText(asString(arc->getCenter().x));
-    leCenterY->setText(asString(arc->getCenter().y));
-    leRadius->setText(asString(arc->getRadius()));
-    leAngle1->setText(asStringAngleDeg(arc->getAngle1()));
-    leAngle2->setText(asStringAngleDeg(arc->getAngle2()));
+    toUI(m_entity->getCenter(), leCenterX, leCenterY);
+    toUIValue(m_entity->getRadius(), leRadius);
+    toUIAngleDeg(m_entity->getAngle1(), leAngle1);
+    toUIAngleDeg(m_entity->getAngle2(), leAngle2);
+    toUIBool(m_entity->isReversed(), cbReversed);
 
-    cbReversed->setChecked(arc->isReversed());
     // fixme - sand - refactor to common function
     if (LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false)){
-        lId->setText(QString("ID: %1").arg(arc->getId()));
+        lId->setText(QString("ID: %1").arg(m_entity->getId()));
     }
     else{
         lId->setVisible(false);
     }
 }
 
-void QG_DlgArc::updateArc() {
-    arc->setCenter(RS_Vector(RS_Math::eval(leCenterX->text()),
-                             RS_Math::eval(leCenterY->text())));
-    arc->setRadius(RS_Math::eval(leRadius->text()));
-    arc->setAngle1(RS_Math::deg2rad(RS_Math::eval(leAngle1->text())));
-    arc->setAngle2(RS_Math::deg2rad(RS_Math::eval(leAngle2->text())));
-    if (arc->isReversed() != cbReversed->isChecked()) {
-        arc->revertDirection();
+void QG_DlgArc:: updateEntity() {
+    m_entity->setCenter(toWCS(leCenterX, leCenterY, m_entity->getCenter()));
+    m_entity->setRadius(toWCSValue(leRadius, m_entity->getRadius()));
+
+    m_entity->setAngle1(toWCSAngle(leAngle1, m_entity->getAngle1()));
+    m_entity->setAngle2(toWCSAngle(leAngle2, m_entity->getAngle2()));
+
+    if (m_entity->isReversed() != cbReversed->isChecked()) {
+        m_entity->revertDirection();
     }
-    arc->setPen(wPen->getPen());
-    arc->setLayer(cbLayer->currentText());
-    arc->calculateBorders();
+
+    m_entity->setPen(wPen->getPen());
+    m_entity->setLayer(cbLayer->getLayer());
+    m_entity->calculateBorders();
 }

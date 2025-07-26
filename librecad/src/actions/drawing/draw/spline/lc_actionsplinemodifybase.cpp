@@ -20,30 +20,30 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
 
-#include "rs_document.h"
-#include "rs_spline.h"
-#include "lc_splinepoints.h"
-#include "rs_graphicview.h"
 #include "lc_actionsplinemodifybase.h"
 
-LC_ActionSplineModifyBase::LC_ActionSplineModifyBase(const char* name, RS_EntityContainer &container, RS_GraphicView &graphicView)
-:RS_PreviewActionInterface(name, container, graphicView) {
+#include "rs_entity.h"
+#include "rs_entitycontainer.h"
+#include "rs_pen.h"
+
+LC_ActionSplineModifyBase::LC_ActionSplineModifyBase(const char* name, LC_ActionContext *actionContext, RS2::ActionType actionType)
+    :RS_PreviewActionInterface(name, actionContext, actionType) {
 }
 
 void LC_ActionSplineModifyBase::doTrigger() {
-    RS_Entity* createdEntity = createModifiedSplineEntity(entityToModify, vertexPoint, directionFromStart);
+    RS_Entity* createdEntity = createModifiedSplineEntity(m_entityToModify, m_vertexPoint, m_directionFromStart);
     if (createdEntity != nullptr){
-        if (document) {
+        if (m_document) {
             createdEntity->setSelected(true);
-            createdEntity->setLayer(entityToModify->getLayer());
-            createdEntity->setPen(entityToModify->getPen(false));
-            createdEntity->setParent(entityToModify->getParent());
-            container->addEntity(createdEntity);
+            createdEntity->setLayer(m_entityToModify->getLayer());
+            createdEntity->setPen(m_entityToModify->getPen(false));
+            createdEntity->setParent(m_entityToModify->getParent());
+            m_container->addEntity(createdEntity);
             doCompleteTrigger();
-            undoCycleReplace(entityToModify, createdEntity);
+            undoCycleReplace(m_entityToModify, createdEntity);
         }
-        entityToModify = createdEntity;
-        vertexPoint = RS_Vector(false);
+        m_entityToModify = createdEntity;
+        m_vertexPoint = RS_Vector(false);
         doAfterTrigger();
     }
     else{
@@ -61,21 +61,16 @@ void LC_ActionSplineModifyBase::finish(bool updateTB) {
 }
 
 void LC_ActionSplineModifyBase::clean() {
-    if (entityToModify){
-        entityToModify->setSelected(false);
+    if (m_entityToModify){
+        m_entityToModify->setSelected(false);
     }
     deletePreview();
-    graphicView->redraw();
+    redraw();
 }
 
-void LC_ActionSplineModifyBase::mouseMoveEvent(QMouseEvent *e) {
-    RS_Vector mouse = snapPoint(e);
-    int status = getStatus();
-    deleteHighlights();
-    deletePreview();
+void LC_ActionSplineModifyBase::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->snapPoint;
     onMouseMove(mouse, status, e);
-    drawHighlights();
-    drawPreview();
 }
 
 RS2::CursorType LC_ActionSplineModifyBase::doGetMouseCursor([[maybe_unused]]int status) {

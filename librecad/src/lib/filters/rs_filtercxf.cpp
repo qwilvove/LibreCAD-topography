@@ -24,21 +24,20 @@
 **
 **********************************************************************/
 
-
-#include <QStringList>
-#include "rs_filtercxf.h"
-
 #include <fstream>
 
-#include "rs_arc.h"
-#include "rs_line.h"
-#include "rs_font.h"
-#include "rs_utility.h"
-#include "rs_system.h"
-#include "rs_block.h"
-#include "rs_math.h"
-#include "rs_debug.h"
+#include <QStringList>
 
+#include "lc_containertraverser.h"
+#include "rs_arc.h"
+#include "rs_block.h"
+#include "rs_debug.h"
+#include "rs_filtercxf.h"
+#include "rs_font.h"
+#include "rs_line.h"
+#include "rs_math.h"
+#include "rs_system.h"
+#include "rs_utility.h"
 
 /**
  * Default constructor.
@@ -172,7 +171,7 @@ bool RS_FilterCXF::fileExport(RS_Graphic& g, const QString& file, RS2::FormatTyp
         if (!sa.isEmpty()) {
             QStringList authors = sa.split(',');
             RS_DEBUG->print("006");
-            RS_DEBUG->print("count: %d", authors.count());
+            LC_LOG<<"count: " << authors.count();
 
             QString a;
             for (QStringList::Iterator it2 = authors.begin();
@@ -211,9 +210,7 @@ bool RS_FilterCXF::fileExport(RS_Graphic& g, const QString& file, RS2::FormatTyp
 
 
                 // iterate through entities of this letter:
-                for (RS_Entity* e=blk->firstEntity(RS2::ResolveAll);
-                        e;
-                        e=blk->nextEntity(RS2::ResolveAll)) {
+                for(RS_Entity* e: lc::LC_ContainerTraverser{*blk, RS2::ResolveAll}.entities()) {
 
                     if (!e->isUndone()) {
 

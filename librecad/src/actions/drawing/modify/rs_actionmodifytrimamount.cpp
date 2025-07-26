@@ -24,35 +24,24 @@
 **
 **********************************************************************/
 
-#include<cmath>
-
-
-#include <QMouseEvent>
-
 #include "rs_actionmodifytrimamount.h"
-#include "rs_atomicentity.h"
-#include "rs_commandevent.h"
-#include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_preview.h"
-#include "rs_graphicview.h"
-#include "rs_math.h"
-#include "rs_modification.h"
+
 #include "qg_trimamountoptions.h"
+#include "rs_arc.h"
+#include "rs_atomicentity.h"
+#include "rs_debug.h"
+#include "rs_modification.h"
 
 namespace {
 
     //list of entity types supported by current action. In general, entities that has proper implementation of trimStartpoint() and trimEndpoint()
     // might be supported. For now, we'll support Line and Arc
-    const auto enTypeList = EntityTypeList{RS2::EntityLine, RS2::EntityArc/*, RS2::EntityParabola,RS2::EntityEllipse*/};
+    const auto g_enTypeList = EntityTypeList{RS2::EntityLine, RS2::EntityArc/*, RS2::EntityParabola,RS2::EntityEllipse*/};
 }
 
-RS_ActionModifyTrimAmount::RS_ActionModifyTrimAmount(
-    RS_EntityContainer &container,
-    RS_GraphicView &graphicView)
-    :RS_PreviewActionInterface("Trim Entity by a given amount",
-                               container, graphicView), trimEntity(nullptr), trimCoord(new RS_Vector{}), distance(0.0), distanceIsTotalLength(false){
-    actionType = RS2::ActionModifyTrimAmount;
+RS_ActionModifyTrimAmount::RS_ActionModifyTrimAmount(LC_ActionContext *actionContext)
+    :RS_PreviewActionInterface("Trim Entity by a given amount",actionContext, RS2::ActionModifyTrimAmount)
+    , m_trimEntity(nullptr), m_trimCoord(new RS_Vector{}), m_distance(0.0), m_distanceIsTotalLength(false){
 }
 
 RS_ActionModifyTrimAmount::~RS_ActionModifyTrimAmount() = default;
@@ -60,57 +49,54 @@ RS_ActionModifyTrimAmount::~RS_ActionModifyTrimAmount() = default;
 void RS_ActionModifyTrimAmount::init(int status) {
     RS_PreviewActionInterface::init(status);
 
-    snapMode.clear();
-    snapMode.restriction = RS2::RestrictNothing;
-    snapMode.snapOnEntity = true;
+    m_snapMode.clear();
+    m_snapMode.restriction = RS2::RestrictNothing;
+    m_snapMode.snapOnEntity = true;
 }
 
 // fixme - check if negative total length is larger than the overall length of the entity
 void RS_ActionModifyTrimAmount::doTrigger() {
     RS_DEBUG->print("RS_ActionModifyTrimAmount::trigger()");
 
-    if (trimEntity && trimEntity->isAtomic()){
+    if (m_trimEntity && m_trimEntity->isAtomic()){
 
-        RS_Modification m(*container, graphicView, true);
-        auto* e = dynamic_cast<RS_AtomicEntity *>(trimEntity);
+        RS_Modification m(*m_container, m_viewport, true);
+        auto* e = dynamic_cast<RS_AtomicEntity *>(m_trimEntity);
         double dist = determineDistance(e);
 
         bool trimStart;
         bool trimEnd;
-        bool trimBoth = symmetricDistance && !distanceIsTotalLength;
+        bool trimBoth = m_symmetricDistance && !m_distanceIsTotalLength;
 
-        m.trimAmount(*trimCoord, e, dist, trimBoth, trimStart, trimEnd);
+        m.trimAmount(*m_trimCoord, e, dist, trimBoth, trimStart, trimEnd);
 
-        trimEntity = nullptr;
+        m_trimEntity = nullptr;
         setStatus(ChooseTrimEntity);
     }
 }
 
 double RS_ActionModifyTrimAmount::determineDistance(const RS_AtomicEntity *e) const{
     double d;
-    if (distanceIsTotalLength){
+    if (m_distanceIsTotalLength){
         //the distance is taken as the new total length
-        d = fabs(distance) - e->getLength();
+        d = fabs(m_distance) - e->getLength();
     } else {
-        d = distance;
+        d = m_distance;
     }
     return d;
 }
 
-void RS_ActionModifyTrimAmount::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    deleteHighlights();
-    snapPoint(e);
-    RS_Vector coord =  toGraph(e);
-    auto en = catchEntityOnPreview(e, enTypeList, RS2::ResolveNone);
+void RS_ActionModifyTrimAmount::onMouseMoveEvent([[maybe_unused]]int status, LC_MouseEvent *e) {
+    RS_Vector coord =  e->graphPoint;
+    auto en = catchAndDescribe(e, g_enTypeList, RS2::ResolveNone);
     deleteSnapper();
     if (en != nullptr){
         if (en->isAtomic()){
             highlightHover(en);
-            auto* atomic = reinterpret_cast<RS_AtomicEntity *>(en);
-            RS_Modification m(*container, nullptr, false);
+            auto* atomic = static_cast<RS_AtomicEntity *>(en);
+            RS_Modification m(*m_container, m_viewport, false);
             double dist = determineDistance(atomic);
-            bool trimBoth = symmetricDistance && !distanceIsTotalLength;
+            bool trimBoth = m_symmetricDistance && !m_distanceIsTotalLength;
             bool trimStart;
             bool trimEnd;
             auto trimmed = m.trimAmount(coord, atomic, dist, trimBoth, trimStart, trimEnd, true);
@@ -122,7 +108,7 @@ void RS_ActionModifyTrimAmount::mouseMoveEvent(QMouseEvent *e){
                     previewEntity(trimmed);
                 }
 
-                if (showRefEntitiesOnPreview) {
+                if (m_showRefEntitiesOnPreview) {
                     RS_Arc *atomicArc = nullptr;
                     RS_Arc *trimmedArc = nullptr;
                     bool entityIsArc = isArc(atomic);
@@ -170,20 +156,18 @@ void RS_ActionModifyTrimAmount::mouseMoveEvent(QMouseEvent *e){
             }
         }
     }
-    drawPreview();
-    drawHighlights();
 }
 
-void RS_ActionModifyTrimAmount::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
+void RS_ActionModifyTrimAmount::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
     switch (status) {
         case ChooseTrimEntity: {
-            *trimCoord = toGraph(e);
-            RS_Entity* en = catchEntity(e, enTypeList, RS2::ResolveNone);
+            *m_trimCoord = e->graphPoint;
+            RS_Entity* en = catchEntityByEvent(e, g_enTypeList, RS2::ResolveNone);
             if (en == nullptr){
                 commandMessage(tr("No entity found."));
             }
             else if (en->isAtomic()){
-                trimEntity = dynamic_cast<RS_AtomicEntity *>(en);
+                m_trimEntity = dynamic_cast<RS_AtomicEntity *>(en);
                 trigger();
             }
             else {
@@ -197,7 +181,7 @@ void RS_ActionModifyTrimAmount::onMouseLeftButtonRelease(int status, QMouseEvent
     invalidateSnapSpot();
 }
 
-void RS_ActionModifyTrimAmount::onMouseRightButtonRelease(int status, [[maybe_unused]] QMouseEvent *e) {
+void RS_ActionModifyTrimAmount::onMouseRightButtonRelease(int status, [[maybe_unused]] LC_MouseEvent *e) {
     initPrevious(status);
 }
 
@@ -210,7 +194,7 @@ bool RS_ActionModifyTrimAmount::doProcessCommand(int status, const QString &c) {
             double d = RS_Math::eval(c, &ok);
             if (ok){
                 accept = true;
-                distance = d;
+                m_distance = d;
             } else {
                 commandMessage(tr("Not a valid expression"));
             }

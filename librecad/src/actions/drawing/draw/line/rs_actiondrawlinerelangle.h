@@ -41,21 +41,16 @@ class RS_Vector;
 class RS_ActionDrawLineRelAngle:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionDrawLineRelAngle(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        double angle = 0.0,
-        bool fixedAngle = false);
+    RS_ActionDrawLineRelAngle(LC_ActionContext *actionContext,double angle = 0.0,bool fixedAngle = false);
     ~RS_ActionDrawLineRelAngle() override;
     RS2::ActionType rtti() const override;
     void finish(bool updateTB) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
-    void setAngle(double a){angle = a;}
-    double getAngle() const{return angle;}
-    void setLength(double l){length = l;}
-    double getLength() const{return length;}
-    bool hasFixedAngle() const{return fixedAngle;}
+    void setAngle(double angleDeg);
+    double getAngle() const;
+    void setLength(double l){m_length = l;}
+    double getLength() const{return m_length;}
+    bool hasFixedAngle() const{return m_fixedAngle;}
 protected:
     enum Status {
         SetEntity,     /**< Choose entity. */
@@ -64,25 +59,26 @@ protected:
         SetLength      /**< Set length in console. */
     };
     /** Chosen entity */
-    RS_Entity *entity = nullptr;
+    RS_Entity *m_entity = nullptr;
     /** Chosen position */
-    std::unique_ptr<RS_Vector> pos;
+    std::unique_ptr<RS_Vector> m_pos;
     /**
      * Line angle.
      */
-    double angle = 0.;
+    double m_relativeAngleRad = 0.;
     /**
      * Line length.
      */
-    double length = 10.;
+    double m_length = 10.;
     /**
      * Is the angle fixed?
      */
-    bool fixedAngle = false;
+    bool m_fixedAngle = false;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;

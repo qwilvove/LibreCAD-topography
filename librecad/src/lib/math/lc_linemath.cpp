@@ -19,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
+#include <algorithm>
 #include <cmath>
 
 #include "lc_linemath.h"
@@ -120,13 +121,13 @@ RS_Vector LC_LineMath::getNearestPointOnInfiniteLine(const RS_Vector &coord, con
     RS_Vector ea = lineStartPoint-lineEndPoint;
     RS_Vector ap = coord-lineStartPoint;
 
-    if (ae.magnitude()<RS_TOLERANCE|| ea.magnitude()<RS_TOLERANCE) {
+    double magnitude = ae.magnitude();
+    if (magnitude < RS_TOLERANCE || ea.magnitude() < RS_TOLERANCE) {
         return RS_Vector(false);
     }
 
     // Orthogonal projection from both sides:
-    RS_Vector ba = ae * RS_Vector::dotP(ae, ap)
-                   / (ae.magnitude()*ae.magnitude());
+    RS_Vector ba = ae * RS_Vector::dotP(ae, ap)/ (magnitude * magnitude);
 
     return lineStartPoint+ba;
 }
@@ -140,14 +141,11 @@ RS_Vector LC_LineMath::getNearestPointOnInfiniteLine(const RS_Vector &coord, con
  * @param toSnapPoint snap point
  * @return end point for the segment
  */
-RS_Vector LC_LineMath::calculateEndpointForAngleDirection(double angleValueDegree, const RS_Vector &startPoint, const RS_Vector &toSnapPoint){
+RS_Vector LC_LineMath::calculateEndpointForAngleDirection(double wcsAngleRad, const RS_Vector &startPoint, const RS_Vector &toSnapPoint){
     RS_Vector possibleEndPoint;
-    double angle = RS_Math::deg2rad(angleValueDegree);
+
     RS_Vector infiniteTickStartPoint = startPoint;
-
-
-    RS_Vector infiniteTickVector = RS_Vector::polar(10.0, angle);
-    RS_Vector infiniteTickEndPoint = infiniteTickStartPoint + infiniteTickVector;
+    RS_Vector infiniteTickEndPoint = infiniteTickStartPoint.relative(10.0, wcsAngleRad);
     RS_Vector pointOnInfiniteTick = getNearestPointOnInfiniteLine(toSnapPoint, infiniteTickStartPoint, infiniteTickEndPoint);
 
     possibleEndPoint = pointOnInfiniteTick;
@@ -291,7 +289,7 @@ double LC_LineMath::getMeaningfulAngle(double candidate, double replacementValue
  * @return
  */
 bool LC_LineMath::isMeaningful(double value){
-    return std::abs(value) > RS_TOLERANCE;
+    return std::abs(value) >= RS_TOLERANCE;
 }
 
 /**
@@ -309,7 +307,11 @@ bool LC_LineMath::isNotMeaningful(double value){
  * @return
  */
 bool LC_LineMath::isMeaningfulAngle(double value){
-    return std::abs(value) > RS_TOLERANCE_ANGLE;
+    return std::abs(value) >= RS_TOLERANCE_ANGLE;
+}
+
+bool LC_LineMath::isSameAngle(double angle1, double angle2) {
+    return std::abs(angle1 - angle2) < RS_TOLERANCE_ANGLE;
 }
 
 /**
@@ -321,8 +323,7 @@ bool LC_LineMath::isMeaningfulAngle(double value){
  */
 bool LC_LineMath::isMeaningfulDistance(const RS_Vector &v1, const RS_Vector &v2){
     double distance = v1.distanceTo(v2);
-    bool result = distance > RS_TOLERANCE;
-    return result;
+    return distance >= RS_TOLERANCE;
 }
 /**
  * Return true if distance between two points is not meaningful (close to zero
@@ -334,8 +335,7 @@ bool LC_LineMath::isMeaningfulDistance(const RS_Vector &v1, const RS_Vector &v2)
  */
 bool LC_LineMath::isNotMeaningfulDistance(const RS_Vector &v1, const RS_Vector &v2){
     double distance = v1.distanceTo(v2);
-    bool result = distance < RS_TOLERANCE;
-    return result;
+    return distance < RS_TOLERANCE;
 }
 
 /**

@@ -27,13 +27,11 @@
 
 #include "rs_ellipse.h"
 
-#include  "lc_quadratic.h"
-#include  "lc_rect.h"
-
+#include "lc_quadratic.h"
+#include "lc_rect.h"
 #include "rs_circle.h"
 #include "rs_debug.h"
 #include "rs_entitycontainer.h"
-#include "rs_graphicview.h"
 #include "rs_information.h"
 #include "rs_line.h"
 #include "rs_math.h"
@@ -153,7 +151,7 @@ class ClosestEllipticPoint {
 public:
     ClosestEllipticPoint(double a, double b, const RS_Vector& point):
         m_point{point}
-      , c2{a*a-b*b}
+      , c2{b * b - a * a}
       , ax2{2.*a*point.x}
       , by2{2.*b*point.y}
     {}
@@ -238,7 +236,6 @@ RS_Ellipse::RS_Ellipse(RS_EntityContainer* parent,
 
 RS_Entity* RS_Ellipse::clone() const {
 	auto* e = new RS_Ellipse(*this);
-	e->initId();
 	return e;
 }
 
@@ -418,18 +415,18 @@ void RS_Ellipse::updateLength() {
 **/
 double RS_Ellipse::getEllipseLength(double x1, double x2) const{
     double a(getMajorRadius()),k(getRatio());
-    k= 1-k*k;//elliptic modulus, or eccentricity
+    k= std::sqrt(1-k*k);//elliptic modulus, or eccentricity
 //    std::cout<<"1, angle1="<<x1/M_PI<<" angle2="<<x2/M_PI<<std::endl;
 //    if(isReversed())  std::swap(x1,x2);
     x1=RS_Math::correctAngle(x1);
     x2=RS_Math::correctAngle(x2);
 //    std::cout<<"2, angle1="<<x1/M_PI<<" angle2="<<x2/M_PI<<std::endl;
     if(x2 < x1+RS_TOLERANCE_ANGLE) x2 += 2.*M_PI;
-    double ret;
+    double ret = 0.;
 //    std::cout<<"3, angle1="<<x1/M_PI<<" angle2="<<x2/M_PI<<std::endl;
     if( x2 >= M_PI) {
         // the complete elliptic integral
-        ret=  (static_cast< int>((x2+RS_TOLERANCE_ANGLE)/M_PI) -
+        ret=  (static_cast<int>((x2+RS_TOLERANCE_ANGLE)/M_PI) -
                (static_cast<int>((x1+RS_TOLERANCE_ANGLE)/M_PI)
                 ))*2;
 //        std::cout<<"Adding "<<ret<<" of E("<<k<<")\n";
@@ -1254,7 +1251,7 @@ void RS_Ellipse::move(const RS_Vector& offset) {
     moveBorders(offset);
 }
 
-void RS_Ellipse::rotate(const RS_Vector& center, const double& angle) {
+void RS_Ellipse::rotate(const RS_Vector& center, double angle) {
     RS_Vector angleVector(angle);
     data.center.rotate(center, angleVector);
     data.majorP.rotate(angleVector);
@@ -1277,13 +1274,14 @@ void RS_Ellipse::rotate(const RS_Vector& center, const RS_Vector& angleVector) {
     calculateBorders();
 }
 
-void RS_Ellipse::rotate( const double& angle) {//rotate around origin
+void RS_Ellipse::rotate(double angle) {//rotate around origin
     RS_Vector aV(angle);
     data.center.rotate(aV);
     data.majorP.rotate(aV);
     calculateBorders();
 }
-void RS_Ellipse::rotate( const RS_Vector& angleVector) {//rotate around origin
+
+void RS_Ellipse::rotate(const RS_Vector& angleVector) {//rotate around origin
     data.center.rotate(angleVector);
     data.majorP.rotate(angleVector);
     //calculateEndpoints();
@@ -1338,8 +1336,10 @@ RS_Vector RS_Ellipse::prepareTrim(const RS_Vector& trimCoord,
                                   const RS_VectorSolutions& trimSol) {
 //special trimming for ellipse arc
         RS_DEBUG->print("RS_Ellipse::prepareTrim()");
-    if( ! trimSol.hasValid() ) return (RS_Vector(false));
-    if( trimSol.getNumber() == 1 ) return (trimSol.get(0));
+    if(!trimSol.hasValid())
+            return RS_Vector{false};
+    if(trimSol.getNumber() == 1)
+        return trimSol.front();
     double am=getEllipseAngle(trimCoord);
 	std::vector<double> ias;
     double ia(0.),ia2(0.);
@@ -1542,7 +1542,7 @@ void RS_Ellipse::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2
     RS_Vector majorp = center + getMajorP();
     RS_Vector startpoint,endpoint;
     bool isArc = isEllipticArc();
-    if( isArc)  {
+    if (isArc)  {
         startpoint = getStartpoint();
         endpoint = getEndpoint();
     }
@@ -1690,32 +1690,6 @@ void RS_Ellipse::moveRef(const RS_Vector& ref, const RS_Vector& offset) {
     }
 }
 
-/** whether the entity's bounding box intersects with visible portion of graphic view
-//fix me, need to handle overlay container separately
-*/
-bool RS_Ellipse::isVisibleInWindow(RS_GraphicView* view) const
-{
-    RS_Vector vpMin(view->toGraph(0,view->getHeight()));
-    RS_Vector vpMax(view->toGraph(view->getWidth(),0));
-    //viewport
-    QRectF visualRect(vpMin.x,vpMin.y,vpMax.x-vpMin.x, vpMax.y-vpMin.y);
-    QPolygonF visualBox(visualRect);
-    std::vector<RS_Vector> vps;
-    for(unsigned short i=0;i<4;i++){
-        const QPointF& vp(visualBox.at(i));
-        vps.push_back(RS_Vector(vp.x(),vp.y()));
-    }
-    //check for intersection points with viewport
-    for(unsigned short i=0;i<4;i++){
-        RS_Line line{vps.at(i),vps.at((i+1)%4)};
-        RS_Ellipse e0(nullptr, getData());
-        if( RS_Information::getIntersection(&e0, &line, true).size()>0) return true;
-    }
-    //is startpoint within viewport
-    QRectF ellipseRect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y);
-    return ellipseRect.intersects(visualRect);
-}
-
 /** return the equation of the entity
 for quadratic,
 
@@ -1823,19 +1797,23 @@ void RS_Ellipse::setRatio(double r) {
 }
 
 double RS_Ellipse::getAngleLength() const {
-    double ret;
-    if (isReversed()) {
-        ret= RS_Math::correctAngle(data.angle1-data.angle2);
-    } else {
-        ret= RS_Math::correctAngle(data.angle2-data.angle1);
+    double a = getAngle1();
+    double b = getAngle2();
+
+    if (isReversed())
+        std::swap(a, b);
+    double ret = RS_Math::correctAngle(b - a);
+    // full ellipse:
+    if (std::abs(std::remainder(ret, 2. * M_PI)) < RS_TOLERANCE_ANGLE) {
+        ret = 2 * M_PI;
     }
-    if(ret<RS_TOLERANCE_ANGLE) ret=2.*M_PI;
+
     return ret;
 }
 
 
 double RS_Ellipse::getMajorRadius() const {
-	return data.majorP.magnitude();
+	return data.majorP.magnitude(); // fixme - renderperf - cache !!!!!
 }
 
 RS_Vector RS_Ellipse::getMajorPoint() const{
@@ -1851,18 +1829,16 @@ double RS_Ellipse::getMinorRadius() const {
 	return data.majorP.magnitude()*data.ratio;
 }
 
-void RS_Ellipse::draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) {
-    double ra = getMajorRadius()*view->getFactor().x;
-    double rb = data.ratio*ra;
-    double centerX = view->toGuiX(data.center.x);
-    double centerY = view->toGuiY(data.center.y);
+void RS_Ellipse::draw(RS_Painter* painter) {
     // Adjust dash offset
-    updateDashOffset(*painter, *view, patternOffset);
+    painter->updateDashOffset(this);
     if (data.isArc){
-        painter->drawEllipseArc(centerX, centerY, ra, rb, data.angleDegrees, data.startAngleDegrees, data.otherAngleDegrees, data.angularLength, data.reversed);
+        painter->drawEllipseArcWCS(data.center, getMajorRadius(), data.ratio, data.angleDegrees,
+                                data.startAngleDegrees, data.otherAngleDegrees,
+                                data.angularLength, data.reversed);
     }
     else {
-        painter->drawEllipse(centerX, centerY,ra, rb, data.angleDegrees);
+        painter->drawEllipseWCS(data.center, getMajorRadius(), data.ratio, data.angleDegrees);
     }
 }
 

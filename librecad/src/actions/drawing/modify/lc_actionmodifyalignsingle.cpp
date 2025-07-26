@@ -19,60 +19,64 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
-#include <QInputEvent>
-
-#include "rs_graphicview.h"
-#include "rs_document.h"
 #include "lc_actionmodifyalignsingle.h"
-#include "lc_modifyalignoptions.h"
 
-LC_ActionModifyAlignSingle::LC_ActionModifyAlignSingle( RS_EntityContainer &container,RS_GraphicView &graphicView)
-  :RS_PreviewActionInterface("ModifyAlignSingle", container, graphicView){
-    actionType = RS2::ActionModifyAlignOne;
+#include "lc_actioninfomessagebuilder.h"
+#include "lc_cursoroverlayinfo.h"
+#include "lc_graphicviewport.h"
+#include "lc_modifyalignoptions.h"
+#include "rs_entity.h"
+#include "rs_entitycontainer.h"
+
+LC_ActionModifyAlignSingle::LC_ActionModifyAlignSingle(LC_ActionContext *actionContext)
+  :RS_PreviewActionInterface("ModifyAlignSingle", actionContext, RS2::ActionModifyAlignOne){
 }
 
 void LC_ActionModifyAlignSingle::init(int status) {
-    RS_PreviewActionInterface::init(status);
-//    showOptions();
+    if (m_viewport->hasUCS()){
+        commandMessage(tr("Align action at the moment supports only World Coordinates system, and may not be invoked if User Coordinate System is active."));
+        finish();
+    }
+    else {
+        RS_PreviewActionInterface::init(status);
+    }
 }
 
 void LC_ActionModifyAlignSingle::doTrigger() {
-    if (entityToAlign != nullptr) {
-        if (document != nullptr) {
-            RS_Vector target = LC_Align::getReferencePoint(alignMin, alignMax, hAlign, vAlign);
-            RS_Entity *clone = LC_Align::createCloneMovedToTarget(entityToAlign, target, true, hAlign, vAlign);
+    if (m_entityToAlign != nullptr) {
+        if (m_document != nullptr) {
+            RS_Vector target = LC_Align::getReferencePoint(m_alignMin, m_alignMax, hAlign, vAlign);
+            RS_Entity *clone = LC_Align::createCloneMovedToTarget(m_entityToAlign, target, true, hAlign, vAlign);
             if (clone != nullptr) {
                 clone->setSelected(false);
-                container->addEntity(clone);
+                m_container->addEntity(clone);
 
-                undoCycleReplace(entityToAlign, clone);
+                undoCycleReplace(m_entityToAlign, clone);
             }
         }
     }
-    entityToAlign = nullptr;
-    if (finishActionAfterTrigger){
+    m_entityToAlign = nullptr;
+    if (m_finishActionAfterTrigger){
         setStatus(-1);
     }
     else {
-        if (showRefEntitiesOnPreview) {
-            previewAlignRefPoint(alignMin, alignMax);
+        if (m_showRefEntitiesOnPreview) {
+            previewAlignRefPoint(m_alignMin, m_alignMax);
         }
     }
     drawPreview();
 }
 
-void LC_ActionModifyAlignSingle::mouseMoveEvent(QMouseEvent *e) {
-    deletePreview();
-    deleteHighlights();
-    RS_Vector snap = snapPoint(e);
-    switch (getStatus()){
+void LC_ActionModifyAlignSingle::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector snap = e->snapPoint;
+    switch (status){
         case SetRefPoint:{
             RS_Vector min;
             RS_Vector max;
             bool showPreview = true;
             switch (alignType) {
                 case LC_Align::ENTITY: {
-                    RS_Entity *entity = catchEntityOnPreview(snap);
+                    RS_Entity *entity = catchAndDescribe(snap);
                     if (entity != nullptr) {
                         min = entity->getMin();
                         max = entity->getMax();
@@ -89,8 +93,8 @@ void LC_ActionModifyAlignSingle::mouseMoveEvent(QMouseEvent *e) {
                     break;
                 }
                 case LC_Align::DRAWING: {
-                    min = container->getMin();
-                    max = container->getMax();
+                    min = m_container->getMin();
+                    max = m_container->getMax();
                     break;
                 }
                 default:
@@ -106,7 +110,7 @@ void LC_ActionModifyAlignSingle::mouseMoveEvent(QMouseEvent *e) {
                 previewRefLines(drawVertical, verticalRef, drawHorizontal, horizontalRef);
 
                 // info cursor
-                if (infoCursorOverlayPrefs->enabled){
+                if (m_infoCursorOverlayPrefs->enabled){
                     QString msg = prepareInfoCursorMessage(verticalRef, drawVertical, horizontalRef, drawHorizontal);
                     appendInfoCursorZoneMessage(msg, 2, false);
                 }
@@ -116,23 +120,23 @@ void LC_ActionModifyAlignSingle::mouseMoveEvent(QMouseEvent *e) {
         case SelectEntity:{
 
             double verticalRef;
-            bool drawVertical  = LC_Align::getVerticalRefCoordinate(alignMin, alignMax, hAlign, verticalRef);
+            bool drawVertical  = LC_Align::getVerticalRefCoordinate(m_alignMin, m_alignMax, hAlign, verticalRef);
 
             double horizontalRef;
-            bool drawHorizontal = LC_Align::getHorizontalRefCoordinate(alignMin, alignMax, vAlign, horizontalRef);
+            bool drawHorizontal = LC_Align::getHorizontalRefCoordinate(m_alignMin, m_alignMax, vAlign, horizontalRef);
 
-            if (showRefEntitiesOnPreview){
+            if (m_showRefEntitiesOnPreview){
                 previewRefLines(drawVertical, verticalRef, drawHorizontal, horizontalRef);
             }
-            if (baseAlignEntity != nullptr) {
-                highlightSelected(baseAlignEntity);
+            if (m_baseAlignEntity != nullptr) {
+                highlightSelected(m_baseAlignEntity);
             }
 
-            RS_Entity* entity = catchEntityOnPreview(e);
+            RS_Entity* entity = catchAndDescribe(e);
             RS_Vector offset;
             if (entity != nullptr){
                 highlightHover(entity);
-                RS_Vector target = LC_Align::getReferencePoint(alignMin, alignMax, hAlign, vAlign);
+                RS_Vector target = LC_Align::getReferencePoint(m_alignMin, m_alignMax, hAlign, vAlign);
 
                 RS_Vector entityRefPoint = LC_Align::getReferencePoint(entity->getMin(), entity->getMax(), hAlign, vAlign);
                 offset = target - entityRefPoint;
@@ -144,20 +148,19 @@ void LC_ActionModifyAlignSingle::mouseMoveEvent(QMouseEvent *e) {
             }
 
             if (isInfoCursorForModificationEnabled()){
-                QString msg = prepareInfoCursorMessage(verticalRef, drawVertical, horizontalRef, drawHorizontal);
-                LC_InfoMessageBuilder builder = LC_InfoMessageBuilder(msg);
+                QString message = prepareInfoCursorMessage(verticalRef, drawVertical, horizontalRef, drawHorizontal);
+
+                auto builder = msg(message);
                 if (entity != nullptr){
-                    builder.add(tr("Offset:"));
-                    builder.add(formatRelative(offset));
-                    builder.add(formatRelativePolar(offset));
+                    builder.string(tr("Offset:"))
+                           .relative(offset)
+                           .relativePolar(offset);
                 }
-                appendInfoCursorZoneMessage(builder.toString(), 2, false);
+                builder.toInfoCursorZone2(false);
             }
             break;
         }
     }
-    drawPreview();
-    drawHighlights();
 }
 
 QString LC_ActionModifyAlignSingle::prepareInfoCursorMessage(double verticalRef, bool drawVertical, double horizontalRef, bool drawHorizontal) {
@@ -192,33 +195,32 @@ QString LC_ActionModifyAlignSingle::prepareInfoCursorMessage(double verticalRef,
 }
 
 void LC_ActionModifyAlignSingle::previewRefLines(bool drawVertical, double verticalRef, bool drawHorizontal, double horizontalRef) {
+    // NOTE:
+    // AS Action so far do not support UCS, coordinates below will be in WCS despite used methods.
+    RS_Vector wcsLeftBottom = m_viewport->getUCSViewLeftBottom();
+    RS_Vector wcsRightTop = m_viewport->getUCSViewRightTop();
     if (drawVertical) {
-        double g0 = graphicView->toGraphY(0);
-        double gHeight = graphicView->toGraphY(graphicView->getHeight());
-        previewRefConstructionLine({verticalRef, g0}, {verticalRef, gHeight});
+        previewRefConstructionLine({verticalRef, wcsLeftBottom.y}, {verticalRef, wcsRightTop.y});
     }
-
     if (drawHorizontal) {
-        double g0 = graphicView->toGraphX(0);
-        double gWidth = graphicView->toGraphX(graphicView->getWidth());
-        previewRefConstructionLine({g0, horizontalRef}, {gWidth, horizontalRef});
+        previewRefConstructionLine({wcsLeftBottom.x, horizontalRef}, {wcsRightTop.x, horizontalRef});
     }
 }
 
 void LC_ActionModifyAlignSingle::previewAlignRefPoint(const RS_Vector &min, const RS_Vector &max) {
     double verticalRef;
     bool drawVertical  = LC_Align::getVerticalRefCoordinate(min, max, hAlign, verticalRef);
+    RS_Vector wcsLeftBottom = m_viewport->getUCSViewLeftBottom();
+    RS_Vector wcsRightTop = m_viewport->getUCSViewRightTop();
     if (drawVertical) {
-        double g0 = this->graphicView->toGraphY(0);
-        double gHeight = this->graphicView->toGraphY(this->graphicView->getHeight());
-        this->previewRefConstructionLine({verticalRef, g0}, {verticalRef, gHeight});
+        // NOTE:: works properly for WCS only
+        previewRefConstructionLine({verticalRef, wcsLeftBottom.y}, {verticalRef, wcsRightTop.y});
     }
     double horizontalRef;
     bool drawHorizontal = LC_Align::getHorizontalRefCoordinate(min, max, vAlign, horizontalRef);
     if (drawHorizontal) {
-        double g0 = this->graphicView->toGraphX(0);
-        double gWidth = this->graphicView->toGraphX(this->graphicView->getWidth());
-        this->previewRefConstructionLine({g0, horizontalRef}, {gWidth, horizontalRef});
+        // NOTE:: works properly for WCS only
+        previewRefConstructionLine({wcsLeftBottom.x, horizontalRef}, {wcsRightTop.x, horizontalRef});
     }
 }
 
@@ -254,31 +256,31 @@ void LC_ActionModifyAlignSingle::updateMouseButtonHints() {
     }
 }
 
-void LC_ActionModifyAlignSingle::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
-    RS_Vector snap = snapPoint(e);
+void LC_ActionModifyAlignSingle::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
+    RS_Vector snap = e->snapPoint;
     switch (status){
         case SetRefPoint:{
             switch (alignType) {
                 case LC_Align::ENTITY:{
-                    RS_Entity *entity = catchEntity(e);
+                    RS_Entity *entity = catchEntityByEvent(e);
                     if (entity != nullptr) {
-                        baseAlignEntity = entity;
-                        alignMin = entity->getMin();
-                        alignMax = entity->getMax();
+                        m_baseAlignEntity = entity;
+                        m_alignMin = entity->getMin();
+                        m_alignMax = entity->getMax();
                         setStatus(SelectEntity);
                     }
                     break;
                 }
                 case LC_Align::POSITION: {
                     snap = getRelZeroAwarePoint(e, snap);
-                    alignMin = snap;
-                    alignMax = snap;
+                    m_alignMin = snap;
+                    m_alignMax = snap;
                     setStatus(SelectEntity);
                     break;
                 }
                 case LC_Align::DRAWING:
-                    alignMin = container->getMin();
-                    alignMax = container->getMax();
+                    m_alignMin = m_container->getMin();
+                    m_alignMax = m_container->getMax();
                     setStatus(SelectEntity);
                     break;
                 default:
@@ -287,10 +289,10 @@ void LC_ActionModifyAlignSingle::onMouseLeftButtonRelease(int status, QMouseEven
             break;
         }
         case SelectEntity:{
-            RS_Entity* entity = catchEntity(e);
+            RS_Entity* entity = catchEntityByEvent(e);
             if (entity != nullptr){
-                entityToAlign = entity;
-                finishActionAfterTrigger = isControl(e);
+                m_entityToAlign = entity;
+                m_finishActionAfterTrigger = e->isControl;
                 trigger();
             }
             break;
@@ -300,14 +302,14 @@ void LC_ActionModifyAlignSingle::onMouseLeftButtonRelease(int status, QMouseEven
     }
 }
 
-void LC_ActionModifyAlignSingle::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void LC_ActionModifyAlignSingle::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     switch (status){
         case SetRefPoint:{
             setStatus(-1);
             break;
         }
         case SelectEntity:{
-            entityToAlign = nullptr;
+            m_entityToAlign = nullptr;
             if (alignType == LC_Align::AlignMode::DRAWING){
                 setStatus(-1);
             }
@@ -323,8 +325,8 @@ void LC_ActionModifyAlignSingle::onMouseRightButtonRelease(int status, [[maybe_u
 
 void LC_ActionModifyAlignSingle::onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) {
     if (status == SetRefPoint && !isZero && alignType == LC_Align::AlignMode::POSITION) {
-        alignMin = pos;
-        alignMax = pos;
+        m_alignMin = pos;
+        m_alignMax = pos;
         setStatus(SelectEntity);
     } else {
         commandMessage(tr("Coordinate is accepted only for Align to \"Position\""));
@@ -339,8 +341,8 @@ void LC_ActionModifyAlignSingle::setAlignType(int a) {
     if (a != alignType) {
         LC_ActionModifyAlignData::setAlignType(a);
         if (a == LC_Align::AlignMode::DRAWING){
-            alignMin = container->getMin();
-            alignMax = container->getMax();
+            m_alignMin = m_container->getMin();
+            m_alignMax = m_container->getMax();
             setStatus(SelectEntity);
         }
         else {

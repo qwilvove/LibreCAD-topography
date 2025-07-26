@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef RS_ACTIONDRAWCIRCLETAN2_1P_H
 #define RS_ACTIONDRAWCIRCLETAN2_1P_H
 
-#include "rs_previewactioninterface.h"
 #include "lc_actiondrawcirclebase.h"
 
 class RS_AtomicEntity;
@@ -37,15 +36,11 @@ struct RS_CircleData;
 class RS_ActionDrawCircleTan2_1P : public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawCircleTan2_1P(RS_EntityContainer& container,
-                               RS_GraphicView& graphicView);
+    RS_ActionDrawCircleTan2_1P(LC_ActionContext *actionContext);
     ~RS_ActionDrawCircleTan2_1P() override;
     void init(int status) override;
     bool getCenters();
     bool preparePreview();
-    void mouseMoveEvent(QMouseEvent* e) override;
-
-//        void commandEvent(RS_CommandEvent* e) override;
     void finish(bool updateTB) override;
 protected:
     /**
@@ -57,14 +52,16 @@ protected:
         SetPoint=2,   //  Setting point on the desired circle.  */
         SetCenter
     };
-    struct Points;
-    std::unique_ptr<Points> pPoints;
-    RS_Entity* catchCircle(QMouseEvent* e, bool forPreview);
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
+    RS_Entity* catchCircle(LC_MouseEvent* e, bool forPreview);
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
+
     void doTrigger() override;
 };
 #endif

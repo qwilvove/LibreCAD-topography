@@ -24,54 +24,44 @@
 **
 **********************************************************************/
 
-#include <QMouseEvent>
 #include "rs_actionsetrelativezero.h"
-#include "rs_coordinateevent.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
-#include "rs_previewactioninterface.h"
 
-RS_ActionSetRelativeZero::RS_ActionSetRelativeZero(
-    RS_EntityContainer &container,
-    RS_GraphicView &graphicView)
-    : RS_PreviewActionInterface("Set the relative Zero",
-                                container, graphicView)
-      , pt(std::make_unique<RS_Vector>()){
-    actionType = RS2::ActionSetRelativeZero;
+#include "lc_graphicviewport.h"
+#include "rs_document.h"
+
+RS_ActionSetRelativeZero::RS_ActionSetRelativeZero(LC_ActionContext *actionContext)
+    : RS_PreviewActionInterface("Set the relative Zero",actionContext, RS2::ActionSetRelativeZero)
+    , m_position(std::make_unique<RS_Vector>()){
 }
 
 RS_ActionSetRelativeZero::~RS_ActionSetRelativeZero() = default;
 
 void RS_ActionSetRelativeZero::trigger(){
-    bool wasLocked = graphicView->isRelativeZeroLocked();
-    if (pt->valid) {
-        graphicView->lockRelativeZero(false);
-        moveRelativeZero(*pt);
+    bool wasLocked = m_viewport->isRelativeZeroLocked();
+    if (m_position->valid) {
+        m_viewport->lockRelativeZero(false);
+        moveRelativeZero(*m_position);
         undoCycleStart();
-        RS_Undoable *relativeZeroUndoable = graphicView->getRelativeZeroUndoable();
+        RS_Undoable *relativeZeroUndoable = m_viewport->getRelativeZeroUndoable();
         if (relativeZeroUndoable != nullptr) {
-            document->addUndoable(relativeZeroUndoable);
+            m_document->addUndoable(relativeZeroUndoable);
         }
         undoCycleEnd();
-        graphicView->lockRelativeZero(wasLocked);
+        m_viewport->lockRelativeZero(wasLocked);
     }
     finish(false);
 }
 
-void RS_ActionSetRelativeZero::mouseMoveEvent(QMouseEvent *e){
-    snapPoint(e);
-}
-
-void RS_ActionSetRelativeZero::onMouseLeftButtonRelease([[maybe_unused]]int status, QMouseEvent *e) {
+void RS_ActionSetRelativeZero::onMouseLeftButtonRelease([[maybe_unused]]int status, LC_MouseEvent *e) {
     fireCoordinateEventForSnap(e);
 }
 
-void RS_ActionSetRelativeZero::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionSetRelativeZero::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     initPrevious(status);
 }
 
 void RS_ActionSetRelativeZero::onCoordinateEvent( [[maybe_unused]]int status, [[maybe_unused]]bool isZero, const RS_Vector &pos) {
-    *pt = pos;
+    *m_position = pos;
     trigger();
     updateMouseButtonHints();
 }

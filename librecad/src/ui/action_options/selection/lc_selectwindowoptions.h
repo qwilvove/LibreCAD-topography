@@ -23,15 +23,14 @@
 #ifndef LC_SELECTWINDOWOPTIONS_H
 #define LC_SELECTWINDOWOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "rs_actionselectwindow.h"
 
+class RS_ActionSelectWindow;
 namespace Ui {
-class LC_SelectWindowOptions;
+    class LC_SelectWindowOptions;
 }
 
-class LC_SelectWindowOptions:public LC_ActionOptionsWidgetBase {
+class LC_SelectWindowOptions: public LC_ActionOptionsWidgetBase {
 Q_OBJECT
 public:
     LC_SelectWindowOptions();
@@ -40,16 +39,13 @@ public slots:
     void languageChange() override;
     void onAllToggled(bool value);
     void onTypeToggled(bool value);
-    protected:
+protected:
+    Ui::LC_SelectWindowOptions *ui;
+    RS_ActionSelectWindow* m_action = nullptr;
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
-private:
-    Ui::LC_SelectWindowOptions *ui;
-    RS_ActionSelectWindow* action;
     void setSelectAllToActionAndView(bool value);
     void setEntityTypesToActinAndView(QList<RS2::EntityType> entityTypes);
-
     void enableEntityTypes(bool enable) const;
 };
-
 #endif // LC_SELECTWINDOWOPTIONS_H

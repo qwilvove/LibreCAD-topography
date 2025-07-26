@@ -20,25 +20,19 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
 
-#include <QMouseEvent>
+#include "rs_actiondrawcircletan1_2p.h"
 
 #include "lc_quadratic.h"
-#include "rs_actiondrawcircletan1_2p.h"
 #include "rs_circle.h"
-#include "rs_coordinateevent.h"
 #include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
 #include "rs_line.h"
-#include "rs_point.h"
-#include "rs_preview.h"
 
 namespace {
     //list of entity types supported by current action
-    const EntityTypeList enTypeList = {RS2::EntityLine, RS2::EntityArc, RS2::EntityCircle};
+    const EntityTypeList g_enTypeList = {RS2::EntityLine, RS2::EntityArc, RS2::EntityCircle};
 }
 
-struct RS_ActionDrawCircleTan1_2P::Points {
+struct RS_ActionDrawCircleTan1_2P::ActionData {
 	std::vector<RS_Vector> points;
 	RS_CircleData cData;
 	RS_Vector coord;
@@ -48,19 +42,13 @@ struct RS_ActionDrawCircleTan1_2P::Points {
 	RS_VectorSolutions centers;
 };
 
-
-
 /**
  * Constructor.
  *
  */
-RS_ActionDrawCircleTan1_2P::RS_ActionDrawCircleTan1_2P(
-        RS_EntityContainer& container,
-        RS_GraphicView& graphicView)
-    :LC_ActionDrawCircleBase("Draw tangent circle 2P",
-                               container, graphicView)
-    ,pPoints(std::make_unique<Points>()), baseEntity(nullptr){
-	actionType = RS2::ActionDrawCircleTan1_2P;
+RS_ActionDrawCircleTan1_2P::RS_ActionDrawCircleTan1_2P(LC_ActionContext *actionContext)
+    :LC_ActionDrawCircleBase("Draw tangent circle 2P",actionContext, RS2::ActionDrawCircleTan1_2P)
+    ,m_actionData(std::make_unique<ActionData>()), m_baseEntity(nullptr){
 }
 
 RS_ActionDrawCircleTan1_2P::~RS_ActionDrawCircleTan1_2P() = default;
@@ -73,15 +61,15 @@ void RS_ActionDrawCircleTan1_2P::init(int status) {
     }
 
     if (status <= SetCircle1){
-       graphicView->redraw(RS2::RedrawDrawing);
-       pPoints->points.clear();
+       redrawDrawing();
+       m_actionData->points.clear();
     }
 }
 
 
 void RS_ActionDrawCircleTan1_2P::finish(bool updateTB){
-    if (baseEntity){
-        graphicView->redraw(RS2::RedrawDrawing);
+    if (m_baseEntity){
+        redrawDrawing();
     }
     RS_PreviewActionInterface::finish(updateTB);
 }
@@ -89,9 +77,9 @@ void RS_ActionDrawCircleTan1_2P::finish(bool updateTB){
 void RS_ActionDrawCircleTan1_2P::doTrigger() {
     //    std::cout<<__FILE__<<" : "<<__func__<<" : line "<<__LINE__<<std::endl;
     //    std::cout<<"begin"<<std::endl;
-    auto *c = new RS_Circle(container, pPoints->cData);
+    auto *c = new RS_Circle(m_container, m_actionData->cData);
 
-    if (moveRelPointAtCenterAfterTrigger){
+    if (m_moveRelPointAtCenterAfterTrigger){
         moveRelativeZero(c->getCenter());
     }
 
@@ -101,12 +89,9 @@ void RS_ActionDrawCircleTan1_2P::doTrigger() {
     RS_DEBUG->print("RS_ActionDrawCircleTan1_2P::trigger(): entity added: %lu", c->getId());
 }
 
-void RS_ActionDrawCircleTan1_2P::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    deleteHighlights();
-    RS_DEBUG->print("RS_ActionDrawCircleTan1_2P::mouseMoveEvent begin");
-    RS_Vector const &mouse = snapPoint(e);
-    switch (getStatus()) {
+void RS_ActionDrawCircleTan1_2P::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector const &mouse = e->snapPoint;
+    switch (status) {
         case SetCircle1:{
             deleteSnapper();
             RS_Entity *en = catchCircle(e, true);
@@ -116,36 +101,36 @@ void RS_ActionDrawCircleTan1_2P::mouseMoveEvent(QMouseEvent *e){
             break;
         }            
         case SetPoint1: {
-            highlightSelected(baseEntity);
-            pPoints->points.clear();
-            pPoints->points.push_back(mouse);
-            switch (baseEntity->rtti()) {
+            highlightSelected(m_baseEntity);
+            m_actionData->points.clear();
+            m_actionData->points.push_back(mouse);
+            switch (m_baseEntity->rtti()) {
                 case RS2::EntityArc:
                 case RS2::EntityCircle: {
-                    double baseEntityRadius = baseEntity->getRadius();
-                    const RS_Vector &baseEntityCenter = baseEntity->getCenter();
+                    double baseEntityRadius = m_baseEntity->getRadius();
+                    const RS_Vector &baseEntityCenter = m_baseEntity->getCenter();
                     RS_Vector const &dvp = mouse - baseEntityCenter;
                     double rvp = dvp.magnitude();
                     if (rvp < RS_TOLERANCE2)
                         break;
-                    pPoints->cData.radius = (baseEntityRadius + rvp) * 0.5;
-                    pPoints->cData.center = baseEntityCenter + dvp * (pPoints->cData.radius / rvp);
-                    pPoints->cData.radius = fabs(baseEntityRadius - pPoints->cData.radius);
-                    if (showRefEntitiesOnPreview) {
-                        previewRefPoint(pPoints->cData.center);
-                        previewRefPoint(getTangentPoint(pPoints->cData.center, true));
+                    m_actionData->cData.radius = (baseEntityRadius + rvp) * 0.5;
+                    m_actionData->cData.center = baseEntityCenter + dvp * (m_actionData->cData.radius / rvp);
+                    m_actionData->cData.radius = fabs(baseEntityRadius - m_actionData->cData.radius);
+                    if (m_showRefEntitiesOnPreview) {
+                        previewRefPoint(m_actionData->cData.center);
+                        previewRefPoint(getTangentPoint(m_actionData->cData.center, true));
                     }
                     break;
                 }
                 case RS2::EntityLine: {
-                    auto *line = dynamic_cast<RS_Line *>(baseEntity);
-                    RS_Vector &&vp = line->getNearestPointOnEntity(pPoints->points[0], false);
+                    auto *line = dynamic_cast<RS_Line *>(m_baseEntity);
+                    RS_Vector &&vp = line->getNearestPointOnEntity(m_actionData->points[0], false);
                     if (vp.valid){
-                        pPoints->cData.center = (vp + pPoints->points[0]) * 0.5;
-                        pPoints->cData.radius = vp.distanceTo(pPoints->cData.center);
-                        if (showRefEntitiesOnPreview) {
+                        m_actionData->cData.center = (vp + m_actionData->points[0]) * 0.5;
+                        m_actionData->cData.radius = vp.distanceTo(m_actionData->cData.center);
+                        if (m_showRefEntitiesOnPreview) {
                             previewRefPoint(vp);
-                            previewRefPoint(pPoints->cData.center);
+                            previewRefPoint(m_actionData->cData.center);
                         }
                     }
                     break;
@@ -154,28 +139,28 @@ void RS_ActionDrawCircleTan1_2P::mouseMoveEvent(QMouseEvent *e){
                     return;
             }
 
-            previewToCreateCircle(pPoints->cData);
+            previewToCreateCircle(m_actionData->cData);
             break;
         }
         case SetPoint2: {
-            highlightSelected(baseEntity);
-            pPoints->points.resize(1);
-            pPoints->points.push_back(mouse);
-            pPoints->coord = mouse;
+            highlightSelected(m_baseEntity);
+            m_actionData->points.resize(1);
+            m_actionData->points.push_back(mouse);
+            m_actionData->coord = mouse;
             if (getCenters()){
                 if (preparePreview()){
-                    previewToCreateCircle((pPoints->cData));
-                    if (showRefEntitiesOnPreview) {
-                        previewRefPoint(pPoints->points.at(0));
-                        previewRefPoint(pPoints->cData.center);
-                        if (isLine(baseEntity)) {
-                            previewRefPoint(baseEntity->getNearestPointOnEntity(pPoints->cData.center, false));
+                    previewToCreateCircle((m_actionData->cData));
+                    if (m_showRefEntitiesOnPreview) {
+                        previewRefPoint(m_actionData->points.at(0));
+                        previewRefPoint(m_actionData->cData.center);
+                        if (isLine(m_baseEntity)) {
+                            previewRefPoint(m_baseEntity->getNearestPointOnEntity(m_actionData->cData.center, false));
                         } else {
-                            double baseEntityRadius = baseEntity->getRadius();
+                            double baseEntityRadius = m_baseEntity->getRadius();
                             bool calcTangentFromOriginalCircle =
-                                (pPoints->cData.center.distanceTo(baseEntity->getCenter()) < baseEntityRadius) &&
-                                (pPoints->cData.radius < baseEntityRadius);
-                            previewRefPoint(getTangentPoint(pPoints->cData.center, calcTangentFromOriginalCircle));
+                                (m_actionData->cData.center.distanceTo(m_baseEntity->getCenter()) < baseEntityRadius) &&
+                                (m_actionData->cData.radius < baseEntityRadius);
+                            previewRefPoint(getTangentPoint(m_actionData->cData.center, calcTangentFromOriginalCircle));
                         }
                     }
                 }
@@ -184,25 +169,25 @@ void RS_ActionDrawCircleTan1_2P::mouseMoveEvent(QMouseEvent *e){
         }
         case SetCenter: {
             deleteSnapper();
-            highlightSelected(baseEntity);
-            pPoints->coord = toGraph(e);
+            highlightSelected(m_baseEntity);
+            m_actionData->coord = e->graphPoint;
             if (preparePreview()){
-                previewToCreateCircle(pPoints->cData);
-                for (const auto &center: pPoints->centers) {
+                previewToCreateCircle(m_actionData->cData);
+                for (const auto &center: m_actionData->centers) {
                     previewRefSelectablePoint(center);
                 }
 
-                if (showRefEntitiesOnPreview) {
-                    previewRefPoint(pPoints->points.at(0));
-                    previewRefPoint(pPoints->points.at(1));
-                    if (isLine(baseEntity)) {
-                        previewRefPoint(baseEntity->getNearestPointOnEntity(pPoints->cData.center, false));
+                if (m_showRefEntitiesOnPreview) {
+                    previewRefPoint(m_actionData->points.at(0));
+                    previewRefPoint(m_actionData->points.at(1));
+                    if (isLine(m_baseEntity)) {
+                        previewRefPoint(m_baseEntity->getNearestPointOnEntity(m_actionData->cData.center, false));
                     } else {
-                        double baseEntityRadius = baseEntity->getRadius();
+                        double baseEntityRadius = m_baseEntity->getRadius();
                         bool calcTangentFromOriginalCircle =
-                            (pPoints->cData.center.distanceTo(baseEntity->getCenter()) < baseEntityRadius) &&
-                            (pPoints->cData.radius < baseEntityRadius);
-                        previewRefPoint(getTangentPoint(pPoints->cData.center, calcTangentFromOriginalCircle));
+                            (m_actionData->cData.center.distanceTo(m_baseEntity->getCenter()) < baseEntityRadius) &&
+                            (m_actionData->cData.radius < baseEntityRadius);
+                        previewRefPoint(getTangentPoint(m_actionData->cData.center, calcTangentFromOriginalCircle));
                     }
                 }
             }
@@ -211,18 +196,15 @@ void RS_ActionDrawCircleTan1_2P::mouseMoveEvent(QMouseEvent *e){
         default:
             break;
     }
-    RS_DEBUG->print("RS_ActionDrawCircleTan1_2P::mouseMoveEvent end");
-    drawPreview();
-    drawHighlights();
 }
 
 RS_Vector RS_ActionDrawCircleTan1_2P::getTangentPoint(RS_Vector& creatingCircleCenter, bool fromOriginalCircle) const{
-    const RS_Vector &circleCenter = baseEntity->getCenter();
+    const RS_Vector &circleCenter = m_baseEntity->getCenter();
     if (fromOriginalCircle){
-        return circleCenter + RS_Vector::polar(baseEntity->getRadius(), circleCenter.angleTo(creatingCircleCenter));
+        return circleCenter + RS_Vector::polar(m_baseEntity->getRadius(), circleCenter.angleTo(creatingCircleCenter));
     }
     else{
-        return creatingCircleCenter + RS_Vector::polar(pPoints->cData.radius, creatingCircleCenter.angleTo(circleCenter));
+        return creatingCircleCenter + RS_Vector::polar(m_actionData->cData.radius, creatingCircleCenter.angleTo(circleCenter));
     }
 }
 
@@ -236,13 +218,13 @@ RS_Vector RS_ActionDrawCircleTan1_2P::getTangentPoint(RS_Vector& creatingCircleC
 //}
 
 bool RS_ActionDrawCircleTan1_2P::getCenters(){
-    pPoints->centers.clear();
+    m_actionData->centers.clear();
     if (getStatus() < SetPoint2) {
         return false;
     }
 
-    LC_Quadratic lc0(baseEntity, pPoints->points[0]);
-    LC_Quadratic lc1(pPoints->points[1], pPoints->points[0]);
+    LC_Quadratic lc0(m_baseEntity, m_actionData->points[0]);
+    LC_Quadratic lc1(m_actionData->points[1], m_actionData->points[0]);
     auto list = LC_Quadratic::getIntersection(lc0, lc1);
 //    DEBUG_HEADER
 //    std::cout<<"intersections : "<<list<<std::endl;
@@ -250,17 +232,17 @@ bool RS_ActionDrawCircleTan1_2P::getCenters(){
     for (const RS_Vector &vp: list) {
         //when taking the path of center of tangent circle passing a given point,
         // the center is never closer to the circle center than the point, for internal and external tangent circles
-        double ds0 = vp.distanceTo(pPoints->points[0]);
-        if (isCircle(baseEntity) || isArc(baseEntity)){
-            double ds = vp.distanceTo(baseEntity->getCenter());
+        double ds0 = vp.distanceTo(m_actionData->points[0]);
+        if (isCircle(m_baseEntity) || isArc(m_baseEntity)){
+            double ds = vp.distanceTo(m_baseEntity->getCenter());
             //condition for tangential to the given circle
-            double baseEntityRadius = baseEntity->getRadius();
+            double baseEntityRadius = m_baseEntity->getRadius();
             if (fabs(ds - (ds0 + baseEntityRadius)) > RS_TOLERANCE && fabs(ds - fabs(ds0 - baseEntityRadius)) > RS_TOLERANCE) {
                 continue;
             }
         } else {
             double ds = 0.;
-            baseEntity->getNearestPointOnEntity(vp, false, &ds);
+            m_baseEntity->getNearestPointOnEntity(vp, false, &ds);
             //condition for tangential to the given straight line
             if (fabs(ds - ds0) > RS_TOLERANCE) {
                 continue;
@@ -269,7 +251,7 @@ bool RS_ActionDrawCircleTan1_2P::getCenters(){
 
         //avoid counting the same center
         bool existing = false;
-        for (auto const &vq: pPoints->centers) {
+        for (auto const &vq: m_actionData->centers) {
             if (vq.squaredTo(vp) < RS_TOLERANCE15){
                 existing = true;
                 break;
@@ -278,32 +260,32 @@ bool RS_ActionDrawCircleTan1_2P::getCenters(){
         if (existing) {
             continue;
         }
-        pPoints->centers.push_back(vp);
+        m_actionData->centers.push_back(vp);
     }
 //    DEBUG_HEADER
 //    std::cout<<"points: "<<points[0]<<" , "<<points[1]<<std::endl;
 //    std::cout<<"centers.size()="<<centers.size()<<std::endl;
 //    std::cout<<"centers: "<<centers<<std::endl;
-    pPoints->valid = !pPoints->centers.empty();
-    return pPoints->valid;
+    m_actionData->valid = !m_actionData->centers.empty();
+    return m_actionData->valid;
 }
 
 bool RS_ActionDrawCircleTan1_2P::preparePreview(){
-    if (pPoints->centers.empty()) getCenters();
-    if (pPoints->centers.empty()) return false;
-    pPoints->cData.center = pPoints->centers.getClosest(pPoints->coord);
-    pPoints->cData.radius = pPoints->points[0].distanceTo(pPoints->cData.center);
+    if (m_actionData->centers.empty()) getCenters();
+    if (m_actionData->centers.empty()) return false;
+    m_actionData->cData.center = m_actionData->centers.getClosest(m_actionData->coord);
+    m_actionData->cData.radius = m_actionData->points[0].distanceTo(m_actionData->cData.center);
     return true;
 }
 
-RS_Entity *RS_ActionDrawCircleTan1_2P::catchCircle(QMouseEvent *e, bool forPreview){
+RS_Entity *RS_ActionDrawCircleTan1_2P::catchCircle(LC_MouseEvent *e, bool forPreview){
     RS_Entity *ret = nullptr;
     RS_Entity *en;
     if (forPreview){
-        en = catchModifiableEntityOnPreview(e, enTypeList);
+        en = catchModifiableAndDescribe(e, g_enTypeList);
     }
     else{
-        en = catchModifiableEntity(e, enTypeList);
+        en = catchModifiableEntity(e, g_enTypeList);
     }
 
     if (en == nullptr) {
@@ -315,15 +297,15 @@ RS_Entity *RS_ActionDrawCircleTan1_2P::catchCircle(QMouseEvent *e, bool forPrevi
     return en;
 }
 
-void RS_ActionDrawCircleTan1_2P::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
+void RS_ActionDrawCircleTan1_2P::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
     switch (status) {
         case SetCircle1: {
             RS_Entity *en = catchCircle(e, false);
             if (en == nullptr){
                 return;
             }
-            baseEntity = dynamic_cast<RS_AtomicEntity *>(en);
-            graphicView->redraw(RS2::RedrawDrawing);
+            m_baseEntity = dynamic_cast<RS_AtomicEntity *>(en);
+            redrawDrawing();
             setStatus(status + 1);
             invalidateSnapSpot();
             break;
@@ -334,7 +316,7 @@ void RS_ActionDrawCircleTan1_2P::onMouseLeftButtonRelease(int status, QMouseEven
             break;
         }
         case SetCenter:
-            pPoints->coord = toGraph(e);
+            m_actionData->coord = e->graphPoint;
             if (preparePreview()) {
                 trigger();
             }
@@ -346,7 +328,7 @@ void RS_ActionDrawCircleTan1_2P::onMouseLeftButtonRelease(int status, QMouseEven
     }
 }
 
-void RS_ActionDrawCircleTan1_2P::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionDrawCircleTan1_2P::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     // Return to last status:
     if (status > 0){
         deletePreview();
@@ -355,18 +337,18 @@ void RS_ActionDrawCircleTan1_2P::onMouseRightButtonRelease(int status, [[maybe_u
 }
 
 void RS_ActionDrawCircleTan1_2P::onCoordinateEvent(int status, [[maybe_unused]]bool isZero, const RS_Vector &mouse) {
-    pPoints->coord = mouse;
+    m_actionData->coord = mouse;
     switch (status) {
         case SetPoint1: {
-            pPoints->points.clear();
-            pPoints->points.push_back(mouse);
+            m_actionData->points.clear();
+            m_actionData->points.push_back(mouse);
             setStatus(status + 1);
             break;
         }
         case SetPoint2: {
-            pPoints->points.push_back(mouse);
+            m_actionData->points.push_back(mouse);
             if (getCenters()) {
-                if (pPoints->centers.size() == 1) {
+                if (m_actionData->centers.size() == 1) {
                     trigger();
                 }
                 else {
@@ -488,5 +470,5 @@ RS2::CursorType RS_ActionDrawCircleTan1_2P::doGetMouseCursor(int status){
 }
 
 double RS_ActionDrawCircleTan1_2P::getRadius() const{
-    return pPoints->cData.radius;
+    return m_actionData->cData.radius;
 }

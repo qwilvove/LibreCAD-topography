@@ -23,20 +23,18 @@
 #ifndef LC_SPLINEFROMPOLYLINEOPTIONS_H
 #define LC_SPLINEFROMPOLYLINEOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "lc_actionsplinefrompolyline.h"
 
+class LC_ActionSplineFromPolyline;
 namespace Ui {
-class LC_SplineFromPolylineOptions;
+    class LC_SplineFromPolylineOptions;
 }
 
 class LC_SplineFromPolylineOptions : public LC_ActionOptionsWidgetBase{
-Q_OBJECT
-
+    Q_OBJECT
 public:
     explicit LC_SplineFromPolylineOptions();
-    ~LC_SplineFromPolylineOptions();
+    ~LC_SplineFromPolylineOptions() override;
 public slots:
     void languageChange() override;
     void cbKeepOriginalsClicked(bool val);
@@ -46,12 +44,10 @@ public slots:
     void sbDegreeValueChanged(int value);
     void sbMidPointsValueChanged(int value);
 protected:
-    void doSetAction(RS_ActionInterface *a, bool update) override;
-    void doSaveSettings() override;
-private:
     Ui::LC_SplineFromPolylineOptions *ui;
-    LC_ActionSplineFromPolyline* action;
-
+    LC_ActionSplineFromPolyline* m_action = nullptr;
+    void doSaveSettings() override;
+    void doSetAction(RS_ActionInterface *a, bool update) override;
     void setKeepOriginalsToActionAndView(bool val);
     void setUseCurrentAttributesToActionAndView(bool val);
     void setUseCurrentLayerToActionAndView(bool val);
@@ -59,5 +55,4 @@ private:
     void setMidPointsToActionAndView(int value);
     void setDegreeToActionAndView(int value);
 };
-
 #endif // LC_SPLINEFROMPOLYLINEOPTIONS_H

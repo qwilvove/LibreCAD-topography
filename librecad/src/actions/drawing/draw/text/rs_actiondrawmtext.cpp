@@ -24,38 +24,31 @@
 **
 **********************************************************************/
 
-
-#include <QMouseEvent>
 #include "rs_actiondrawmtext.h"
-#include "rs_commandevent.h"
-#include "rs_coordinateevent.h"
+
+#include "qg_mtextoptions.h"
 #include "rs_debug.h"
 #include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
+#include "rs_dialogfactoryinterface.h"
 #include "rs_mtext.h"
 #include "rs_preview.h"
-#include "qg_mtextoptions.h"
 
-RS_ActionDrawMText::RS_ActionDrawMText(RS_EntityContainer& container,
-                                     RS_GraphicView& graphicView)
-        :RS_PreviewActionInterface("Draw Text",
-						   container, graphicView)
-        ,pos(std::make_unique<RS_Vector>())
-		,textChanged(true){
-    actionType=RS2::ActionDrawMText;
+RS_ActionDrawMText::RS_ActionDrawMText(LC_ActionContext *actionContext)
+    :RS_PreviewActionInterface("Draw Text",actionContext, RS2::ActionDrawMText)
+    ,m_pos(std::make_unique<RS_Vector>()),m_textChanged(true){
 }
 
 RS_ActionDrawMText::~RS_ActionDrawMText() = default;
 
 void RS_ActionDrawMText::init(int status){
     RS_PreviewActionInterface::init(status);
-
     switch (status) {
         case ShowDialog: {
             reset();
-            RS_MText tmp(nullptr, *data);
-            if (RS_DIALOGFACTORY->requestMTextDialog(&tmp)){
-                data.reset(new RS_MTextData(tmp.getData()));
+            RS_MText tmp(nullptr, *m_mtextData);
+            if (RS_DIALOGFACTORY->requestMTextDialog(&tmp, m_viewport)){
+                const RS_MTextData &editedData = tmp.getData();
+                m_mtextData.reset(new RS_MTextData(editedData));
                 setStatus(SetPos);
                 updateOptions();
             } else {
@@ -67,7 +60,7 @@ void RS_ActionDrawMText::init(int status){
         case SetPos: {
             updateOptions();
             deletePreview();
-            preview->setVisible(true);
+            m_preview->setVisible(true);
             preparePreview();
             break;
         }
@@ -77,8 +70,8 @@ void RS_ActionDrawMText::init(int status){
 }
 
 void RS_ActionDrawMText::reset() {
-    const QString text= (data != nullptr) ? data->text : "";
-    data = std::make_unique<RS_MTextData>(RS_Vector(0.0,0.0),
+    const QString text= (m_mtextData != nullptr) ? m_mtextData->text : "";
+    m_mtextData = std::make_unique<RS_MTextData>(RS_Vector(0.0,0.0),
                                           1.0, 100.0,
                                           RS_MTextData::VATop,
                                           RS_MTextData::HALeft,
@@ -93,55 +86,46 @@ void RS_ActionDrawMText::reset() {
 
 void RS_ActionDrawMText::doTrigger() {
     RS_DEBUG->print("RS_ActionDrawText::trigger()");
-    if (pos->valid){
-        auto *text = new RS_MText(container, *data);
+    if (m_pos->valid){
+        auto text = std::make_unique<RS_MText>(m_container, *m_mtextData);
         text->update();
-        undoCycleAdd(text);
-        textChanged = true;
+        undoCycleAdd(text.get());
+        text.release();
+        m_textChanged = true;
         setStatus(SetPos);
     }
 }
 
 void RS_ActionDrawMText::preparePreview() {
-    data->insertionPoint = *pos;
-    auto *text = new RS_MText(preview.get(), *data);
+    m_mtextData->insertionPoint = *m_pos;
+    auto text = std::make_unique<RS_MText>(m_preview.get(), *m_mtextData);
     text->update();
-    previewEntity(text);
-    textChanged = false;
+    previewEntity(text.get());
+    text.release();
+    m_textChanged = false;
+    m_preview->setVisible(true);
 }
 
-void RS_ActionDrawMText::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    RS_DEBUG->print("RS_ActionDrawText::mouseMoveEvent begin");
-
-    if (getStatus() == SetPos){
-        RS_Vector mouse = snapPoint(e);
-        bool shiftPressed = isShift(e);
-        if (shiftPressed){
-            RS_Vector relZero = graphicView->getRelativeZero();
-            if (relZero.valid){
-               mouse = relZero;
-            }
-        }
-        RS_Vector mov = mouse - *pos;
-        *pos = mouse;
-        if (textChanged || pos->valid == false || preview->isEmpty()){
+void RS_ActionDrawMText::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    if (status == SetPos){
+        RS_Vector mouse = e->snapPoint;
+        mouse = getRelZeroAwarePoint(e, mouse);
+        RS_Vector mov = mouse - *m_pos;
+        *m_pos = mouse;
+        if (m_textChanged || m_pos->valid == false || m_preview->isEmpty()){
             preparePreview();
         } else {
-            preview->move(mov);
-            preview->setVisible(true);
+            m_preview->move(mov);
+            m_preview->setVisible(true);
         }
     }
-
-    RS_DEBUG->print("RS_ActionDrawText::mouseMoveEvent end");
-    drawPreview();
 }
 
-void RS_ActionDrawMText::onMouseLeftButtonRelease([[maybe_unused]]int status, QMouseEvent *e) {
+void RS_ActionDrawMText::onMouseLeftButtonRelease([[maybe_unused]]int status, LC_MouseEvent *e) {
     fireCoordinateEventForSnap(e);
 }
 
-void RS_ActionDrawMText::onMouseRightButtonRelease([[maybe_unused]]int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionDrawMText::onMouseRightButtonRelease([[maybe_unused]]int status, [[maybe_unused]]LC_MouseEvent *e) {
     deletePreview();
     finish(false);
 }
@@ -151,7 +135,7 @@ void RS_ActionDrawMText::onCoordinateEvent(int status, [[maybe_unused]]bool isZe
         case ShowDialog:
             break;
         case SetPos: {
-            data->insertionPoint = mouse;
+            m_mtextData->insertionPoint = mouse;
             trigger();
             break;
         }
@@ -167,7 +151,7 @@ bool RS_ActionDrawMText::doProcessCommand(int status, const QString &c) {
         case SetPos: {
             if (checkCommand("text", c)){
                 deletePreview();
-                graphicView->disableCoordinateInput();
+                disableCoordinateInput();
                 setStatus(SetText);
                 accept = true;
             }
@@ -176,7 +160,7 @@ bool RS_ActionDrawMText::doProcessCommand(int status, const QString &c) {
         case SetText: {
             setText(c);
             updateOptions();
-            graphicView->enableCoordinateInput();
+            enableCoordinateInput();
             setStatus(SetPos);
             accept = true;
             break;
@@ -214,21 +198,21 @@ RS2::CursorType RS_ActionDrawMText::doGetMouseCursor([[maybe_unused]] int status
 }
 
 void RS_ActionDrawMText::setText(const QString &t){
-    data->text = t;
-    textChanged = true;
+    m_mtextData->text = t;
+    m_textChanged = true;
 }
 
 QString RS_ActionDrawMText::getText(){
-    return data->text;
+    return m_mtextData->text;
 }
 
-void RS_ActionDrawMText::setAngle(double a){
-    data->angle = a;
-    textChanged = true;
+void RS_ActionDrawMText::setUcsAngleDegrees(double ucsRelAngleDegrees){
+    m_mtextData->angle = toWorldAngleFromUCSBasisDegrees(ucsRelAngleDegrees);
+    m_textChanged = true;
 }
 
-double RS_ActionDrawMText::getAngle(){
-    return data->angle;
+double RS_ActionDrawMText::getUcsAngleDegrees(){
+    return toUCSBasisAngleDegrees(m_mtextData->angle);
 }
 
 LC_ActionOptionsWidget* RS_ActionDrawMText::createOptionsWidget(){

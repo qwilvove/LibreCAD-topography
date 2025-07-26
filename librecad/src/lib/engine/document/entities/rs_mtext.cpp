@@ -24,32 +24,30 @@
 **
 **********************************************************************/
 
-#include <cmath>
-#include <iostream>
+
+ #include <iostream>
 
 #include "rs_mtext.h"
-
 #include "rs_debug.h"
 #include "rs_font.h"
 #include "rs_fontlist.h"
-#include "rs_graphicview.h"
 #include "rs_insert.h"
-#include "rs_math.h"
 #include "rs_line.h"
+#include "rs_math.h"
 #include "rs_painter.h"
-
+#include "rs_pen.h"
 
 RS_MText::LC_TextLine *RS_MText::LC_TextLine::clone() const {
     auto *ec = new LC_TextLine(getParent(), isOwner());
     if (isOwner()) {
-        for (const auto *entity: entities)
+        for (const RS_Entity *entity: *this)
             if (entity != nullptr)
-                ec->entities.push_back(entity->clone());
+                ec->push_back(entity->clone());
     } else {
-        ec->entities = entities;
+        ec->clear();
+        std::copy(cbegin(), cend(), std::back_inserter(*ec));
     }
     ec->detach();
-    ec->initId();
     ec->setTextSize(textSize);
     ec->setLeftBottomCorner(leftBottomCorner);
     ec->setBaselineStart(baselineStart);
@@ -128,38 +126,31 @@ RS_MText::RS_MText(RS_EntityContainer *parent, const RS_MTextData &d)
 RS_Entity *RS_MText::clone() const {
     auto *t = new RS_MText(*this);
     t->setOwner(isOwner());
-    t->initId();
     t->detach();
     return t;
 }
+
 // fixme - test concept for using UI proxies for heavy entities on modification operation (rotate, scale etc).
 // potentially, it might be either expanded further or removed.
 class RS_MTextProxy:public RS_EntityContainer{
 public:
     RS_MTextProxy(const RS_MText &parent):RS_EntityContainer(parent) {
-
     }
-
 };
 
-RS_Entity *RS_MText::cloneProxy(RS_GraphicView* view) const {
-    if (view->isDrawTextsAsDraftForPreview()) {
-        auto* proxy = new RS_EntityContainer();
-        proxy->setOwner(true);
-        for (RS_Entity *entity: std::as_const(entities)) {
-            auto line = dynamic_cast<LC_TextLine*>(entity);
-            if (line != nullptr && line->count() > 0) {
-                const RS_Vector &start = line->getBaselineStart();
-                const RS_Vector &end = line->getBaselineEnd();
-                auto line = new RS_Line(proxy, start, end);
-                proxy->addEntity(line);
-            }
+RS_Entity *RS_MText::cloneProxy() const {
+    auto* proxy = new RS_EntityContainer();
+    proxy->setOwner(true);
+    for (RS_Entity *entity: std::as_const(*this)) {
+        auto line = dynamic_cast<LC_TextLine*>(entity);
+        if (line != nullptr && line->count() > 0) {
+            const RS_Vector &start = line->getBaselineStart();
+            const RS_Vector &end = line->getBaselineEnd();
+            auto line = new RS_Line(proxy, start, end);
+            proxy->addEntity(line);
         }
-        return proxy;
     }
-    else{
-        return clone();
-    }
+    return proxy;
 }
 
 /**
@@ -479,7 +470,7 @@ void RS_MText::alignVertically(){
             LC_ERR<<__func__<<"(): line "<<__LINE__<<": invalid Invalid RS_MText::VAlign="<<data.valign;
             break;
     }
-    for (RS_Entity *e: std::as_const(entities)) {
+    for (RS_Entity *e: std::as_const(*this)) {
         auto line = dynamic_cast<LC_TextLine *> (e);
         if (line != nullptr) {
             RS_Vector corner =  RS_Vector(line->getMin().rotate(data.insertionPoint, data.angle));
@@ -496,7 +487,7 @@ void RS_MText::alignVertically(){
 }
 
 void RS_MText::rotateLinesRefs() const {
-    for (RS_Entity *e: std::as_const(entities)) {
+    for (RS_Entity *e: std::as_const(*this)) {
         auto line = dynamic_cast<LC_TextLine *> (e);
         if (line != nullptr) {
             RS_Vector corner = line->getLeftBottomCorner();
@@ -556,8 +547,11 @@ void RS_MText::addLetter(LC_TextLine &oneLine, QChar letter,
     // Add spacing, if the font is actually wider than word spacing
     double actualWidth = letterEntity->getMax().x - letterEntity->getMin().x;
     if (actualWidth >= font.getWordSpacing() + RS_TOLERANCE) {
-        actualWidth = font.getWordSpacing() + std::ceil((actualWidth - font.getWordSpacing())/std::abs(letterSpace.x)) * std::abs(letterSpace.x);
+        double letterSpacing = std::max(1., std::abs(letterSpace.x));
+        double wordSpacing = font.getWordSpacing();
+        actualWidth = wordSpacing + letterSpacing - std::fmod(actualWidth - wordSpacing, letterSpacing);
     }
+    LC_LOG<<__LINE__<<": actualWidth: "<<actualWidth;
 
     RS_Vector letterWidth = {actualWidth, 0.};
     // right-to-left text support
@@ -683,7 +677,7 @@ void RS_MText::move(const RS_Vector &offset) {
     RS_EntityContainer::move(offset);
     data.insertionPoint.move(offset);
     //    update();
-    for (RS_Entity* e: std::as_const(entities)) {
+    for (RS_Entity* e: std::as_const(*this)) {
         auto line = dynamic_cast<LC_TextLine *> (e);
         if (line != nullptr) {
             line->moveBaseline(offset);
@@ -692,15 +686,14 @@ void RS_MText::move(const RS_Vector &offset) {
     forcedCalculateBorders();
 }
 
-void RS_MText::rotate(const RS_Vector &center, const double &angle) {
-    RS_Vector oldInsertionPoint{data.insertionPoint};
+void RS_MText::rotate(const RS_Vector &center, double angle) {
     RS_EntityContainer::rotate(center, angle);
     data.insertionPoint.rotate(center, angle);
 
 //    update();
 //    calculateBorders();
 
-    for (RS_Entity *e: std::as_const(entities)) {
+    for (RS_Entity *e: std::as_const(*this)) {
         auto line = dynamic_cast<LC_TextLine *> (e);
         if (line != nullptr) {
             RS_Vector corner = line->getLeftBottomCorner();
@@ -771,7 +764,8 @@ void RS_MText::mirror(const RS_Vector &axisPoint1,
 }
 
 bool RS_MText::hasEndpointsWithinWindow(const RS_Vector & /*v1*/,
-                                        const RS_Vector & /*v2*/) {
+                                        const RS_Vector & /*v2*/) const
+{
     return false;
 }
 
@@ -799,22 +793,19 @@ std::ostream &operator<<(std::ostream &os, const RS_MText &p) {
 
 #define DEBUG_LINE_POINTS_
 
-void RS_MText::draw(RS_Painter *painter, RS_GraphicView *view,
-                    double & patternOffset) {
-    /*if (!(painter && view))
-        return;*/
+void RS_MText::draw(RS_Painter *painter) {
 #ifdef DEBUG_LINE_POINTS
     painter->drawRect(view->toGui(getMin()), view->toGui(getMax()));
 #endif
-//    if (!view->isPrintPreview() && !view->isPrinting()) {
-        if (/*view->isPanning() || */view->toGuiDY(getHeight()) < view->getMinRenderableTextHeightInPx()) {
-            drawDraft(painter, view, patternOffset);
-            return;
-        }
-//    }
 
-    for (RS_Entity *entity: std::as_const(entities)) {
-        entity->drawAsChild(painter, view, patternOffset);
+    bool drawAsDraft = painter->isTextLineNotRenderable(getHeight());
+    if (drawAsDraft){
+        drawDraft(painter);
+        return;
+    }
+
+    for (RS_Entity *entity: std::as_const(*this)) {
+        painter->drawAsChild(entity);
 
 #ifdef DEBUG_LINE_POINTS
         auto line = dynamic_cast<LC_TextLine*>(entity);
@@ -826,16 +817,14 @@ void RS_MText::draw(RS_Painter *painter, RS_GraphicView *view,
     }
 }
 
-void RS_MText::drawDraft(RS_Painter *painter, RS_GraphicView *view, [[maybe_unused]] double &patternOffset) {
+void RS_MText::drawDraft(RS_Painter *painter) {
 #ifdef DEBUG_LINE_POINTS
-    painter->drawRect(view->toGui(getMin()), view->toGui(getMax()));
+    painter->drawRect(painter->toGui(getMin()), painter->toGui(getMax()));
 #endif
-    for (RS_Entity *entity: std::as_const(entities)) {
+    for (RS_Entity *entity: std::as_const(*this)) {
         auto line = dynamic_cast<LC_TextLine*>(entity);
         if (line != nullptr && line->count() > 0) {
-            const RS_Vector &start = view->toGui(line->getBaselineStart());
-            const RS_Vector &end = view->toGui(line->getBaselineEnd());
-            painter->drawLine(start, end);
+            painter->drawLineWCS(line->getBaselineStart(), line->getBaselineEnd());
+        }
     }
-  }
 }

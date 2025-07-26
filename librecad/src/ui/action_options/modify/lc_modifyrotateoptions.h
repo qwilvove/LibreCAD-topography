@@ -23,17 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_MODIFYROTATEOPTIONS_H
 #define LC_MODIFYROTATEOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "rs_actionmodifyrotate.h"
 
+class RS_ActionModifyRotate;
 namespace Ui {
     class LC_ModifyRotateOptions;
 }
 
 class LC_ModifyRotateOptions : public LC_ActionOptionsWidgetBase{
-Q_OBJECT
-
+    Q_OBJECT
 public:
     explicit LC_ModifyRotateOptions();
     ~LC_ModifyRotateOptions() override;
@@ -59,12 +57,11 @@ public slots:
     void onRefPointAngleEditingFinished();
     void onCopiesNumberValueChanged(int value);
 protected:
-
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
 private:
     Ui::LC_ModifyRotateOptions *ui;
-    RS_ActionModifyRotate* action = nullptr;
+    RS_ActionModifyRotate* m_action = nullptr;
     void setUseMultipleCopiesToActionAndView(bool copies);
     void setUseCurrentLayerToActionAndView(bool val);
     void setUseCurrentAttributesToActionAndView(bool val);

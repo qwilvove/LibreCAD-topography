@@ -23,17 +23,15 @@
 #ifndef LC_MODIFYALIGNREFOPTIONS_H
 #define LC_MODIFYALIGNREFOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "lc_actionmodifyalignref.h"
 
+class LC_ActionModifyAlignRef;
 namespace Ui {
-class LC_ModifyAlignRefOptions;
+    class LC_ModifyAlignRefOptions;
 }
 
 class LC_ModifyAlignRefOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     explicit LC_ModifyAlignRefOptions();
     ~LC_ModifyAlignRefOptions() override;
@@ -52,7 +50,7 @@ protected:
     void setKeepOriginalsToActionAndView(bool val);
 private:
     Ui::LC_ModifyAlignRefOptions *ui;
-    LC_ActionModifyAlignRef* action;
+    LC_ActionModifyAlignRef* m_action = nullptr;
 };
 
 #endif // LC_MODIFYALIGNREFOPTIONS_H

@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef RS_ACTIONDRAWCIRCLETAN2_H
 #define RS_ACTIONDRAWCIRCLETAN2_H
 
-
 #include "lc_actiondrawcirclebase.h"
 
 class RS_AtomicEntity;
@@ -37,17 +36,11 @@ struct RS_CircleData;
 class RS_ActionDrawCircleTan2:public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawCircleTan2(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawCircleTan2(LC_ActionContext *actionContext);
     ~RS_ActionDrawCircleTan2() override;
     void init(int status) override;
     bool getCenters(RS_Entity* secondEntityCandidate = nullptr);
     bool preparePreview();
-    void mouseMoveEvent(QMouseEvent *e) override;
-
-//        void coordinateEvent(RS_CoordinateEvent* e) override;
-//    void commandEvent(RS_CommandEvent* e) override;
     void finish(bool updateTB) override;
     void setRadius(double);
     double getRadius() const;
@@ -64,17 +57,17 @@ protected:
         SetCenter   //  select the closest tangential Circle.  */
     };
 
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
 
-    RS_Entity *catchCircle(QMouseEvent *e, bool forPreview);
+    RS_Entity *catchCircle(LC_MouseEvent *e, bool forPreview);
     RS_Vector getTangentPoint(RS_Vector creatingCircleCenter, double creatingCircleRadius, const RS_AtomicEntity * circle);
     LC_ActionOptionsWidget* createOptionsWidget() override;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
-
     void doTrigger() override;
 };
 #endif

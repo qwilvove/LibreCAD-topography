@@ -25,9 +25,9 @@
 **********************************************************************/
 #include "qg_dlgellipse.h"
 
+#include "rs_debug.h"
 #include "rs_ellipse.h"
 #include "rs_graphic.h"
-#include "rs_math.h"
 #include "rs_settings.h"
 
 /*
@@ -37,16 +37,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgEllipse::QG_DlgEllipse(QWidget* parent)
-    : LC_Dialog(parent, "EllipseProperties"){
+QG_DlgEllipse:: QG_DlgEllipse(QWidget *parent, LC_GraphicViewport *pViewport, RS_Ellipse* ellipse)
+    :LC_EntityPropertiesDlg(parent, "EllipseProperties", pViewport){
     setupUi(this);
-}
-
-/*
- *  Destroys the object and frees any allocated resources
- */
-QG_DlgEllipse::~QG_DlgEllipse(){
-    // no need to delete child widgets, Qt does it all for us
+    setEntity(ellipse);
 }
 
 /*
@@ -57,52 +51,71 @@ void QG_DlgEllipse::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgEllipse::setEllipse(RS_Ellipse& e) {
-    ellipse = &e;
-    RS_Graphic* graphic = ellipse->getGraphic();
+void QG_DlgEllipse::setEntity(RS_Ellipse* e) {
+    m_entity = e;
+    RS_Graphic* graphic = m_entity->getGraphic();
     if (graphic) {
         cbLayer->init(*(graphic->getLayerList()), false, false);
     }
-    RS_Layer* lay = ellipse->getLayer(false);
+    RS_Layer* lay = m_entity->getLayer(false);
     if (lay) {
         cbLayer->setLayer(*lay);
     }
 
-    wPen->setPen(ellipse, lay, "Pen");
-    leCenterX->setText(asString(ellipse->getCenter().x));
-    leCenterY->setText(asString(ellipse->getCenter().y));
-    double magnitude = ellipse->getMajorP().magnitude();
-    leMajor->setText(asString(magnitude));
-    leMinor->setText(asString(magnitude * ellipse->getRatio()));
-    leRotation->setText(asStringAngleDeg(ellipse->getMajorP().angle()));
-    leAngle1->setText(asStringAngleDeg(ellipse->getAngle1()));
-    leAngle2->setText(asStringAngleDeg(ellipse->getAngle2()));
-    cbReversed->setChecked(ellipse->isReversed());
+    wPen->setPen(m_entity, lay, tr("Pen"));
+
+    toUI(m_entity->getCenter(), leCenterX, leCenterY);
+
+    double majorAxisLen = m_entity->getMajorRadius();
+    double minorAxisLen = m_entity->getMinorRadius();
+
+    toUIValue(majorAxisLen, leMajor);
+    toUIValue(minorAxisLen, leMinor);
+
+    double wcsMajorAngle = m_entity->getMajorP().angle();
+
+    toUIAngleDeg(wcsMajorAngle, leRotation);
+
+    // fixme - sand - for ellipse arc, internal angles are used (assuming that major angle = 0). Rework this for the consistency over the entire UI - use ucs angle like RS_ARC!!
+    toUIAngleDegRaw(m_entity->getAngle1(), leAngle1);
+    toUIAngleDegRaw(m_entity->getAngle2(), leAngle2);
+
+    toUIBool(m_entity->isReversed(), cbReversed);
 
     // fixme - sand - refactor to common function
     if (LC_GET_ONE_BOOL("Appearance","ShowEntityIDs", false)){
-        lId->setText(QString("ID: %1").arg(ellipse->getId()));
+        lId->setText(QString("ID: %1").arg(m_entity->getId()));
     }
     else{
         lId->setVisible(false);
     }
 }
 
-void QG_DlgEllipse::updateEllipse() {
-    ellipse->setCenter(RS_Vector(RS_Math::eval(leCenterX->text()),
-                                  RS_Math::eval(leCenterY->text())));
-	RS_Vector v = RS_Vector::polar(RS_Math::eval(leMajor->text()),
-               RS_Math::deg2rad(RS_Math::eval(leRotation->text())));
-    ellipse->setMajorP(v);
-    if (RS_Math::eval(leMajor->text())>1.0e-6) {
-        ellipse->setRatio(RS_Math::eval(leMinor->text())/RS_Math::eval(leMajor->text()));
+void QG_DlgEllipse::updateEntity() {
+    if (m_entity == nullptr)
+        return;
+
+    double major = toWCSValue(leMajor, m_entity->getMajorRadius());
+    if (major < RS_TOLERANCE) {
+        LC_ERR << __func__<<"(): invalid ellipse major radius: "<< major<<", ellipse not modified";
+        return;
     }
-    else {
-        ellipse->setRatio(1.0);
-    }
-    ellipse->setAngle1(RS_Math::deg2rad(RS_Math::eval(leAngle1->text())));
-    ellipse->setAngle2(RS_Math::deg2rad(RS_Math::eval(leAngle2->text())));
-    ellipse->setReversed(cbReversed->isChecked());
-    ellipse->setPen(wPen->getPen());
-    ellipse->setLayer(cbLayer->currentText());
+    double minor = toWCSValue(leMinor, m_entity->getMinorRadius());
+
+    double rotation = toWCSAngle(leRotation, m_entity->getMajorP().angle());
+
+    m_entity->setMajorP(RS_Vector::polar(major, rotation));
+    m_entity->setRatio(minor/major);
+
+    m_entity->setCenter(toWCS(leCenterX, leCenterY, m_entity->getCenter()));
+
+    m_entity->setAngle1(toRawAngleValue(leAngle1, m_entity->getAngle1()));
+    m_entity->setAngle2(toRawAngleValue(leAngle2, m_entity->getAngle2()));
+
+    m_entity->setReversed(cbReversed->isChecked());
+    // todo - sand - should we call revertDirection() as for arc?
+
+    m_entity->setPen(wPen->getPen());
+    m_entity->setLayer(cbLayer->getLayer());
+    m_entity->calculateBorders();
 }

@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** This file is part of the LibreCAD project, a 2D CAD program
@@ -39,18 +40,18 @@
 class RS_ActionDrawLine : public RS_PreviewActionInterface{
     Q_OBJECT
 public:
-    RS_ActionDrawLine(RS_EntityContainer& container,
-                      RS_GraphicView& graphicView);
+    RS_ActionDrawLine(LC_ActionContext *actionContext);
     ~RS_ActionDrawLine() override;
     void reset();
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
     QStringList getAvailableCommands() override;
     void close();
     void next();
     void undo();
     void redo();
 
+    bool canUndo() const;
+    bool canRedo() const;
 protected:
     /// Action States
     enum Status {
@@ -67,13 +68,14 @@ protected:
     };
 
     struct History;
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
     RS2::CursorType doGetMouseCursor(int status) override;
 
-    void addHistory(RS_ActionDrawLine::HistoryAction a, const RS_Vector& p, const RS_Vector& c, const int s);
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void addHistory(RS_ActionDrawLine::HistoryAction action, const RS_Vector& previous, const RS_Vector& current, int start);
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;

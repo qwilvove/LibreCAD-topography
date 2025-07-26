@@ -24,18 +24,14 @@
 **
 **********************************************************************/
 
-#include <QDialog>
 #include "rs_actionoptionsdrawing.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
-#include "rs_debug.h"
 
-RS_ActionOptionsDrawing::RS_ActionOptionsDrawing(RS_EntityContainer& container,
-        RS_GraphicView& graphicView, int tabIndex)
-        :RS_ActionInterface("Drawing Options",
-                    container, graphicView) {
-	actionType=RS2::ActionOptionsDrawing;
- tabToShow = tabIndex;
+#include "qc_applicationwindow.h"
+#include "rs_graphicview.h"
+
+RS_ActionOptionsDrawing::RS_ActionOptionsDrawing(LC_ActionContext *actionContext, int tabIndex)
+        :RS_ActionInterface("Drawing Options",actionContext, RS2::ActionOptionsDrawing) {
+    m_tabToShow = tabIndex;
 }
 
 void RS_ActionOptionsDrawing::init(int status) {
@@ -43,21 +39,11 @@ void RS_ActionOptionsDrawing::init(int status) {
     trigger();
 }
 
-void RS_ActionOptionsDrawing::trigger() {
-    if (graphic != nullptr) {
-        graphicView->setForcedActionKillAllowed(false);
-        int dialogResult = RS_DIALOGFACTORY->requestOptionsDrawingDialog(*graphic,tabToShow);
-        if (dialogResult == QDialog::Accepted){
-            updateCoordinateWidgetFormat();
-            if (graphicView != nullptr) {
-                graphicView->loadSettings();
-                graphicView->redraw(RS2::RedrawAll);
-                graphicView->repaint();
-            }
-            else{
-            }
-        }
-        graphicView->setForcedActionKillAllowed(true);
+void RS_ActionOptionsDrawing::trigger(){
+    if (m_graphic != nullptr) {
+        m_graphicView->setForcedActionKillAllowed(false);
+        QC_ApplicationWindow::getAppWindow()->changeDrawingOptions(m_tabToShow);
+        m_graphicView->setForcedActionKillAllowed(true);
     }
     finish(false);
 }

@@ -28,9 +28,7 @@
 class LC_ActionEditPasteTransform :public RS_PreviewActionInterface{
 Q_OBJECT
 public:
-    LC_ActionEditPasteTransform(RS_EntityContainer& container,
-                                RS_GraphicView& graphicView);
-    void mouseMoveEvent(QMouseEvent *event) override;
+    LC_ActionEditPasteTransform(LC_ActionContext *actionContext);
     void init(int status) override;
     void setAngle(double value);
     double getFactor() const;
@@ -47,17 +45,17 @@ public:
     void setArraySpacingY(double arraySpacing);
     double getArrayAngle() const;
     void setArrayAngle(double arrayAngle);
-    bool isSameAngles() const {return sameAngles;}
-    void setSameAngles(bool val) {sameAngles = val;}
+    bool isSameAngles() const {return m_sameAngles;}
+    void setSameAngles(bool val) {m_sameAngles = val;}
     double getAngle() const;
 protected:
     enum Status{
         SetReferencePoint
     };
 
-    std::unique_ptr<RS_Vector> referencePoint;
-    bool invokedWithControl = false;
-    bool sameAngles = false;
+    std::unique_ptr<RS_Vector> m_referencePoint;
+    bool m_invokedWithControl = false;
+    bool m_sameAngles = false;
 
     struct PasteData{
         double angle = 0.0;
@@ -69,15 +67,17 @@ protected:
         double arrayAngle = 0.0;
     };
 
-    std::unique_ptr<PasteData> data;
+    std::unique_ptr<PasteData> m_pasteData;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     LC_ActionOptionsWidget *createOptionsWidget() override;
     void previewMultipleReferencePoints();
     void updateMouseButtonHints() override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
+
     void doTrigger() override;
 };
 #endif // LC_ACTIONEDITPASTETRANSFORM_H

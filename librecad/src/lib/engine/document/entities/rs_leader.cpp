@@ -25,10 +25,13 @@
 **********************************************************************/
 
 #include<iostream>
+
 #include "rs_leader.h"
 
+#include "rs_atomicentity.h"
 #include "rs_debug.h"
 #include "rs_line.h"
+#include "rs_pen.h"
 #include "rs_solid.h"
 
 // fixme - sand - RS_LEADER should be reworked, add support of moving ref points, properties, probably various rendering types
@@ -37,7 +40,7 @@
  */
 RS_Leader::RS_Leader(RS_EntityContainer* parent)
 		:RS_EntityContainer(parent)
-		,empty(true){
+{
 }
 
 
@@ -48,14 +51,13 @@ RS_Leader::RS_Leader(RS_EntityContainer* parent)
 RS_Leader::RS_Leader(RS_EntityContainer* parent,
                      const RS_LeaderData& d)
     :RS_EntityContainer(parent), data(d) {
-    empty = true;
 }
 
 RS_Entity* RS_Leader::clone() const{
     auto* p = new RS_Leader(*this);
     p->setOwner(isOwner());
-    p->initId();
     p->detach();
+    p->empty = empty;
     return p;
 }
 
@@ -65,7 +67,7 @@ RS_Entity* RS_Leader::clone() const{
 void RS_Leader::update() {
 
     // find and delete arrow:
-    for(auto e: entities){
+    for(RS_Entity* e: *this){
         if (e->rtti()==RS2::EntitySolid) {
             removeEntity(e);
             break;
@@ -78,8 +80,8 @@ void RS_Leader::update() {
 
     RS_Entity* fe = firstEntity();
     if (fe && fe->isAtomic()) {
-        RS_Vector p1 = ((RS_AtomicEntity*)fe)->getStartpoint();
-        RS_Vector p2 = ((RS_AtomicEntity*)fe)->getEndpoint();
+        RS_Vector p1 = static_cast<RS_AtomicEntity*>(fe)->getStartpoint();
+        RS_Vector p2 = static_cast<RS_AtomicEntity*>(fe)->getEndpoint();
 
         // first entity must be the line which gets the arrow:
         if (hasArrowHead()) {
@@ -98,14 +100,12 @@ void RS_Leader::update() {
 RS_VectorSolutions RS_Leader::getRefPoints() const {
     RS_VectorSolutions result = RS_VectorSolutions();
     result.clear();
-    int count = entities.size();
+    size_t count = size();
     if (count > 1) {
-        auto startEntity = entities[0];
+        RS_Entity* startEntity = first();
         result.push_back(startEntity->getStartpoint());
-        for (int i = 0; i < count-1; i++) {
-            auto e = entities[i];
-            result.push_back(e->getEndpoint());
-        }
+        for(RS_Entity* edge: *this)
+            result.push_back(edge->getEndpoint());
     }
     return result;
 }
@@ -166,7 +166,7 @@ void RS_Leader::move(const RS_Vector& offset) {
     update();
 }
 
-void RS_Leader::rotate(const RS_Vector& center, const double& angle) {
+void RS_Leader::rotate(const RS_Vector& center, double angle) {
     RS_EntityContainer::rotate(center, angle);
     update();
 }

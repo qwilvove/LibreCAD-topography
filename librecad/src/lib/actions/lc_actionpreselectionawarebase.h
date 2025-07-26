@@ -28,46 +28,44 @@
 class LC_ActionPreSelectionAwareBase:public RS_ActionSelectBase{
     Q_OBJECT
 public:
-    LC_ActionPreSelectionAwareBase(
-        const char *name, RS_EntityContainer &container, RS_GraphicView &graphicView,
+    LC_ActionPreSelectionAwareBase(const char *name, LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionNone,
         const QList<RS2::EntityType> &entityTypeList = {}, bool countSelectionDeep = false);
-
     ~LC_ActionPreSelectionAwareBase() override;
-    void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent*) override;
     void init(int status) override;
     void drawSnapper() override;
-protected:
-    bool selectionComplete = false;
-    bool countDeep = false;
-    std::vector<RS_Entity*> selectedEntities;
 
-    RS_Vector selectionCorner1 = RS_Vector(false);
-    bool inBoxSelectionMode = false;
+protected:
+    bool m_selectionComplete = false;
+    bool m_countDeep = false;
+    std::vector<RS_Entity*> m_selectedEntities;
+
+    RS_Vector m_selectionCorner1 = RS_Vector(false);
+    bool m_inBoxSelectionMode = false;
 
     void selectionFinishedByKey(QKeyEvent *e, bool escape) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    virtual void selectionCompleted(bool singleEntity, bool fromInit);
-    virtual void mouseLeftButtonReleaseEventSelected(int status, QMouseEvent *pEvent);
-    virtual void mouseRightButtonReleaseEventSelected(int status, QMouseEvent *pEvent);
-    virtual void mouseMoveEventSelected(QMouseEvent *e);
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    virtual void applyBoxSelectionModeIfNeeded(RS_Vector mouse);
+    virtual void onSelectionCompleted(bool singleEntity, bool fromInit);
+    virtual void onMouseLeftButtonReleaseSelected(int status, LC_MouseEvent *pEvent);
+    virtual void onMouseRightButtonReleaseSelected(int status, LC_MouseEvent *pEvent);
+    virtual void onMouseMoveEventSelected(int status, LC_MouseEvent *e);
     virtual void updateMouseButtonHintsForSelection() = 0;
     virtual void updateMouseButtonHintsForSelected(int status);
-
+    virtual bool isAllowTriggerOnEmptySelection(){return true;};
+    virtual void doTrigger(bool keepSelected) = 0;
+    virtual void finishMouseMoveOnSelection(LC_MouseEvent *event);
+    virtual void proceedSelectedEntity(LC_MouseEvent* e);
     RS2::CursorType doGetMouseCursor(int status) override;
     virtual RS2::CursorType doGetMouseCursorSelected(int status);
-
     unsigned int countSelectedEntities();
     void setSelectionComplete(bool allowEmptySelection, bool fromInit);
-    virtual bool isAllowTriggerOnEmptySelection(){return true;};
     void updateMouseButtonHints() override;
-    virtual void doTrigger(bool keepSelected) = 0;
-    virtual void finishMouseMoveOnSelection(QMouseEvent *event);
-
     void doSelectEntity(RS_Entity *entityToSelect, bool selectContour) const override;
-
     void doTrigger() override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
+
 };
 
 #endif // LC_ACTIONPRESELECTIONAWAREBASE_H

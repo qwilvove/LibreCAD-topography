@@ -25,23 +25,24 @@
 
 #include "rs_previewactioninterface.h"
 
+class RS_Polyline;
+
 class LC_ActionPolylineArcsToLines:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    LC_ActionPolylineArcsToLines(RS_EntityContainer &container, RS_GraphicView &graphicView);
+    explicit LC_ActionPolylineArcsToLines(LC_ActionContext *actionContext);
     ~LC_ActionPolylineArcsToLines() override;
-    void mouseMoveEvent(QMouseEvent *event) override;
     void init(int status) override;
 protected:
     enum Status{
         SetEntity
     };
-    RS_Polyline* polyline;
+    RS_Polyline* m_polyline;
     RS2::CursorType doGetMouseCursor(int status) override;
     void updateMouseButtonHints() override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
-protected:
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     RS_Polyline *createPolyline(RS_Polyline *pPolyline);
     bool hasArcsSegments(RS_Polyline *p);
     void doTrigger() override;

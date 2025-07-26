@@ -27,6 +27,8 @@
 #ifndef RS_H
 #define RS_H
 
+#include <cstddef>
+
 //#define RS_TEST
 
 // Windoze XP can't handle the original MAX/MINDOUBLE's
@@ -154,6 +156,8 @@ namespace RS2 {
         EntityDimAngular,   /**< Angular Dimension */
         EntityDimArc,       /**< Arc Dimension */
         EntityDimLeader,    /**< Leader Dimension */
+        EntityDimOrdinate,
+        EntityTolerance,
         EntityHatch,        /**< Hatch */
         EntityImage,        /**< Image */
         EntitySpline,       /**< Spline */
@@ -179,12 +183,9 @@ namespace RS2 {
         ActionNone,        /**< Invalid action id. */
 
         ActionDefault,
-
         ActionFileNew,
         ActionFileNewTemplate,
         ActionFileOpen,
-        ActionFileSave,
-        ActionFileSaveAs,
         ActionFileExport,
         ActionFileClose,
         ActionFilePrint,
@@ -199,11 +200,8 @@ namespace RS2 {
         ActionEditCut,
         ActionEditCutNoSelect,
         ActionEditCutQuick,
-        ActionEditCutQuickNoSelect,
         ActionEditCopy,
-        ActionEditCopyNoSelect,
         ActionEditCopyQuick,
-        ActionEditCopyQuickNoSelect,
         ActionEditPaste,
         ActionEditPasteTransform,
         ActionOrderNoSelect,
@@ -211,7 +209,6 @@ namespace RS2 {
         ActionOrderLower,
         ActionOrderRaise,
         ActionOrderTop,
-
         ActionViewStatusBar,
         ActionViewLayerList,
         ActionViewBlockList,
@@ -224,10 +221,8 @@ namespace RS2 {
         ActionViewFileToolbar,
         ActionViewEditToolbar,
         ActionViewSnapToolbar,
-
         ActionViewGrid,
         ActionViewDraft,
-
         ActionZoomIn,
         ActionZoomOut,
         ActionZoomAuto,
@@ -235,7 +230,7 @@ namespace RS2 {
         ActionZoomPan,
         ActionZoomRedraw,
         ActionZoomPrevious,
-
+        ActionZoomScroll, // fixme - sand - or probably it's better to incorporate into view?
         ActionSelect,
         ActionSelectSingle,
         ActionSelectContour,
@@ -249,6 +244,7 @@ namespace RS2 {
         ActionSelectLayer,
         ActionSelectDouble,
         ActionGetSelect,
+        ActionGetEntity,
 
         ActionEntityInfoSelectSingle,
 
@@ -364,6 +360,7 @@ namespace RS2 {
         ActionDimLeader,
         ActionDimBaseline,
         ActionDimContinue,
+        ActionDimOrdinate,
 
         ActionModifyAttributes,
         ActionModifyDelete,
@@ -429,6 +426,8 @@ namespace RS2 {
         ActionLayersUnlockAll,
         ActionLayersLockAll,
         ActionLayersAdd,
+        ActionLayersAddCmd,
+        ActionLayersActivateCmd,
         ActionLayersRemove,
         ActionLayersEdit,
         ActionLayersToggleView,
@@ -437,6 +436,12 @@ namespace RS2 {
         ActionLayersToggleConstruction,
         ActionLayersExportSelected,
         ActionLayersExportVisible,
+
+        ActionLayerEntityActivate,
+        ActionLayerEntityToggleView,
+        ActionLayerEntityTogglePrint,
+        ActionLayerEntityToggleConstruction,
+        ActionLayerEntityToggleLock,
 
         ActionBlocksDefreezeAll,
         ActionBlocksFreezeAll,
@@ -448,7 +453,6 @@ namespace RS2 {
         ActionBlocksInsert,
         ActionBlocksToggleView,
         ActionBlocksCreate,
-        ActionBlocksCreateNoSelect,
         ActionBlocksExplode,
         ActionBlocksImport,
 
@@ -458,6 +462,7 @@ namespace RS2 {
         ActionOptionsGeneral,
         ActionOptionsDrawing,
         ActionOptionsDrawingGrid,
+        ActionOptionsDrawingUnits,
 
         ActionToolRegenerateDimensions,
 
@@ -469,6 +474,12 @@ namespace RS2 {
         ActionPenApply,
         ActionPenCopy,
         ActionPenSyncFromLayer,
+
+
+        ActionUCSCreate,
+        ActionUCSSetByDimOrdinate,
+        ActionDimOrdinateSelectSameOrigin,
+        ActionDimOrdinateRebase,
 
         /** Needed to loop through all actions */
         ActionLast
@@ -490,7 +501,7 @@ namespace RS2 {
     enum UpdateMode {
         NoUpdate,       /**< No automatic updates. */
         Update,         /**< Always update automatically when modified. */
-                PreviewUpdate   /**< Update automatically but only for previews (quick update) */
+        PreviewUpdate   /**< Update automatically but only for previews (quick update) */
     };
 
     /**
@@ -589,7 +600,7 @@ namespace RS2 {
     /**
      * Enum of levels of resolving when iterating through an entity tree.
      */
-    enum ResolveLevel {
+    enum ResolveLevel: unsigned short {
         /** Groups are not resolved */
         ResolveNone,
         /**
@@ -630,40 +641,6 @@ namespace RS2 {
 		AnyPosition = -1, North, South, West, East
 	};
 
-    /**
-     * Vertical alignments.
-     */
-//    enum VAlign {
-//        VAlignTop,      /**< Top. */
-//        VAlignMiddle,   /**< Middle */
-//        VAlignBottom    /**< Bottom */
-//    };
-
-    /**
-     * Horizontal alignments.
-     */
-//    enum HAlign {
-//        HAlignLeft,     /**< Left */
-//        HAlignCenter,   /**< Centered */
-//        HAlignRight     /**< Right */
-//    };
-
-    /**
-     * Text drawing direction.
-     */
-//    enum TextDrawingDirection {
-//        LeftToRight,     /**< Left to right */
-//        TopToBottom,     /**< Top to bottom */
-//        ByStyle          /**< Inherited from associated text style */
-//    };
-
-    /**
-     * Line spacing style for texts.
-     */
-//    enum TextLineSpacingStyle {
-//        AtLeast,        /**< Taller characters will override */
-//        Exact           /**< Taller characters will not override */
-//    };
 
     /**
      * Leader path type.
@@ -695,7 +672,8 @@ namespace RS2 {
     enum IsoGridViewType {
         IsoLeft,         /**< Left type isometric view */
         IsoTop,         /**< Top type isometric view */
-        IsoRight         /**< Right type isometric view */
+        IsoRight,       /**< Right type isometric view */
+        Ortho
     };
 
     enum CrossHairType{
@@ -806,73 +784,6 @@ namespace RS2 {
         WidthUnchanged = -4 /* utility type for not changed line width during editing*/
     };
 
-    /**
-     * Wrapper for Qt
-     */
-    /*
-       static int qw(RS2::LineWidth w) {
-           switch (w) {
-           case Width00:
-               return 1;  // 0 is more accurate but quite slow
-               break;
-           case WidthByLayer:
-           case WidthByBlock:
-           case WidthDefault:
-               return 1;
-               break;
-           case Width01:
-           case Width02:
-           case Width03:
-           case Width04:
-           case Width05:
-           case Width06:
-           case Width07:
-           case Width08:
-               return 1;
-               break;
-           case Width09:
-           case Width10:
-               return 3;
-               break;
-           case Width11:
-               return 4;
-               break;
-           case Width12:
-           case Width13:
-               return 5;
-               break;
-           case Width14:
-               return 6;
-               break;
-           case Width15:
-               return 7;
-               break;
-           case Width16:
-               return 8;
-               break;
-           case Width17:
-               return 9;
-               break;
-           case Width18:
-           case Width19:
-               return 10;
-               break;
-           case Width20:
-               return 12;
-               break;
-           case Width21:
-           case Width22:
-           case Width23:
-           //case Width24:
-               return 14;
-               break;
-           default:
-               return (int)w;
-               break;
-           }
-           return (int)w;
-       }
-    */
 
     /**
      * Wrapper for Qt
@@ -910,53 +821,6 @@ namespace RS2 {
         NoCursorChange        /**< special value to indicate that no cursor change is requested. */
     };
 
-    /**
-     * Wrapper for Qt.
-     */
-	/*
-    static Qt::CursorShape rsToQtCursorType(RS2::CursorType t) {
-        switch (t) {
-        case ArrowCursor:
-            return Qt::ArrowCursor;
-        case UpArrowCursor:
-            return Qt::UpArrowCursor;
-        case CrossCursor:
-            return Qt::CrossCursor;
-        case WaitCursor:
-            return Qt::WaitCursor;
-        case IbeamCursor:
-            return Qt::IBeamCursor;
-        case SizeVerCursor:
-            return Qt::SizeVerCursor;
-        case SizeHorCursor:
-            return Qt::SizeHorCursor;
-        case SizeBDiagCursor:
-            return Qt::SizeBDiagCursor;
-        case SizeFDiagCursor:
-            return Qt::SizeFDiagCursor;
-        case SizeAllCursor:
-            return Qt::SizeAllCursor;
-        case BlankCursor:
-            return Qt::BlankCursor;
-        case SplitVCursor:
-            return Qt::SplitVCursor;
-        case SplitHCursor:
-            return Qt::SplitHCursor;
-        case PointingHandCursor:
-            return Qt::PointingHandCursor;
-        case OpenHandCursor:
-            return Qt::OpenHandCursor;
-        case ClosedHandCursor:
-            return Qt::ClosedHandCursor;
-        case ForbiddenCursor:
-            return Qt::ForbiddenCursor;
-        case WhatsThisCursor:
-            return Qt::WhatsThisCursor;
-        default:
-            return Qt::ArrowCursor;
-        }
-    }
-*/
     /**
      * Paper formats.
      */
@@ -1005,10 +869,11 @@ namespace RS2 {
          * it always shows up
          */
         enum OverlayGraphics: short {
+                OverlayEffects = 0,      // special effects, like glowing on hover
                 ActionPreviewEntity = 1, // Action Entities
-                Snapper = 2, // Snapper
-                InfoCursor = 3, // Info Cursor
-                OverlayEffects = 0 // special effects, like glowing on hover
+                Snapper = 2,             // Snapper
+                InfoCursor = 3,          // Info Cursor
+                LAST
         };
 
         //Different re-draw methods to speed up rendering of the screen
@@ -1035,6 +900,65 @@ namespace RS2 {
             DescriptionCreating,
             DescriptionModifying
         };
+
+        /**
+         * Curve end point type
+         */
+        enum class EndPointType: short {
+            Start = 0,
+            End = 1
+        };
+
+
 };
+
+namespace Text
+{
+    /**
+* Vertical alignments.
+*/
+    enum VAlign {
+        VATop,    /**< Top. */
+        VAMiddle, /**< Middle */
+        VABottom  /**< Bottom */
+      };
+
+    /**
+     * Horizontal alignments.
+     */
+    enum HAlign {
+        HALeft,   /**< Left */
+        HACenter, /**< Centered */
+        HARight   /**< Right */
+      };
+
+
+    /**
+     * MText drawing direction.
+     */
+    enum MTextDrawingDirection {
+        LeftToRight, /**< Left to right */
+        RightToLeft, /**< Right to left*/
+        TopToBottom, /**< Top to bottom */
+        ByStyle      /**< Inherited from associated text style */
+      };
+
+    /**
+     * Line spacing style for MTexts.
+     */
+    enum MTextLineSpacingStyle {
+        AtLeast, /**< Taller characters will override */
+        Exact    /**< Taller characters will not override */
+      };
+
+    /**
+   * Text drawing direction.
+   */
+    enum TextGeneration {
+        None,      /**< Normal text */
+        Backward,  /**< Mirrored in X */
+        UpsideDown /**< Mirrored in Y */
+    };
+}
 
 #endif

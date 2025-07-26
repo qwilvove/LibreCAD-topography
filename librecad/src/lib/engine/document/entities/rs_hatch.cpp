@@ -23,22 +23,17 @@
 ** This copyright notice MUST APPEAR in all copies of the script!
 **
 **********************************************************************/
-#include <cmath>
+
 #include <iostream>
-#include <memory>
 #include <set>
 
 #include <QPainterPath>
-#include <QBrush>
-#include <QString>
 
 #include "lc_looputils.h"
-
 #include "rs_arc.h"
 #include "rs_circle.h"
 #include "rs_debug.h"
 #include "rs_ellipse.h"
-#include "rs_graphicview.h"
 #include "rs_hatch.h"
 #include "rs_information.h"
 #include "rs_line.h"
@@ -46,7 +41,11 @@
 #include "rs_painter.h"
 #include "rs_pattern.h"
 #include "rs_patternlist.h"
+#include "rs_pen.h"
 
+class RS_Arc;
+class RS_Pattern;
+class RS_AtomicEntity;
 
 namespace{
 // angular distance corrected for direction and range [0, 2 pi]
@@ -68,7 +67,9 @@ namespace{
             {
                 pr(static_cast<RS_EntityContainer*>(e));
             } else if (e) {
-                LC_ERR<<", "<<e->getId();
+                auto vp0 = static_cast<RS_AtomicEntity*>(e)->getStartpoint();
+                auto vp1 = static_cast<RS_AtomicEntity*>(e)->getEndpoint();
+                LC_ERR<<", "<<e->getId()<<": "<<vp0.x<<", "<<vp0.y <<" :: "<<vp1.x<<", "<<vp1.y;
             }
         }
         LC_ERR<<" |"<<loop->getId()<<" )";
@@ -89,12 +90,16 @@ namespace{
     }
 }
 
-RS_HatchData::RS_HatchData(bool _solid,
-						   double _scale,
-						   double _angle,
-						   const QString& _pattern):
-	solid(_solid),scale(_scale),angle(_angle),pattern(_pattern){
-	//std::cout << "RS_HatchData: " << pattern.latin1() << "\n";
+RS_HatchData::RS_HatchData(bool solid,
+                           double scale,
+                           double angle,
+                           QString pattern):
+    solid{solid}
+    , scale{scale}
+    , angle{angle}
+    , pattern{std::move(pattern)}
+{
+    //LC_LOG << "RS_HatchData: " << pattern.latin1() << "\n";
 }
 
 std::ostream& operator << (std::ostream& os, const RS_HatchData& td) {
@@ -108,11 +113,6 @@ std::ostream& operator << (std::ostream& os, const RS_HatchData& td) {
 RS_Hatch::RS_Hatch(RS_EntityContainer* parent,
                    const RS_HatchData& d)
     : RS_EntityContainer(parent), data(d){
-
-    hatch = nullptr;
-    updateRunning = false;
-    needOptimization = true;
-    updateError = HATCH_UNDEFINED;
 }
 
 /**
@@ -122,7 +122,7 @@ bool RS_Hatch::validate() {
     bool ret = true;
 
     // loops:
-        foreach(auto* l, entities){
+        for(RS_Entity* l: *this){
 
             auto* loop = dynamic_cast<RS_EntityContainer*>(l);
             if (loop != nullptr) {
@@ -143,10 +143,8 @@ RS_Entity* RS_Hatch::clone() const{
     RS_DEBUG->print(RS_Debug::D_DEBUGGING, "RS_Hatch::clone()");
     auto* t = new RS_Hatch(*this);
     t->setOwner(isOwner());
-    t->initId();
     t->detach();
     t->update();
-//    t->hatch = nullptr;
     RS_DEBUG->print(RS_Debug::D_DEBUGGING, "RS_Hatch::clone(): OK");
     return t;
 }
@@ -444,10 +442,10 @@ RS_EntityContainer RS_Hatch::trimPattern(const RS_EntityContainer& patternEntiti
         // getting all intersections of this pattern line with the contour:
         QList<RS_Vector> is;
 
-        foreach(const auto& loop, entities){
+        for(const RS_Entity* loop: *this){
 
             if (loop->isContainer()) {
-                for(auto p: * static_cast<RS_EntityContainer*>(loop)){
+                for(auto p: * static_cast<const RS_EntityContainer*>(loop)){
 
                     RS_VectorSolutions sol =
                         RS_Information::getIntersection(e, p, true);
@@ -549,7 +547,7 @@ RS_EntityContainer RS_Hatch::trimPattern(const RS_EntityContainer& patternEntiti
  */
 void RS_Hatch::activateContour(bool on) {
     RS_DEBUG->print("RS_Hatch::activateContour: %d", (int)on);
-        foreach(auto* e, entities){
+        for(RS_Entity* e: *this){
             if (!e->isUndone()) {
                 if (!e->getFlag(RS2::FlagTemp)) {
                     RS_DEBUG->print("RS_Hatch::activateContour: set visible");
@@ -569,68 +567,47 @@ void RS_Hatch::activateContour(bool on) {
 /**
  * Overrides drawing of subentities. This is only ever called for solid fills.
  */
-void RS_Hatch::draw(RS_Painter* painter, RS_GraphicView* view, double& /*patternOffset*/) {
+void RS_Hatch::draw(RS_Painter* painter) {
     if (data.solid) {
-        drawSolidFill(painter, view);
+        drawSolidFill(painter);
     }
     else{
-        foreach (auto se, entities){
-            view->drawEntity(painter,se);
+        for(RS_Entity* se: *this){
+            painter->drawEntity(se);
         }
     }
 }
 
-void RS_Hatch::drawSolidFill(RS_Painter *painter, const RS_GraphicView *view) {//area of solid fill. Use polygon approximation, except trivial cases
+void RS_Hatch::drawSolidFill(RS_Painter *painter) {//area of solid fill. Use polygon approximation, except trivial cases
 
     if (needOptimization == true) {
-        foreach (auto l, entities){
-                if (l->rtti()==RS2::EntityContainer) {
-                    auto* loop = (RS_EntityContainer*)l;
-                    loop->optimizeContours();
-                }
-            }
+        LC_LoopUtils::LoopOptimizer optimizer{*this};
+        m_orderedLoops = optimizer.GetResults();
         needOptimization = false;
     }
-    QPainterPath path;
-    QList<QPolygon> paClosed;
-    QPolygon pa;
 
+    if (m_orderedLoops == nullptr)
+        return;
 
     const QBrush brush(painter->brush());
     const RS_Pen pen=painter->getPen();
-    painter->setBrush(pen.getColor());
-//    painter->disablePen();
+    try {
+        QPainterPath path = createSolidFillPath(painter);
+        QBrush fillBrush = brush;
+        fillBrush.setColor(pen.getColor());
+        fillBrush.setStyle(Qt::SolidPattern);
+        painter->setBrush(fillBrush);
+        painter->drawPath(path);
+    } catch(...) {
+    }
 
-    createSolidFillPath(painter, view, path);
-    /*  if(pa.size()>2){
-            pa<<pa.first();
-            paClosed<<pa;
-        }
-
-        for(auto& p:paClosed){
-            path.addPolygon(p);
-        }*/
-
-    //bug#474, restore brush after solid fill
-/*    const QBrush brush(painter->brush());
-    const RS_Pen pen=painter->getPen();
-    painter->setBrush(pen.getColor());
-    painter->disablePen();*/
-    painter->drawPath(path);
-    QBrush fillBrush = brush;
-    fillBrush.setColor(pen.getColor());
-    fillBrush.setStyle(Qt::SolidPattern);
-//    path.closeSubpath();
-//    painter->fillPath(path, fillBrush);
-
-//    debugOutPath(path);
-//    painter->drawPath(path);
     painter->setBrush(brush);
     painter->setPen(pen);
 }
 
-void RS_Hatch::createSolidFillPath(RS_Painter *painter, const RS_GraphicView *view, QPainterPath &path) {
-    painter->createSolidFillPath(path, view, entities);
+QPainterPath RS_Hatch::createSolidFillPath(RS_Painter *painter) const
+{
+    return painter->createSolidFillPath(*m_orderedLoops);
 }
 
 void RS_Hatch::debugOutPath(const QPainterPath &tmpPath) const {
@@ -642,7 +619,8 @@ void RS_Hatch::debugOutPath(const QPainterPath &tmpPath) const {
 }
 
 //must be called after update()
-double RS_Hatch::getTotalArea() {
+double RS_Hatch::getTotalArea() const
+{
     if (m_area + RS_Math::ulp(m_area) < RS_MAXDOUBLE)
         return m_area;
     try {
@@ -653,16 +631,19 @@ double RS_Hatch::getTotalArea() {
 
     return m_area;
 }
-#define DEBUG_TOTAL_AREA_
-double RS_Hatch::getTotalAreaImpl() {
+
+// #define DEBUG_TOTAL_AREA_
+double RS_Hatch::getTotalAreaImpl() const
+{
     auto loops = getLoops();
 #ifdef DEBUG_TOTAL_AREA
-    LC_LOG<<__func__<<"(): loops.size()="<<loops.size();
+    LC_ERR<<__func__<<"(): loops.size()="<<loops.size();
+    int i=0;
     for (auto& l: loops) {
-        LC_LOG<<l->getId()<<": "<<l->rtti();
+        LC_ERR<<i++<<": "<<l->getId()<<": "<<l->rtti();
         pr(l.get());
     }
-    LC_LOG<<"loops: done";
+    LC_ERR<<"loops: done";
 #endif
     LC_LoopUtils::LoopSorter loopSorter(std::move(loops));
     auto sorted = loopSorter.getResults();
@@ -711,7 +692,7 @@ void RS_Hatch::move(const RS_Vector& offset) {
     update();
 }
 
-void RS_Hatch::rotate(const RS_Vector& center, const double& angle) {
+void RS_Hatch::rotate(const RS_Vector& center, double angle) {
     RS_EntityContainer::rotate(center, angle);
     data.angle = RS_Math::correctAngle(data.angle+angle);
     update();

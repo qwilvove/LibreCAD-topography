@@ -23,22 +23,21 @@
 #ifndef LC_ACTIONSPLINEADDPOINTACTION_H
 #define LC_ACTIONSPLINEADDPOINTACTION_H
 
-#include "rs_previewactioninterface.h"
 #include "lc_actionsplinemodifybase.h"
 
 class LC_ActionSplineAddPoint:public LC_ActionSplineModifyBase{
     Q_OBJECT
 public:
-    LC_ActionSplineAddPoint(RS_EntityContainer &container, RS_GraphicView &graphicView);
+    LC_ActionSplineAddPoint(LC_ActionContext *actionContext);
     ~LC_ActionSplineAddPoint() override = default;
 protected:
-    bool endpointIsSelected = false;
+    bool m_endpointIsSelected = false;
     RS_Entity *createModifiedSplineEntity(RS_Entity *e, RS_Vector controlPoint, bool adjustPosition) override;
     void updateMouseButtonHints() override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMove(RS_Vector mouse, int status, LC_MouseEvent *e) override;
     void doCompleteTrigger() override;
     void doAfterTrigger() override;
-    void onMouseMove(RS_Vector mouse, int status, QMouseEvent *e) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
 };
 

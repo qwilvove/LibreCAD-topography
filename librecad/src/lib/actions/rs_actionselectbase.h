@@ -23,31 +23,26 @@
 #ifndef RS_ACTIONSELECTBASE_H
 #define RS_ACTIONSELECTBASE_H
 
-#include "rs_previewactioninterface.h"
+#include "lc_overlayboxaction.h"
 
 /**
  * This class is the base class to all select actions.
  *
  * @author Andrew Mustun
  */
-class RS_ActionSelectBase:public RS_PreviewActionInterface {
-Q_OBJECT
-
+class RS_ActionSelectBase:public LC_OverlayBoxAction {
+    Q_OBJECT
 public:
-    RS_ActionSelectBase(
-        const char *name,
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        QList<RS2::EntityType> entityTypeList = {});
-
+    RS_ActionSelectBase(const char *name,LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionNone, QList<RS2::EntityType> entityTypeList = {});
     void keyReleaseEvent(QKeyEvent *e) override;
     void keyPressEvent(QKeyEvent *e) override;
 protected:
+    const QList<RS2::EntityType> m_catchForSelectionEntityTypes;
+
     RS2::CursorType doGetMouseCursor(int status) override;
-    const QList<RS2::EntityType> catchForSelectionEntityTypes;
     virtual bool isEntityAllowedToSelect([[maybe_unused]]RS_Entity *ent) const { return true; };
     bool selectEntity(RS_Entity* entityToSelect, bool selectContour);
-    RS_Entity *selectionMouseMove(QMouseEvent *event);
+    RS_Entity *selectionMouseMove(LC_MouseEvent *event);
     virtual void selectionFinishedByKey(QKeyEvent *e, bool escape) = 0;
     virtual bool isShowRefPointsOnHighlight();
     void deselectAll();

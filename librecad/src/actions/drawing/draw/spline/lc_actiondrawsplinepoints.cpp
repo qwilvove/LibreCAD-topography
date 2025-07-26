@@ -25,19 +25,13 @@
 **
 **********************************************************************/
 
-
-#include <QMouseEvent>
 #include "lc_actiondrawsplinepoints.h"
-#include "lc_splinepoints.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
-#include "rs_commands.h"
-#include "rs_commandevent.h"
-#include "rs_coordinateevent.h"
-#include "rs_preview.h"
-#include "rs_debug.h"
 
-struct LC_ActionDrawSplinePoints::Points {
+#include "lc_splinepoints.h"
+#include "rs_debug.h"
+#include "rs_document.h"
+
+struct LC_ActionDrawSplinePoints::ActionData {
 	/**
 	* Spline data defined so far.
 	*/
@@ -54,19 +48,19 @@ struct LC_ActionDrawSplinePoints::Points {
 	std::vector<RS_Vector> undoBuffer;
 };
 
-LC_ActionDrawSplinePoints::LC_ActionDrawSplinePoints(
-    RS_EntityContainer &container,
-    RS_GraphicView &graphicView):
-    RS_ActionDrawSpline(container, graphicView), pPoints(std::make_unique<Points>()){
-    actionType = RS2::ActionDrawSplinePoints;
+LC_ActionDrawSplinePoints::LC_ActionDrawSplinePoints(LC_ActionContext *actionContext)
+    :RS_ActionDrawSpline(actionContext, RS2::ActionDrawSplinePoints)
+    , m_actionData(std::make_unique<ActionData>())
+{
     setName("DrawSplinePoints");
 }
 
 LC_ActionDrawSplinePoints::~LC_ActionDrawSplinePoints() = default;
 
 void LC_ActionDrawSplinePoints::reset(){
-    pPoints->spline.reset();
-    pPoints->undoBuffer.clear();
+    m_actionData->spline.reset();
+    m_actionData->undoBuffer.clear();
+    setStatus(SetStartPoint);
 }
 
 void LC_ActionDrawSplinePoints::init(int status){
@@ -75,31 +69,28 @@ void LC_ActionDrawSplinePoints::init(int status){
 }
 
 void LC_ActionDrawSplinePoints::doTrigger() {
-    if (pPoints->spline.get() != nullptr) {
-        setPenAndLayerToActive(pPoints->spline.get());
-        pPoints->spline->update();
-        RS_Entity *s = pPoints->spline->clone();
-        undoCycleAdd(s);
+    if (m_actionData->spline.get() != nullptr) {
+        setPenAndLayerToActive(m_actionData->spline.get());
+        auto spline = std::make_unique<LC_SplinePoints>(m_container, m_actionData->spline->getData());
+        setPenAndLayerToActive(spline.get());
+        undoCycleAdd(spline.get());
 
-        RS_DEBUG->print("RS_ActionDrawSplinePoints::trigger(): spline added: %lu", s->getId());
+        LC_LOG<<"RS_ActionDrawSplinePoints::trigger(): spline added: "<<spline->getId();
+        spline.release();
         reset();
     }
 }
 
-void LC_ActionDrawSplinePoints::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    RS_DEBUG->print("RS_ActionDrawSplinePoints::mouseMoveEvent begin");
-
-    RS_Vector mouse = snapPoint(e);
-    int status = getStatus();
+void LC_ActionDrawSplinePoints::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->snapPoint;
     switch (status) {
         case SetStartPoint:
             trySnapToRelZeroCoordinateEvent(e);
             break;
         case SetNextPoint: {
-            auto *sp = dynamic_cast<LC_SplinePoints *>(pPoints->spline->clone());
+            auto *sp = dynamic_cast<LC_SplinePoints *>(m_actionData->spline->clone());
 
-            if (showRefEntitiesOnPreview) {
+            if (m_showRefEntitiesOnPreview) {
                 for (auto const &v: sp->getPoints()) {
                     previewRefPoint(v);
                 }
@@ -114,17 +105,14 @@ void LC_ActionDrawSplinePoints::mouseMoveEvent(QMouseEvent *e){
         default:
             break;
     }
-
-    RS_DEBUG->print("RS_ActionDrawSplinePoints::mouseMoveEvent end");
-    drawPreview();
 }
 
-void LC_ActionDrawSplinePoints::onMouseLeftButtonRelease([[maybe_unused]]int status, [[maybe_unused]]QMouseEvent *e) {
+void LC_ActionDrawSplinePoints::onMouseLeftButtonRelease([[maybe_unused]]int status, [[maybe_unused]]LC_MouseEvent *e) {
     fireCoordinateEventForSnap(e);
 }
 
-void LC_ActionDrawSplinePoints::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
-    if (status == SetNextPoint && pPoints->spline.get()){
+void LC_ActionDrawSplinePoints::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
+    if (status == SetNextPoint && m_actionData->spline.get()){
         trigger();
     }
     initPrevious(status);
@@ -133,12 +121,12 @@ void LC_ActionDrawSplinePoints::onMouseRightButtonRelease(int status, [[maybe_un
 void LC_ActionDrawSplinePoints::onCoordinateEvent(int status, [[maybe_unused]] bool isZero, const RS_Vector &mouse) {
     switch (status) {
         case SetStartPoint: {
-            pPoints->undoBuffer.clear();
-            if (pPoints->spline.get() == nullptr){
-                pPoints->spline.reset(new LC_SplinePoints(container, pPoints->data));
-                pPoints->spline->addPoint(mouse);
+            m_actionData->undoBuffer.clear();
+            if (m_actionData->spline.get() == nullptr){
+                m_actionData->spline = std::make_unique<LC_SplinePoints>(m_container, m_actionData->data);
+                m_actionData->spline->addPoint(mouse);
 
-                if (showRefEntitiesOnPreview) {
+                if (m_showRefEntitiesOnPreview) {
                     previewRefPoint(mouse);
                 }
             }
@@ -149,9 +137,9 @@ void LC_ActionDrawSplinePoints::onCoordinateEvent(int status, [[maybe_unused]] b
         }
         case SetNextPoint: {
             moveRelativeZero(mouse);
-            if (pPoints->spline.get() != nullptr){
-                pPoints->spline->addPoint(mouse);
-                pPoints->spline->update();
+            if (m_actionData->spline.get() != nullptr){
+                m_actionData->spline->addPoint(mouse);
+                m_actionData->spline->update();
                 drawPreview();
                 drawSnapper();
             }
@@ -179,6 +167,14 @@ bool LC_ActionDrawSplinePoints::doProcessCommand(int status, const QString &c) {
                 updateMouseButtonHints();
                 accept = true;
             }
+            else if (checkCommand("close", c)) {
+                setClosed(!isClosed());
+                accept = true;
+            }
+            else if (checkCommand("kill", c)) {
+                trigger();
+                accept = true;
+            }
             break;
         }
         default:
@@ -194,14 +190,15 @@ QStringList LC_ActionDrawSplinePoints::getAvailableCommands(){
         case SetStartPoint:
             break;
         case SetNextPoint:
-            if (!pPoints->data.splinePoints.empty()){
-                cmd += command("undo");
+            if (!m_actionData->data.splinePoints.empty()){
+                cmd += "undo";
             }
-            if (!pPoints->undoBuffer.empty()){
-                cmd += command("redo");
+            if (!m_actionData->undoBuffer.empty()){
+                cmd += "redo";
             }
-            if (pPoints->data.splinePoints.size() > 2){
-                cmd += command("close");
+            if (m_actionData->spline->getData().splinePoints.size() > 2){
+                cmd += "close";
+                cmd += "kill";
             }
             break;
         default:
@@ -219,18 +216,18 @@ void LC_ActionDrawSplinePoints::updateMouseButtonHints(){
         case SetNextPoint: {
             QString msg = "";
 
-            if (pPoints->data.splinePoints.size() > 2){
+            if (m_actionData->data.splinePoints.size() > 2){
                 msg += command("close");
                 msg += "/";
             }
-            if (!pPoints->data.splinePoints.empty()){
+            if (!m_actionData->data.splinePoints.empty()){
                 msg += command("undo");
             }
-            if (!pPoints->undoBuffer.empty()){
+            if (!m_actionData->undoBuffer.empty()){
                 msg += command("redo");
             }
 
-            if (!pPoints->data.splinePoints.empty()){
+            if (!m_actionData->data.splinePoints.empty()){
                 updateMouseWidget(tr("Specify next control point or [%1]").arg(msg),tr("Back"));
             } else {
                 updateMouseWidgetTRBack(tr("Specify next control point"));
@@ -264,17 +261,17 @@ void RS_ActionDrawSplinePoints::close() {
 */
 
 void LC_ActionDrawSplinePoints::undo(){
-    if (!pPoints->spline.get()){
+    if (!m_actionData->spline.get()){
         commandMessage(tr("Cannot undo: Not enough entities defined yet."));
         return;
     }
 
-    auto &splinePts = pPoints->spline->getData().splinePoints;
+    auto &splinePts = m_actionData->spline->getData().splinePoints;
     size_t nPoints = splinePts.size();
     if (nPoints > 1){
         RS_Vector v = splinePts.back();
-        pPoints->undoBuffer.push_back(v);
-        pPoints->spline->removeLastPoint();
+        m_actionData->undoBuffer.push_back(v);
+        m_actionData->spline->removeLastPoint();
 
         if (splinePts.empty()) {
             setStatus(SetStartPoint);
@@ -283,7 +280,7 @@ void LC_ActionDrawSplinePoints::undo(){
             v = splinePts.back();
             moveRelativeZero(v);
         }
-        graphicView->redraw(RS2::RedrawDrawing);
+        redrawDrawing();
         drawPreview();
     } else {
         commandMessage(tr("Cannot undo: Not enough entities defined yet."));
@@ -291,28 +288,28 @@ void LC_ActionDrawSplinePoints::undo(){
 }
 
 void LC_ActionDrawSplinePoints::redo(){
-    int iBufLen = pPoints->undoBuffer.size();
+    int iBufLen = m_actionData->undoBuffer.size();
     if (iBufLen > 1){
-        RS_Vector v = pPoints->undoBuffer.back();
-        pPoints->spline->addPoint(v);
-        pPoints->undoBuffer.pop_back();
+        RS_Vector v = m_actionData->undoBuffer.back();
+        m_actionData->spline->addPoint(v);
+        m_actionData->undoBuffer.pop_back();
 
         setStatus(SetNextPoint);
-        v = pPoints->data.splinePoints.back();
+        v = m_actionData->data.splinePoints.back();
         moveRelativeZero(v);
-        graphicView->redraw(RS2::RedrawDrawing);
+        redrawDrawing();
     } else {
         commandMessage(tr("Cannot undo: Nothing could be redone."));
     }
 }
 
 void LC_ActionDrawSplinePoints::setClosed(bool c){
-    pPoints->data.closed = c;
-    if (pPoints->spline.get() != nullptr){
-        pPoints->spline->setClosed(c);
+    m_actionData->data.closed = c;
+    if (m_actionData->spline.get() != nullptr){
+        m_actionData->spline->setClosed(c);
     }
 }
 
 bool LC_ActionDrawSplinePoints::isClosed(){
-    return pPoints->data.closed;
+    return m_actionData->data.closed;
 }

@@ -25,24 +25,25 @@
 **
 **********************************************************************/
 
-#include <random>
-#include <vector>
 
+#include "rs_information.h"
+
+#include "lc_containertraverser.h"
 #include "lc_parabola.h"
 #include "lc_quadratic.h"
 #include "lc_rect.h"
 #include "lc_splinepoints.h"
 #include "rs_arc.h"
 #include "rs_circle.h"
-#include "rs_constructionline.h"
 #include "rs_debug.h"
 #include "rs_ellipse.h"
+#include "rs_entity.h"
 #include "rs_entitycontainer.h"
-#include "rs_information.h"
 #include "rs_line.h"
 #include "rs_math.h"
 #include "rs_polyline.h"
-#include "rs_vector.h"
+
+class LC_Parabola;
 
 namespace {
 
@@ -322,10 +323,12 @@ bool RS_Information::isDimension(RS2::EntityType type) {
 	switch(type){
 	case RS2::EntityDimAligned:
 	case RS2::EntityDimLinear:
+	case RS2::EntityDimOrdinate:
 	case RS2::EntityDimRadial:
 	case RS2::EntityDimDiametric:
 	case RS2::EntityDimAngular:
 	case RS2::EntityDimArc:
+	case RS2::EntityTolerance:
 		return true;
 	default:
 		return false;
@@ -1000,10 +1003,7 @@ bool RS_Information::isPointInsideContour(const RS_Vector& point,
             *onContour = false;
         }
 
-        for (RS_Entity* e = contour->firstEntity(RS2::ResolveAll);
-				e;
-                e = contour->nextEntity(RS2::ResolveAll)) {
-
+        for(RS_Entity* e: lc::LC_ContainerTraverser{*contour, RS2::ResolveAll}.entities()) {
             // intersection(s) from ray with contour entity:
             sol = RS_Information::getIntersection(&ray, e, true);
 

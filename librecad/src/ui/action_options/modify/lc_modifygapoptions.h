@@ -22,16 +22,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_MODIFYGAPOPTIONS_H
 #define LC_MODIFYGAPOPTIONS_H
 
-#include "lc_actionmodifylinegap.h"
 #include "lc_actionoptionswidgetbase.h"
 
+class LC_ActionModifyLineGap;
 namespace Ui {
-class LC_ModifyGapOptions;
+    class LC_ModifyGapOptions;
 }
 
 class LC_ModifyGapOptions :public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     explicit LC_ModifyGapOptions();
     ~LC_ModifyGapOptions() override;
@@ -46,7 +45,7 @@ protected slots:
     void onLineSnapModeIndexChanged(int index);
     void onGapSnapModeIndexChanged(int index);
 private:
-    LC_ActionModifyLineGap* action = nullptr;
+    LC_ActionModifyLineGap* m_action = nullptr;
     Ui::LC_ModifyGapOptions *ui;
     void setGapSizeToActionAndView(const QString &val);
     void setGapIsFreeToActionAndView(bool val);

@@ -23,8 +23,7 @@
 #ifndef LC_NAMEDVIEWSLISTOPTIONS_H
 #define LC_NAMEDVIEWSLISTOPTIONS_H
 
-class LC_NamedViewsListOptions
-{
+class LC_NamedViewsListOptions{
 public:
     LC_NamedViewsListOptions();
     void load();
@@ -40,7 +39,11 @@ public:
     int doubleClickPolicy {RENAME};
     bool askForDeletionConfirmation{true};
     bool duplicatedNameReplacesSilently{false};
-    bool showTypeIcon{true};
+    bool showColumnIconType{true};
+    bool showColumnGridType{true};
+    bool showColumnUCSType{true};
+    bool showColumnUCSDetails{true};
+    bool showColumnViewDetails{true};
     bool showViewInfoToolTip{true};
     bool restoreViewBySingleClick{true};
 };

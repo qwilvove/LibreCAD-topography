@@ -26,14 +26,13 @@
 #ifndef QG_LINEBISECTOROPTIONS_H
 #define QG_LINEBISECTOROPTIONS_H
 
-#include<memory>
-#include<QWidget>
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionInterface;
 class RS_ActionDrawLineBisector;
+
 namespace Ui {
-class Ui_LineBisectorOptions;
+    class Ui_LineBisectorOptions;
 }
 
 class QG_LineBisectorOptions : public LC_ActionOptionsWidgetBase{
@@ -49,7 +48,7 @@ protected:
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
 private:
-    RS_ActionDrawLineBisector* action;
+    RS_ActionDrawLineBisector* m_action;
     std::unique_ptr<Ui::Ui_LineBisectorOptions> ui;
     void setLengthToActionAndView(QString val);
     void setNumberToActionAndView(int number);

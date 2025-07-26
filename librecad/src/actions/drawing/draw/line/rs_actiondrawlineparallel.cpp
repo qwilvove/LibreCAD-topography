@@ -24,87 +24,68 @@
 **
 **********************************************************************/
 
-#include <QMouseEvent>
-
 #include "rs_actiondrawlineparallel.h"
-#include "rs_actiondrawlineparallelthrough.h"
-#include "rs_commandevent.h"
-#include "rs_commands.h"
+
+#include "qg_lineparalleloptions.h"
 #include "rs_creation.h"
 #include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
-#include "rs_math.h"
-#include "rs_preview.h"
-#include "qg_lineparalleloptions.h"
 
-RS_ActionDrawLineParallel::RS_ActionDrawLineParallel(
-		RS_EntityContainer& container,
-		RS_GraphicView& graphicView, RS2::ActionType actionType)
-	:RS_PreviewActionInterface("Draw Parallels", container, graphicView)
-	,parallel(nullptr)
-	,distance(1.0)
-	,number(1)
-	, coord(new RS_Vector{})
-	,entity(nullptr){
-    this->actionType= actionType;
+RS_ActionDrawLineParallel::RS_ActionDrawLineParallel(LC_ActionContext *actionContext, RS2::ActionType actionType)
+	:RS_PreviewActionInterface("Draw Parallels", actionContext, actionType)
+	,m_parallel(nullptr)
+	,m_distance(1.0)
+	,m_numberToCreate(1)
+	, m_coord(new RS_Vector{})
+	,m_entity(nullptr){
 }
 
 RS_ActionDrawLineParallel::~RS_ActionDrawLineParallel() = default;
 
 double RS_ActionDrawLineParallel::getDistance() const{
-    return distance;
+    return m_distance;
 }
 
 void RS_ActionDrawLineParallel::setDistance(double d){
-    distance = d;
+    m_distance = d;
 }
 
 int RS_ActionDrawLineParallel::getNumber() const{
-    return number;
+    return m_numberToCreate;
 }
 
 void RS_ActionDrawLineParallel::setNumber(int n){
-    number = n;
+    m_numberToCreate = n;
 }
 
 void RS_ActionDrawLineParallel::doTrigger() {
-    RS_Creation creation(container, graphicView);
-    RS_Entity *e = creation.createParallel(*coord,
-                                           distance, number,
-                                           entity);
+    RS_Creation creation(m_container, m_viewport);
+    RS_Entity *e = creation.createParallel(*m_coord,m_distance, m_numberToCreate,m_entity);
 
-    if (!e){
+    if (e != nullptr){
         RS_DEBUG->print("RS_ActionDrawLineParallel::trigger:No parallels added\n");
     }
 }
 
-void RS_ActionDrawLineParallel::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    deleteHighlights();
-    RS_DEBUG->print("RS_ActionDrawLineParallel::mouseMoveEvent begin");
-    snapPoint(e);
-    *coord = {toGraph(e)};
+void RS_ActionDrawLineParallel::onMouseMoveEvent([[maybe_unused]]int status, LC_MouseEvent *e) {
+    *m_coord = {e->graphPoint}; // copy is needed there!
 
-    entity = catchEntityOnPreview(e, RS2::ResolveAll);
+    m_entity = catchAndDescribe(e, RS2::ResolveAll);
 
     switch (getStatus()) {
         case SetEntity: {
-            if (entity != nullptr){
-                RS_Creation creation(preview.get(), nullptr, false);
-                RS_Entity* createdParallel = creation.createParallel(*coord,
-                                        distance, number,
-                                        entity);
+            if (m_entity != nullptr){
+                RS_Creation creation(m_preview.get(), nullptr, false);
+                RS_Entity* createdParallel = creation.createParallel(*m_coord,m_distance, m_numberToCreate,m_entity);
                 if (createdParallel != nullptr){
-                    highlightHover(entity);
-                    if (number == 1){
+                    highlightHover(m_entity);
+                    if (m_numberToCreate == 1){
                         prepareEntityDescription(createdParallel, RS2::EntityDescriptionLevel::DescriptionCreating);
                     }
                     else{
-                       appendInfoCursorZoneMessage(QString::number(number) + tr(" entities will be created"), 2, false);
+                       appendInfoCursorZoneMessage(QString::number(m_numberToCreate) + tr(" entities will be created"), 2, false);
                     }
-                    if (showRefEntitiesOnPreview) {
-                        RS_Vector nearest = entity->getNearestPointOnEntity(*coord, false);
+                    if (m_showRefEntitiesOnPreview) {
+                        RS_Vector nearest = m_entity->getNearestPointOnEntity(*m_coord, false);
                         previewRefPoint(nearest);
                     }
                 }
@@ -114,24 +95,20 @@ void RS_ActionDrawLineParallel::mouseMoveEvent(QMouseEvent *e){
         default:
             break;
     }
-
-    RS_DEBUG->print("RS_ActionDrawLineParallel::mouseMoveEvent end");
-    drawPreview();
-    drawHighlights();
 }
 
-void RS_ActionDrawLineParallel::onMouseLeftButtonRelease([[maybe_unused]]int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionDrawLineParallel::onMouseLeftButtonRelease([[maybe_unused]]int status, [[maybe_unused]]LC_MouseEvent *e) {
     trigger();
 }
 
-void RS_ActionDrawLineParallel::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void RS_ActionDrawLineParallel::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     initPrevious(status);
 }
 
 void RS_ActionDrawLineParallel::updateMouseButtonHints(){
     switch (getStatus()) {
         case SetEntity:
-            updateMouseWidgetTRCancel(tr("Specify Distance <%1> or select entity or [%2]").arg(distance).arg(command("through")));
+            updateMouseWidgetTRCancel(tr("Specify Distance <%1> or select entity or [%2]").arg(m_distance).arg(command("through")));
             break;
         case SetNumber:
             updateMouseWidget(tr("Enter number:"));
@@ -150,19 +127,17 @@ bool RS_ActionDrawLineParallel::doProcessCommand(int status, const QString &c) {
             if (checkCommand("through", c)){
                 finish(false);
                 accept = true;
-                graphicView->setCurrentAction(
-                    new RS_ActionDrawLineParallelThrough(*container,
-                                                         *graphicView));
+                switchToAction(RS2::ActionDrawLineParallelThrough);
             } else if (checkCommand("number", c)){
                 deletePreview();
                 setStatus(SetNumber);
                 accept = true;
             } else {
-                bool ok;
+                bool ok = false;
                 double d = RS_Math::eval(c, &ok);
                 accept = true;
-                if (ok && d > 1.0e-10){
-                    distance = d;
+                if (ok && d > RS_TOLERANCE){
+                    m_distance = d;
                 } else {
                     commandMessage(tr("Not a valid expression"));
                 }
@@ -173,12 +148,12 @@ bool RS_ActionDrawLineParallel::doProcessCommand(int status, const QString &c) {
             break;
         }
         case SetNumber: {
-            bool ok;
+            bool ok = false;
             int n = c.toInt(&ok);
             if (ok){
                 accept = true;
                 if (n > 0 && n < 100){
-                    number = n;
+                    m_numberToCreate = n;
                 } else
                     commandMessage(tr("Not a valid number. Try 1..99"));
             } else {
@@ -212,5 +187,5 @@ RS2::CursorType RS_ActionDrawLineParallel::doGetMouseCursor([[maybe_unused]] int
 }
 
 LC_ActionOptionsWidget* RS_ActionDrawLineParallel::createOptionsWidget(){
-    return new QG_LineParallelOptions(actionType);
+    return new QG_LineParallelOptions(m_actionType);
 }

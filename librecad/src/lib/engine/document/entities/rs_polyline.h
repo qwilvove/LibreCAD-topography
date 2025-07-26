@@ -26,12 +26,9 @@
 
 
 #pragma once
-
-#include <memory>
+#ifndef RS_Polyline_INCLUDE_H
 
 #include "rs_entitycontainer.h"
-
-
 /**
  * Holds the data that defines a polyline.
  */
@@ -55,9 +52,7 @@ std::ostream& operator << (std::ostream& os, const RS_PolylineData& pd);
 class RS_Polyline:public RS_EntityContainer {
 public:
     RS_Polyline(RS_EntityContainer *parent = nullptr);
-    RS_Polyline(
-        RS_EntityContainer *parent,
-        const RS_PolylineData &d);
+    RS_Polyline(RS_EntityContainer *parent, const RS_PolylineData &d);
     RS_Entity *clone() const override;
 
     /**	@return RS2::EntityPolyline */
@@ -106,7 +101,7 @@ public:
     void appendVertexs(const std::vector<std::pair<RS_Vector, double> > &vl);
 
     void setNextBulge(double bulge){
-        nextBulge = bulge;
+        m_nextBulge = bulge;
     }
 
     void addEntity(RS_Entity *entity) override;
@@ -118,7 +113,7 @@ public:
 
     bool offset(const RS_Vector &coord, const double &distance) override;
     void move(const RS_Vector &offset) override;
-    void rotate(const RS_Vector &center, const double &angle) override;
+    void rotate(const RS_Vector &center, double angle) override;
     void rotate(const RS_Vector &center, const RS_Vector &angleVector) override;
     void scale(const RS_Vector &center, const RS_Vector &factor) override;
     void mirror(const RS_Vector &axisPoint1, const RS_Vector &axisPoint2) override;
@@ -134,20 +129,20 @@ public:
  * @return true - if the polyline contains any circular arc
  */
     bool containsArc() const;
-    void draw(
-        RS_Painter *painter, RS_GraphicView *view,
-        double &patternOffset) override;
+    void draw(RS_Painter *painter) override;
+    void drawAsChild(RS_Painter *painter) override;
     friend std::ostream &operator<<(std::ostream &os, const RS_Polyline &l);
-
-    void drawAsChild(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) override;
     RS_Vector getRefPointAdjacentDirection(bool previousSegment, RS_Vector& refPoint);
 protected:
     std::unique_ptr<RS_Entity> createVertex(
         const RS_Vector &v,
         double bulge = 0.0, bool prepend = false);
-protected:
+private:
+    // whether the polyline is used in fonts(RS2::EntityFontChar
+    bool isFont() const;
     RS_PolylineData data;
-    RS_Entity *closingEntity = nullptr;
-    double nextBulge = 0.;
-
+    RS_Entity *m_closingEntity = nullptr;
+    double m_nextBulge = 0.;
 };
+
+#endif // RS_Polyline_INCLUDE_H

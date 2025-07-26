@@ -24,6 +24,8 @@
 #include <QObject>
 #include "lc_peninforegistry.h"
 
+#include "rs_color.h"
+
 /**
  * internal value used for colors storing in pen palette storage to denote "unchanged" color value
  */
@@ -32,12 +34,12 @@ static const int UNCHANGED_COLOR_INTERNAL_VALUE = -3;
 LC_PenInfoRegistry::LC_PenInfoRegistry()= default;
 
 LC_PenInfoRegistry::~LC_PenInfoRegistry(){
-    lineTypesIconMap.clear();
-    lineTypesNamesMap.clear();
-    lineWidthIconMap.clear();
-    lineWidthNamesMap.clear();
-    colorNamesMap.clear();
-    standardLCColorNamesMap.clear();
+    m_lineTypesIconMap.clear();
+    m_lineTypesNamesMap.clear();
+    m_lineWidthIconMap.clear();
+    m_lineWidthNamesMap.clear();
+    m_colorNamesMap.clear();
+    m_standardLCColorNamesMap.clear();
 }
 
 /**
@@ -46,7 +48,7 @@ LC_PenInfoRegistry::~LC_PenInfoRegistry(){
  * @return string for UI
  */
 QIcon LC_PenInfoRegistry::getLineTypeIcon(RS2::LineType lineType) const{
-    QIcon result = lineTypesIconMap[lineType];
+    QIcon result = m_lineTypesIconMap[lineType];
     return result;
 }
 
@@ -56,7 +58,7 @@ QIcon LC_PenInfoRegistry::getLineTypeIcon(RS2::LineType lineType) const{
  * @return string for UI
  */
 QIcon LC_PenInfoRegistry::getLineWidthIcon(RS2::LineWidth lineWidth) const{
-    QIcon result = lineWidthIconMap[lineWidth];
+    QIcon result = m_lineWidthIconMap[lineWidth];
     return result;
 }
 
@@ -66,7 +68,7 @@ QIcon LC_PenInfoRegistry::getLineWidthIcon(RS2::LineWidth lineWidth) const{
  * @return name to display
  */
 QString LC_PenInfoRegistry::getLineTypeText(RS2::LineType lineType) const{
-    QString result = lineTypesNamesMap[lineType];
+    QString result = m_lineTypesNamesMap[lineType];
     return result;
 }
 
@@ -76,7 +78,7 @@ QString LC_PenInfoRegistry::getLineTypeText(RS2::LineType lineType) const{
  * @return  name to display
  */
 QString LC_PenInfoRegistry::getLineWidthText(RS2::LineWidth lineWidth) const{
-    QString result = lineWidthNamesMap[lineWidth];
+    QString result = m_lineWidthNamesMap[lineWidth];
     return result;
 }
 
@@ -106,13 +108,13 @@ LC_PenInfoRegistry* LC_PenInfoRegistry::instance(){
  */
 QIcon LC_PenInfoRegistry::getColorIcon(const RS_Color &color, int iconSizeW, int iconSizeH) const{
     if (color.isByLayer()){
-        return iconByLayer;
+        return m_iconByLayer;
     }
     else if (color.isByBlock()){
-        return iconByBlock;
+        return m_iconByBlock;
     }
     else if (isUnchangedColor(color)){
-        return iconUnchanged;
+        return m_iconUnchanged;
     }
     if (color.isValid()){
         QPixmap pixmap(iconSizeW, iconSizeH);
@@ -220,12 +222,12 @@ QString LC_PenInfoRegistry::getColorName(const RS_Color &color, int colorNameMod
             // check where this is standard color first
 
             const QRgba64 &key = color.rgba64();
-            if (standardLCColorNamesMap.contains(key)){
-               return standardLCColorNamesMap.value(key, "");
+            if (m_standardLCColorNamesMap.contains(key)){
+               return m_standardLCColorNamesMap.value(key, "");
             }
             else{
                 // try to find qt name, if no such name - give up and return hex color name
-                return colorNamesMap.value(key, color.name());
+                return m_colorNamesMap.value(key, color.name());
             }
         }
         default:
@@ -241,7 +243,7 @@ QString LC_PenInfoRegistry::getColorName(const RS_Color &color, int colorNameMod
  */
 bool LC_PenInfoRegistry::hasLineType(int typeCandidate){
     RS2::LineType lineType = static_cast<RS2::LineType>(typeCandidate);
-    return lineTypesNamesMap.contains(lineType);
+    return m_lineTypesNamesMap.contains(lineType);
 }
 
 /**
@@ -251,83 +253,83 @@ bool LC_PenInfoRegistry::hasLineType(int typeCandidate){
  */
 bool LC_PenInfoRegistry::hasLineWidth(int widthCandidate){
     RS2::LineWidth lineWidth = static_cast<RS2::LineWidth>(widthCandidate);
-    return lineWidthNamesMap.contains(lineWidth);
+    return m_lineWidthNamesMap.contains(lineWidth);
 }
 
 /**
  * Registration of all line widths
  */
 void LC_PenInfoRegistry::registerLineWidths(){
-    doRegisterLineWidth(":/icons/point_cross.svg", tr("- Unchanged -"), RS2::LineWidth::WidthUnchanged);
-//    registerLineWidth(":ui/width00.png", "- Unchanged -", RS2::LineWidth::WidthUnchanged);
-    doRegisterLineWidth(":/icons/point_blank_square.svg", tr("By Layer"), RS2::LineWidth::WidthByLayer);
-//    registerLineWidth(":ui/width00.png", "By Layer", RS2::LineWidth::WidthByLayer);
-    doRegisterLineWidth(":/icons/point_plus_square.svg", tr("By Block"), RS2::LineWidth::WidthByBlock);
-//    registerLineWidth(":ui/width00.png", "By Block", RS2::LineWidth::WidthByBlock);
+    doRegisterLineWidth(":/icons/point_cross.lci", tr("- Unchanged -"), RS2::LineWidth::WidthUnchanged);
+//    registerLineWidth(":linetypes/width00.png", "- Unchanged -", RS2::LineWidth::WidthUnchanged);
+    doRegisterLineWidth(":/icons/point_blank_square.lci", tr("By Layer"), RS2::LineWidth::WidthByLayer);
+//    registerLineWidth(":linetypes/width00.png", "By Layer", RS2::LineWidth::WidthByLayer);
+    doRegisterLineWidth(":/icons/point_plus_square.lci", tr("By Block"), RS2::LineWidth::WidthByBlock);
+//    registerLineWidth(":linetypes/width00.png", "By Block", RS2::LineWidth::WidthByBlock);
 
-    doRegisterLineWidth(":ui/width01.png", tr("Default"), RS2::WidthDefault);
-    doRegisterLineWidth(":ui/width01.png", tr("0.00mm"), RS2::Width00);
-    doRegisterLineWidth(":ui/width01.png", tr("0.05mm"), RS2::Width01);
-    doRegisterLineWidth(":ui/width01.png", tr("0.09mm"), RS2::Width02);
-    doRegisterLineWidth(":ui/width01.png", tr("0.13mm (ISO)"), RS2::Width03);
-    doRegisterLineWidth(":ui/width01.png", tr("0.15mm"), RS2::Width04);
-    doRegisterLineWidth(":ui/width01.png", tr("0.18mm (ISO)"), RS2::Width05);
-    doRegisterLineWidth(":ui/width01.png", tr("0.20mm"), RS2::Width06);
-    doRegisterLineWidth(":ui/width01.png", tr("0.25mm (ISO)"), RS2::Width07);
-    doRegisterLineWidth(":ui/width01.png", tr("0.30mm"), RS2::Width08);
-    doRegisterLineWidth(":ui/width03.png", tr("0.35mm (ISO)"), RS2::Width09);
-    doRegisterLineWidth(":ui/width03.png", tr("0.40mm"), RS2::Width10);
-    doRegisterLineWidth(":ui/width04.png", tr("0.50mm (ISO)"), RS2::Width11);
-    doRegisterLineWidth(":ui/width05.png", tr("0.53mm"), RS2::Width12);
-    doRegisterLineWidth(":ui/width05.png", tr("0.60mm"), RS2::Width13);
-    doRegisterLineWidth(":ui/width06.png", tr("0.70mm (ISO)"), RS2::Width14);
-    doRegisterLineWidth(":ui/width07.png", tr("0.80mm"), RS2::Width15);
-    doRegisterLineWidth(":ui/width08.png", tr("0.90mm"), RS2::Width16);
-    doRegisterLineWidth(":ui/width09.png", tr("1.00mm (ISO)"), RS2::Width17);
-    doRegisterLineWidth(":ui/width10.png", tr("1.06mm"), RS2::Width18);
-    doRegisterLineWidth(":ui/width10.png", tr("1.20mm"), RS2::Width19);
-    doRegisterLineWidth(":ui/width12.png", tr("1.40mm (ISO)"), RS2::Width20);
-    doRegisterLineWidth(":ui/width12.png", tr("1.58mm"), RS2::Width21);
-    doRegisterLineWidth(":ui/width12.png", tr("2.00mm (ISO)"), RS2::Width22);
-    doRegisterLineWidth(":ui/width12.png", tr("2.11mm"), RS2::Width23);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("Default"), RS2::WidthDefault);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.00mm"), RS2::Width00);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.05mm"), RS2::Width01);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.09mm"), RS2::Width02);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.13mm (ISO)"), RS2::Width03);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.15mm"), RS2::Width04);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.18mm (ISO)"), RS2::Width05);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.20mm"), RS2::Width06);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.25mm (ISO)"), RS2::Width07);
+    doRegisterLineWidth(":linetypes/width01.lci", tr("0.30mm"), RS2::Width08);
+    doRegisterLineWidth(":linetypes/width03.lci", tr("0.35mm (ISO)"), RS2::Width09);
+    doRegisterLineWidth(":linetypes/width03.lci", tr("0.40mm"), RS2::Width10);
+    doRegisterLineWidth(":linetypes/width04.lci", tr("0.50mm (ISO)"), RS2::Width11);
+    doRegisterLineWidth(":linetypes/width05.lci", tr("0.53mm"), RS2::Width12);
+    doRegisterLineWidth(":linetypes/width05.lci", tr("0.60mm"), RS2::Width13);
+    doRegisterLineWidth(":linetypes/width06.lci", tr("0.70mm (ISO)"), RS2::Width14);
+    doRegisterLineWidth(":linetypes/width07.lci", tr("0.80mm"), RS2::Width15);
+    doRegisterLineWidth(":linetypes/width08.lci", tr("0.90mm"), RS2::Width16);
+    doRegisterLineWidth(":linetypes/width09.lci", tr("1.00mm (ISO)"), RS2::Width17);
+    doRegisterLineWidth(":linetypes/width10.lci", tr("1.06mm"), RS2::Width18);
+    doRegisterLineWidth(":linetypes/width10.lci", tr("1.20mm"), RS2::Width19);
+    doRegisterLineWidth(":linetypes/width12.lci", tr("1.40mm (ISO)"), RS2::Width20);
+    doRegisterLineWidth(":linetypes/width12.lci", tr("1.58mm"), RS2::Width21);
+    doRegisterLineWidth(":linetypes/width12.lci", tr("2.00mm (ISO)"), RS2::Width22);
+    doRegisterLineWidth(":linetypes/width12.lci", tr("2.11mm"), RS2::Width23);
 }
 
 /**
  * Registration of all line types
  */
 void LC_PenInfoRegistry::registerLineTypes(){
-    doRegisterLineType(":/icons/point_cross.svg", tr("- Unchanged -"), RS2::LineTypeUnchanged);
+    doRegisterLineType(":/icons/point_cross.lci", tr("- Unchanged -"), RS2::LineTypeUnchanged);
 //    registerLineType(":ui/linetype00.png", "- Unchanged -", RS2::LineTypeUnchanged);
-    doRegisterLineType(":/icons/point_blank_square.svg", tr("By Layer"), RS2::LineByLayer);
+    doRegisterLineType(":/icons/point_blank_square.lci", tr("By Layer"), RS2::LineByLayer);
 //    registerLineType(":ui/linetype00.png", "By Layer", RS2::LineByLayer);
-    doRegisterLineType(":/icons/point_plus_square.svg", tr("By Block"), RS2::LineByBlock);
+    doRegisterLineType(":/icons/point_plus_square.lci", tr("By Block"), RS2::LineByBlock);
 //    registerLineType(":ui/linetype00.png", "By Block", RS2::LineByBlock);
-    doRegisterLineType(":ui/linetype00.png", tr("No Pen"), RS2::NoPen);
-    doRegisterLineType(":ui/linetype01.png", tr("Continuous"), RS2::SolidLine);
-    doRegisterLineType(":ui/linetype02.png", tr("Dot"), RS2::DotLine);
-    doRegisterLineType(":ui/linetype02.png", tr("Dot (tiny)"), RS2::DotLineTiny);
-    doRegisterLineType(":ui/linetype02.png", tr("Dot (small)"), RS2::DotLine2);
-    doRegisterLineType(":ui/linetype02.png", tr("Dot (large)"), RS2::DotLineX2);
-    doRegisterLineType(":ui/linetype03.png", tr("Dash"), RS2::DashLine);
-    doRegisterLineType(":ui/linetype03.png", tr("Dash (tiny)"), RS2::DashLineTiny);
-    doRegisterLineType(":ui/linetype03.png", tr("Dash (small)"), RS2::DashLine2);
-    doRegisterLineType(":ui/linetype03.png", tr("Dash (large)"), RS2::DashLineX2);
-    doRegisterLineType(":ui/linetype04.png", tr("Dash Dot"), RS2::DashDotLine);
-    doRegisterLineType(":ui/linetype04.png", tr("Dash Dot (tiny)"), RS2::DashDotLineTiny);
-    doRegisterLineType(":ui/linetype04.png", tr("Dash Dot (small)"), RS2::DashDotLine2);
-    doRegisterLineType(":ui/linetype04.png", tr("Dash Dot (large)"), RS2::DashDotLineX2);
-    doRegisterLineType(":ui/linetype05.png", tr("Divide"), RS2::DivideLine);
-    doRegisterLineType(":ui/linetype05.png", tr("Divide (tiny)"), RS2::DivideLineTiny);
-    doRegisterLineType(":ui/linetype05.png", tr("Divide (small)"), RS2::DivideLine2);
-    doRegisterLineType(":ui/linetype05.png", tr("Divide (large)"), RS2::DivideLineX2);
-    doRegisterLineType(":ui/linetype06.png", tr("Center"), RS2::CenterLine);
-    doRegisterLineType(":ui/linetype06.png", tr("Center (tiny)"), RS2::CenterLineTiny);
-    doRegisterLineType(":ui/linetype06.png", tr("Center (small)"), RS2::CenterLine2);
-    doRegisterLineType(":ui/linetype06.png", tr("Center (large)"), RS2::CenterLineX2);
-    doRegisterLineType(":ui/linetype07.png", tr("Border"), RS2::BorderLine);
-    doRegisterLineType(":ui/linetype07.png", tr("Border (tiny)"), RS2::BorderLineTiny);
-    doRegisterLineType(":ui/linetype07.png", tr("Border (small)"), RS2::BorderLine2);
-    doRegisterLineType(":ui/linetype07.png", tr("Border (large)"), RS2::BorderLineX2);
+    doRegisterLineType(":linetypes/linetype00.lci", tr("No Pen"), RS2::NoPen);
+    doRegisterLineType(":linetypes/linetype01.lci", tr("Continuous"), RS2::SolidLine);
+    doRegisterLineType(":linetypes/linetype02.lci", tr("Dot"), RS2::DotLine);
+    doRegisterLineType(":linetypes/linetype02.lci", tr("Dot (tiny)"), RS2::DotLineTiny);
+    doRegisterLineType(":linetypes/linetype02.lci", tr("Dot (small)"), RS2::DotLine2);
+    doRegisterLineType(":linetypes/linetype02.lci", tr("Dot (large)"), RS2::DotLineX2);
+    doRegisterLineType(":linetypes/linetype03.lci", tr("Dash"), RS2::DashLine);
+    doRegisterLineType(":linetypes/linetype03.lci", tr("Dash (tiny)"), RS2::DashLineTiny);
+    doRegisterLineType(":linetypes/linetype03.lci", tr("Dash (small)"), RS2::DashLine2);
+    doRegisterLineType(":linetypes/linetype03.lci", tr("Dash (large)"), RS2::DashLineX2);
+    doRegisterLineType(":linetypes/linetype04.lci", tr("Dash Dot"), RS2::DashDotLine);
+    doRegisterLineType(":linetypes/linetype04.lci", tr("Dash Dot (tiny)"), RS2::DashDotLineTiny);
+    doRegisterLineType(":linetypes/linetype04.lci", tr("Dash Dot (small)"), RS2::DashDotLine2);
+    doRegisterLineType(":linetypes/linetype04.lci", tr("Dash Dot (large)"), RS2::DashDotLineX2);
+    doRegisterLineType(":linetypes/linetype05.lci", tr("Divide"), RS2::DivideLine);
+    doRegisterLineType(":linetypes/linetype05.lci", tr("Divide (tiny)"), RS2::DivideLineTiny);
+    doRegisterLineType(":linetypes/linetype05.lci", tr("Divide (small)"), RS2::DivideLine2);
+    doRegisterLineType(":linetypes/linetype05.lci", tr("Divide (large)"), RS2::DivideLineX2);
+    doRegisterLineType(":linetypes/linetype06.lci", tr("Center"), RS2::CenterLine);
+    doRegisterLineType(":linetypes/linetype06.lci", tr("Center (tiny)"), RS2::CenterLineTiny);
+    doRegisterLineType(":linetypes/linetype06.lci", tr("Center (small)"), RS2::CenterLine2);
+    doRegisterLineType(":linetypes/linetype06.lci", tr("Center (large)"), RS2::CenterLineX2);
+    doRegisterLineType(":linetypes/linetype07.lci", tr("Border"), RS2::BorderLine);
+    doRegisterLineType(":linetypes/linetype07.lci", tr("Border (tiny)"), RS2::BorderLineTiny);
+    doRegisterLineType(":linetypes/linetype07.lci", tr("Border (small)"), RS2::BorderLine2);
+    doRegisterLineType(":linetypes/linetype07.lci", tr("Border (large)"), RS2::BorderLineX2);
 }
 
 /**
@@ -342,7 +344,7 @@ void LC_PenInfoRegistry::registerColorNames(){
         QString colorName = colorNamesList.at(i);
         QColor color(colorName);
         // todo - basically, localization of QT color names is needed for this mapping
-        colorNamesMap.insert(color.rgba64(), QObject::tr(colorName.toStdString().c_str()));
+        m_colorNamesMap.insert(color.rgba64(), QObject::tr(colorName.toStdString().c_str()));
     }
 
     // register standard LibreCAD Colors
@@ -366,7 +368,7 @@ void LC_PenInfoRegistry::registerColorNames(){
 }
 
 void LC_PenInfoRegistry::registerLCColor(QColor color, const QString colorName){
-    standardLCColorNamesMap.insert(color.rgba64(), colorName);
+    m_standardLCColorNamesMap.insert(color.rgba64(), colorName);
 }
 
 /**
@@ -378,8 +380,8 @@ void LC_PenInfoRegistry::registerLCColor(QColor color, const QString colorName){
 
 void LC_PenInfoRegistry::doRegisterLineType(const char* iconName, const QString labelKey, RS2::LineType lineType){
     QIcon icon = QIcon(iconName);
-    lineTypesIconMap.insert(lineType, icon);
-    lineTypesNamesMap.insert(lineType, labelKey);
+    m_lineTypesIconMap.insert(lineType, icon);
+    m_lineTypesNamesMap.insert(lineType, labelKey);
 }
 
 /**
@@ -390,6 +392,6 @@ void LC_PenInfoRegistry::doRegisterLineType(const char* iconName, const QString 
  */
 void LC_PenInfoRegistry::doRegisterLineWidth(const char* iconName, const QString labelKey, RS2::LineWidth lineWidth){
     QIcon icon = QIcon(iconName);
-    lineWidthIconMap.insert(lineWidth, icon);
-    lineWidthNamesMap.insert(lineWidth, labelKey);
+    m_lineWidthIconMap.insert(lineWidth, icon);
+    m_lineWidthNamesMap.insert(lineWidth, labelKey);
 }

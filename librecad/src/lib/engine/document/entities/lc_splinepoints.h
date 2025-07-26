@@ -92,7 +92,7 @@ protected:
 */
     void updateLength() override;
 public:
-    LC_SplinePoints(RS_EntityContainer* parent, const LC_SplinePointsData& d);
+    LC_SplinePoints(RS_EntityContainer* parent, LC_SplinePointsData d);
     RS_Entity* clone() const override;
 
 /**	@return RS2::EntitySpline */
@@ -202,7 +202,7 @@ public:
     void addControlPoint(const RS_Vector& v);
 
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     void mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) override;
@@ -211,7 +211,7 @@ public:
     void moveRef(const RS_Vector& ref, const RS_Vector& offset) override;
     void revertDirection() override;
 
-    void draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
 
     std::vector<RS_Vector> const& getPoints() const;
     std::vector<RS_Vector> const& getControlPoints() const;

@@ -22,24 +22,23 @@
 
 #include "lc_dialog.h"
 #include "rs_settings.h"
-#include "lc_convert.h"
 
 // fixme - sand - review all dialogs and actions and make all conversions (double/string, angle/string and vise versa consistent)!
 LC_Dialog::LC_Dialog(QWidget* parent, const QString& dlgName)
     :QDialog(parent)
-    ,dialogName(dlgName){
+    ,m_dialogName(dlgName){
 }
 
 void LC_Dialog::showEvent(QShowEvent *event) {
     QDialog::showEvent(event);
-    if (!positionLoaded) {
+    if (!m_positionLoaded) {
         loadDialogPosition();
-        positionLoaded = true;
+        m_positionLoaded = true;
     }
 }
 
 QString LC_Dialog::getPositionSettingsGroupName() const{
-    return "Dlg"+dialogName;
+    return "Dlg"+m_dialogName;
 }
 
 void LC_Dialog::loadDialogPosition() {
@@ -96,16 +95,4 @@ void LC_Dialog::accept() {
 void LC_Dialog::reject() {
     saveDialogPosition();
     QDialog::reject();
-}
-
-QString LC_Dialog::asString(double value){
-    return LC_Convert::asString(value);
-}
-
-QString LC_Dialog::asStringAngle(double value){
-    return LC_Convert::asStringAngle(value);
-}
-
-QString LC_Dialog::asStringAngleDeg(double value){
-    return LC_Convert::asStringAngleDeg(value);
 }

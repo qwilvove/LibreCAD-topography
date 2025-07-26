@@ -22,20 +22,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_PASTETRANSFORMOPTIONS_H
 #define LC_PASTETRANSFORMOPTIONS_H
 
-#include <QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "lc_actioneditpastetransform.h"
 
 namespace Ui {
     class LC_PasteTransformOptions;
 }
+
+class LC_ActionEditPasteTransform;
 
 class LC_PasteTransformOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
 public:
     explicit LC_PasteTransformOptions();
     ~LC_PasteTransformOptions() override;
-
 public slots:
     void languageChange() override;
     void onAngleEditingFinished();
@@ -52,8 +51,7 @@ protected:
     void doSetAction(RS_ActionInterface *a, bool update) override;
 private:
     Ui::LC_PasteTransformOptions *ui;
-    LC_ActionEditPasteTransform* action = nullptr;
-
+    LC_ActionEditPasteTransform* m_action = nullptr;
     void setAngleToActionAndView(QString val);
     void setFactorToActionAndView(QString val);
     void setIsArrayToActionAndView(bool val);

@@ -28,12 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class LC_ActionModifyBreakDivide;
 namespace Ui {
-class LC_ModifyBreakDivideOptions;
+    class LC_ModifyBreakDivideOptions;
 }
 
 class LC_ModifyBreakDivideOptions :public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     explicit LC_ModifyBreakDivideOptions();
 protected slots:
@@ -45,7 +44,7 @@ protected:
     void doSaveSettings() override;
 private:
     Ui::LC_ModifyBreakDivideOptions *ui = nullptr;
-    LC_ActionModifyBreakDivide* action = nullptr;
+    LC_ActionModifyBreakDivide* m_action = nullptr;
     void setRemoveSegmentsToActionAndView(bool val);
     void setRemoveSelectedToActionAndView(bool val);
 };

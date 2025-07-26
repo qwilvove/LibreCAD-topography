@@ -27,7 +27,6 @@
 #define DOCUMENT_INTERFACE_H
 
 #include <QPointF>
-#include <QHash>
 #include <QVariant>
 #include<vector>
 //#include <QColor>
@@ -78,6 +77,8 @@ namespace DPI {
         DIMRADIAL,
         DIMDIAMETRIC,
         DIMANGULAR,
+        DIMORDINATE,
+        TOLERANCE,
         UNKNOWN
     };
 

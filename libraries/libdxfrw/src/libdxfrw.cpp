@@ -312,6 +312,58 @@ bool dxfRW::writeLayer(DRW_Layer *ent){
     return true;
 }
 
+bool dxfRW::writeUCS(DRW_UCS* ent){
+    writer->writeString(0, "UCS");
+    if (version > DRW::AC1009) {
+        writer->writeString(5, toHexStr(++entCount));
+    }
+    if (version > DRW::AC1012) {
+        writer->writeString(330, "42"); // 	Soft-pointer ID/handle to owner object, fixme - check whether id is fixed as for layers?
+    }
+    if (version > DRW::AC1009) {
+        writer->writeString(100, "AcDbSymbolTableRecord");
+        writer->writeString(100, "AcDbViewTableRecord");
+        writer->writeUtf8String(2, ent->name);
+    } else {
+        writer->writeUtf8Caps(2, ent->name);
+    }
+    writer->writeInt16(70, ent->flags);
+
+    writer->writeDouble(10, ent->origin.x);
+    writer->writeDouble(20, ent->origin.y);
+    if (ent->origin.z != 0.0) {
+        writer->writeDouble(30, ent->origin.z);
+    }
+    writer->writeDouble(11, ent->xAxisDirection.x);
+    writer->writeDouble(21, ent->xAxisDirection.y);
+    if (ent->xAxisDirection.z != 0.0) {
+        writer->writeDouble(31, ent->xAxisDirection.z);
+    }
+
+    writer->writeDouble(12, ent->yAxisDirection.x);
+    writer->writeDouble(22, ent->yAxisDirection.y);
+    if (ent->yAxisDirection.z != 0.0) {
+        writer->writeDouble(32, ent->yAxisDirection.z);
+    }
+
+    writer->writeInt16(79, 0);
+    //ID/handle of base UCS if this is an orthographic. This code is not present if the 79 code is 0.
+    // If this code is not present and 79 code is non-zero, then base UCS is assumed to be WORLD
+    // fixme - review this. Probably we'll skip support of it?
+    // writer->writeInt16(346, 0);
+
+    writer->writeDouble(146, ent->elevation);
+
+    writer->writeDouble(71, ent->orthoType);
+
+    writer->writeDouble(13, ent->orthoOrigin.x);
+    writer->writeDouble(23, ent->orthoOrigin.y);
+    if (ent->orthoOrigin.z != 0.0) {
+        writer->writeDouble(33, ent->orthoOrigin.z);
+    }
+    return true;
+}
+
 bool dxfRW::writeView(DRW_View *ent){
     writer->writeString(0, "VIEW");
     if (version > DRW::AC1009) {
@@ -1168,7 +1220,7 @@ bool dxfRW::writeDimension(DRW_Dimension *ent) {
         writer->writeDouble(11, ent->getTextPoint().x);
         writer->writeDouble(21, ent->getTextPoint().y);
         writer->writeDouble(31, ent->getTextPoint().z);
-        if ( !(ent->type & 32))
+        if ( !(ent->type & 32)) // fixme - sand - ordinate type support !!!??
             ent->type = ent->type +32;
         writer->writeInt16(70, ent->type);
         if ( !(ent->getText().empty()) )
@@ -1179,8 +1231,11 @@ bool dxfRW::writeDimension(DRW_Dimension *ent) {
         if ( ent->getTextLineFactor() != 1)
             writer->writeDouble(41, ent->getTextLineFactor());
         writer->writeUtf8String(3, ent->getStyle());
-        if ( ent->getTextLineFactor() != 0)
+        if ( ent->getTextLineFactor() != 0) // fixme - sand - double value equality??
             writer->writeDouble(53, ent->getDir());
+        if ( ent->getHDir() != 0)
+            writer->writeDouble(51, ent->getHDir());
+
         writer->writeDouble(210, ent->getExtrusion().x);
         writer->writeDouble(220, ent->getExtrusion().y);
         writer->writeDouble(230, ent->getExtrusion().z);
@@ -1655,6 +1710,7 @@ bool dxfRW::writeTables() {
         writer->writeString(100, "AcDbSymbolTable");
     }
     writer->writeInt16(70, 0); //end table def
+    iface->writeUCSs();
     writer->writeString(0, "ENDTAB");
 
     writer->writeString(0, "TABLE");
@@ -2123,7 +2179,7 @@ bool dxfRW::processTables() {
                     } else if (sectionstr == "VIEW") {
                        processView();
                     } else if (sectionstr == "UCS") {
-//                        processUCS();
+                        processUCS();
                     } else if (sectionstr == "APPID") {
                         processAppId();
                     } else if (sectionstr == "DIMSTYLE") {
@@ -2138,6 +2194,36 @@ bool dxfRW::processTables() {
         }
     }
 
+    return setError(DRW::BAD_READ_TABLES);
+}
+
+// fixme - sand - code duplication to other entities (VIEW..) Think about more generic reading method
+bool dxfRW::processUCS(){
+    DRW_DBG("dxfRW::processUCS\n");
+    int code;
+    std::string sectionstr;
+    bool reading = false;
+    DRW_UCS ucs;
+    while (reader->readRec(&code)) {
+        DRW_DBG(code); DRW_DBG("\n");
+        if (code == 0) {
+            if (reading) {
+                iface->addUCS(ucs);
+            }
+            sectionstr = reader->getString();
+            DRW_DBG(sectionstr); DRW_DBG("\n");
+            if (sectionstr == "UCS") {
+                reading = true;
+                ucs.reset();
+            } else if (sectionstr == "ENDTAB") {
+                return true;  //found ENDTAB terminate
+            }
+        } else if (reading) {
+            if (!ucs.parseCode(code, reader)) {
+                return setError( DRW::BAD_CODE_PARSED);
+            }
+        }
+    }
     return setError(DRW::BAD_READ_TABLES);
 }
 
@@ -2417,44 +2503,46 @@ bool dxfRW::processEntities(bool isblock) {
         if (nextentity == "ENDSEC" || nextentity == "ENDBLK") {
             return true;  //found ENDSEC or ENDBLK terminate
         }
-        else if (nextentity == "POINT") {
-            processed = processPoint();
-        } else if (nextentity == "LINE") {
+        if (nextentity == "LINE") {
             processed = processLine();
-        } else if (nextentity == "CIRCLE") {
+        }  else if (nextentity == "CIRCLE") {
             processed = processCircle();
         } else if (nextentity == "ARC") {
             processed = processArc();
-        } else if (nextentity == "ELLIPSE") {
-            processed = processEllipse();
-        } else if (nextentity == "TRACE") {
-            processed = processTrace();
-        } else if (nextentity == "SOLID") {
-            processed = processSolid();
-        } else if (nextentity == "INSERT") {
-            processed = processInsert();
+        } else if (nextentity == "POINT") {
+            processed = processPoint();
         } else if (nextentity == "LWPOLYLINE") {
             processed = processLWPolyline();
         } else if (nextentity == "POLYLINE") {
             processed = processPolyline();
-        } else if (nextentity == "TEXT") {
+        }else if (nextentity == "TEXT") {
             processed = processText();
         } else if (nextentity == "MTEXT") {
             processed = processMText();
         } else if (nextentity == "HATCH") {
             processed = processHatch();
-        } else if (nextentity == "SPLINE") {
+        } else if (nextentity == "DIMENSION") {
+            processed = processDimension();
+        } else if (nextentity == "INSERT") {
+            processed = processInsert();
+        } else if (nextentity == "TOLERANCE") {
+            processed = processTolerance();
+        } else if (nextentity == "SOLID") {
+            processed = processSolid();
+        }else if (nextentity == "SPLINE") {
             processed = processSpline();
-        } else if (nextentity == "3DFACE") {
-            processed = process3dface();
+        }else if (nextentity == "LEADER") {
+            processed = processLeader();
+        } else if (nextentity == "ELLIPSE") {
+            processed = processEllipse();
         } else if (nextentity == "VIEWPORT") {
             processed = processViewport();
         } else if (nextentity == "IMAGE") {
             processed = processImage();
-        } else if (nextentity == "DIMENSION") {
-            processed = processDimension();
-        } else if (nextentity == "LEADER") {
-            processed = processLeader();
+        } else if (nextentity == "TRACE") {
+            processed = processTrace();
+        } else if (nextentity == "3DFACE") {
+            processed = process3dface();
         } else if (nextentity == "RAY") {
             processed = processRay();
         } else if (nextentity == "XLINE") {
@@ -2803,6 +2891,27 @@ bool dxfRW::processVertex(DRW_Polyline *pl) {
 
         if (!v->parseCode(code, reader)) { //the members of v are reinitialized here
             return setError(DRW::BAD_CODE_PARSED);
+        }
+    }
+
+    return setError(DRW::BAD_READ_ENTITIES);
+}
+
+bool dxfRW::processTolerance() {
+    DRW_DBG("dxfRW::processTolerance\n");
+    int code;
+    DRW_Tolerance tol;
+    while (reader->readRec(&code)) {
+        DRW_DBG(code); DRW_DBG("\n");
+        if (0 == code) {
+            nextentity = reader->getString();
+            DRW_DBG(nextentity); DRW_DBG("\n");
+            iface->addTolerance(tol);
+            return true;  //found new entity or ENDSEC, terminate
+        }
+
+        if (!tol.parseCode(code, reader)) {
+            return setError( DRW::BAD_CODE_PARSED);
         }
     }
 

@@ -39,20 +39,18 @@ struct RS_TextData;
 class RS_ActionDrawText : public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionDrawText(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawText(LC_ActionContext *actionContext);
     ~RS_ActionDrawText() override;
     void init(int status) override;
     void reset();
     void preparePreview();
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     void setText(const QString &t);
     const QString &getText() const;
-    void setAngle(double a);
-    double getAngle() const;
+    void setUcsAngleDegrees(double a);
+    double getUcsAngleDegrees() const;
 protected:
+    // fixme - sand - cmd -  add support of entering angle as part of command line
     /**
  * Action States.
  */
@@ -63,19 +61,22 @@ protected:
         SetText               /**< Setting the text in the command line. */
     };
 
-    struct Points;
-    std::unique_ptr<Points> pPoints;
-    std::unique_ptr<RS_TextData> data;
-    bool textChanged = false;
-    bool snappedToRelZero = false;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
+    std::unique_ptr<RS_TextData> m_textData;
+    double m_ucsBasicAngleDegrees = 0.0;
+    bool m_textChanged = false;
+    bool m_snappedToRelZero = false;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void updateMouseButtonHints() override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
+
     void doTrigger() override;
 };
 #endif

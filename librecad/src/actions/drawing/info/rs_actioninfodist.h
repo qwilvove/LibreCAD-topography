@@ -40,12 +40,9 @@
 class RS_ActionInfoDist:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionInfoDist(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionInfoDist(LC_ActionContext *actionContext);
     ~RS_ActionInfoDist() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
 protected:
     /**
     * Action States.
@@ -54,12 +51,13 @@ protected:
         SetPoint1,    /**< Setting the 1st point of the distance. */
         SetPoint2     /**< Setting the 2nd point of the distance. */
     };
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
     void updateInfoCursor(const RS_Vector &mouse, const RS_Vector &startPoint);

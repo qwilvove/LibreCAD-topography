@@ -23,14 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "lc_parabola.h"
 
-#include "lc_quadratic.h"
-#include "rs_circle.h"
 #include "rs_debug.h"
-#include "rs_graphicview.h"
 #include "rs_information.h"
 #include "rs_line.h"
-#include "rs_math.h"
-#include "rs_painter.h"
 
 namespace {
 
@@ -344,7 +339,6 @@ LC_Parabola::LC_Parabola(RS_EntityContainer* parent, const LC_ParabolaData& d):
 RS_Entity* LC_Parabola::clone() const
 {
     auto* e = new LC_Parabola(*this);
-    e->initId();
     return e;
 }
 
@@ -494,7 +488,7 @@ void LC_Parabola::move(const RS_Vector& offset)
         point.move(offset);
     update();
 }
-void LC_Parabola::rotate(const RS_Vector& center, const double& angle)
+void LC_Parabola::rotate(const RS_Vector& center, double angle)
 {
     for(auto& point: data.controlPoints)
         point.rotate(center, angle);
@@ -578,14 +572,3 @@ std::unique_ptr<LC_Parabola> LC_Parabola::approximateOffset(double dist) const
     LC_ParabolaData offsetData{controlPoints};
     return std::make_unique<LC_Parabola>(nullptr, offsetData);
 }
-
-
-// void LC_Parabola::LC_Parabola::draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset)
-// {
-//     for (size_t i=0; i<2; ++i){
-//         RS_Line l0{nullptr, {data.controlPoints.at(i), data.controlPoints.at(i+1)}};
-//         l0.draw(painter, view, patternOffset);
-//     }
-//     LC_SplinePoints::draw(painter, view, patternOffset);
-// }
-

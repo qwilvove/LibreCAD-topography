@@ -24,37 +24,26 @@
 **
 **********************************************************************/
 
-#include <cmath>
-
-#include <QMouseEvent>
-
 #include "rs_actiondrawcirclecr.h"
-#include "rs_circle.h"
-#include "rs_commandevent.h"
-#include "rs_coordinateevent.h"
-#include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
-#include "rs_math.h"
-#include "rs_preview.h"
+
 #include "qg_circleoptions.h"
+#include "rs_circle.h"
+#include "rs_debug.h"
+#include "rs_entitycontainer.h"
 
 /**
  * Constructor.
  */
-RS_ActionDrawCircleCR::RS_ActionDrawCircleCR(
-    RS_EntityContainer &container,
-    RS_GraphicView &graphicView)
-    :LC_ActionDrawCircleBase("Draw circles CR",
-                               container, graphicView), data(std::make_unique<RS_CircleData>()){
-    actionType = RS2::ActionDrawCircleCR;
+RS_ActionDrawCircleCR::RS_ActionDrawCircleCR(LC_ActionContext *actionContext)
+    :LC_ActionDrawCircleBase("Draw circles CR", actionContext, RS2::ActionDrawCircleCR)
+    , m_circleData(std::make_unique<RS_CircleData>()){
     reset();
 }
 
 RS_ActionDrawCircleCR::~RS_ActionDrawCircleCR() = default;
 
 void RS_ActionDrawCircleCR::reset(){
-    data = std::make_unique<RS_CircleData>();
+    m_circleData = std::make_unique<RS_CircleData>();
 }
 
 void RS_ActionDrawCircleCR::init(int status){
@@ -62,12 +51,13 @@ void RS_ActionDrawCircleCR::init(int status){
 }
 
 void RS_ActionDrawCircleCR::doTrigger() {
-    auto *circle = new RS_Circle(container, *data);
+    auto *circle = new RS_Circle(m_container, *m_circleData);
     setPenAndLayerToActive(circle);
 
     switch (getStatus()) {
         case SetCenter: // FIXME _ SAND _ _ REVIEW!!!!!
-            container->addEntity(circle);
+            // Issue #2188, cannot add out of an undocycle
+            //m_container->addEntity(circle);
             moveRelativeZero(circle->getCenter());
             break;
         case SetRadius:
@@ -80,32 +70,28 @@ void RS_ActionDrawCircleCR::doTrigger() {
     RS_DEBUG->print("RS_ActionDrawCircleCR::trigger(): circle added: %lu",circle->getId());
 }
 
-
-void RS_ActionDrawCircleCR::mouseMoveEvent(QMouseEvent *e){
-    deletePreview();
-    RS_DEBUG->print("RS_ActionDrawCircleCR::mouseMoveEvent begin");
-    RS_Vector mouse = snapPoint(e);
-    switch (getStatus()) {
+void RS_ActionDrawCircleCR::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->snapPoint;
+    switch (status) {
         case SetCenter: {
             if (!trySnapToRelZeroCoordinateEvent(e)){
-                data->center = mouse;
-                previewToCreateCircle(*data);
-                previewRefSelectablePoint(data->center);
+                m_circleData->center = mouse;
+                previewToCreateCircle(*m_circleData);
+                previewRefSelectablePoint(m_circleData->center);
             } else {
                 setStatus(-1);
             }
             break;
         }
+        default:
+            break;
     }
-
-    RS_DEBUG->print("RS_ActionDrawCircleCR::mouseMoveEvent end");
-    drawPreview();
 }
 
 void RS_ActionDrawCircleCR::onCoordinateEvent(int status, [[maybe_unused]] bool isZero, const RS_Vector &pos) {
     switch (status) {
         case SetCenter: {
-            data->center = pos;
+            m_circleData->center = pos;
             trigger();
             break;
         }
@@ -130,7 +116,7 @@ bool RS_ActionDrawCircleCR::doProcessCommand(int status, const QString &c) {
             // fixme - review processing and add more messages if needed
             double r = RS_Math::eval(c, &ok);
             if (ok && r > RS_TOLERANCE){
-                data->radius = r;
+                m_circleData->radius = r;
                 accept = true;
                 trigger();
             } else {
@@ -157,7 +143,7 @@ bool RS_ActionDrawCircleCR::setRadiusStr(const QString &sr){
         commandMessage(tr("radius=%1 is invalid (zero)").arg(sr));
         ok = false;
     } else {
-        data->radius = r;
+        m_circleData->radius = r;
     }
     return ok;
 }
@@ -189,11 +175,11 @@ void RS_ActionDrawCircleCR::updateMouseButtonHints(){
 }
 
 void RS_ActionDrawCircleCR::setRadius(double val){
-    data->radius = val;
+    m_circleData->radius = val;
 }
 
 double RS_ActionDrawCircleCR::getRadius() const{
-    return data->radius;
+    return m_circleData->radius;
 }
 
 LC_ActionOptionsWidget* RS_ActionDrawCircleCR::createOptionsWidget(){

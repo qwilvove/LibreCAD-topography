@@ -23,9 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LIBRECAD_LC_ABSTRACTACTIONDRAWLINE_H
 #define LIBRECAD_LC_ABSTRACTACTIONDRAWLINE_H
 
-#include "rs_line.h"
-#include "rs_vector.h"
-#include "rs_previewactioninterface.h"
 #include "lc_abstractactionwithpreview.h"
 
 /**
@@ -39,16 +36,16 @@ public:
         DIRECTION_NONE, DIRECTION_X, DIRECTION_Y, DIRECTION_POINT, DIRECTION_ANGLE
     };
 
-    LC_AbstractActionDrawLine(const char* name, RS_EntityContainer &container,RS_GraphicView &graphicView);
+    LC_AbstractActionDrawLine(const char* name, LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionNone);
     ~LC_AbstractActionDrawLine() override;
-    int getDirection() const{return direction;}
+    int getDirection() const{return m_direction;}
     void setNewStartPointState();
     void setSetAngleDirectionState();
     void setSetPointDirectionState();
     void setSetXDirectionState();
     void setSetYDirectionState();
     void setAngleValue(double value);
-    void setAngle(double value){angle = value;};
+    void setAngle(double value){doSetAngle(m_angleDegrees = value);};
     double getAngle() const;
     bool isAngleRelative() const;
     void setAngleIsRelative(bool value);
@@ -66,10 +63,10 @@ protected:
     };
 
 
-    double angle = 0.0; // fixed angle for line
-    bool angleIsRelative = true; // is angle relative to previous segment (if any)
-    int direction = DIRECTION_NONE; // current line direction
-    int primaryDirection = DIRECTION_NONE; // major direction of line - used for subsequent lines
+    double m_angleDegrees = 0.0; // fixed angle for line
+    bool m_angleIsRelative = true; // is angle relative to previous segment (if any)
+    int m_direction = DIRECTION_NONE; // current line direction
+    int m_primaryDirection = DIRECTION_NONE; // major direction of line - used for subsequent lines
 
     void setSetAngleState(bool relative);
     virtual bool processAngleValueInput(const QString &c);
@@ -77,14 +74,14 @@ protected:
     virtual bool doProcessCommandValue(int status, const QString &c);
     virtual const RS_Vector& getStartPointForAngleSnap() const = 0;
     virtual bool isStartPointValid() const;
-    void doOnLeftMouseButtonRelease(QMouseEvent *e, int status, const RS_Vector &snapped) override;
-    bool doCheckMayDrawPreview(QMouseEvent *pEvent, int status) override;
-    RS_Vector doGetMouseSnapPoint(QMouseEvent *e) override;
+    void doOnLeftMouseButtonRelease(LC_MouseEvent *e, int status, const RS_Vector &snapped) override;
+    bool doCheckMayDrawPreview(LC_MouseEvent *pEvent, int status) override;
+    RS_Vector doGetMouseSnapPoint(LC_MouseEvent *e) override;
     virtual void doSetStartPoint(RS_Vector vector) = 0;
     int doGetStatusForInitialSnapToRelativeZero() override;
     void doInitialSnapToRelativeZero(RS_Vector vector) override;
     void setStatusForValidStartPoint(int newStatus);
-
     virtual bool isAllowDirectionCommands();
+    void doSetAngle(double value);
 };
 #endif //LIBRECAD_LC_ABSTRACTACTIONDRAWLINE_H

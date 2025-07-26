@@ -24,10 +24,9 @@
 **
 **********************************************************************/
 #include "qg_dlgpoint.h"
-
 #include "rs_point.h"
 #include "rs_graphic.h"
-#include "rs_math.h"
+
 
 /*
  *  Constructs a QG_DlgPoint as a child of 'parent', with the
@@ -36,9 +35,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgPoint::QG_DlgPoint(QWidget* parent)
-    : LC_Dialog(parent, "PointProperties"){
+QG_DlgPoint::QG_DlgPoint(QWidget *parent, LC_GraphicViewport *pViewport, RS_Point * point)
+    :LC_EntityPropertiesDlg(parent, "PointProperties", pViewport){
     setupUi(this);
+    setEntity(point);
 }
 
 /*
@@ -56,30 +56,45 @@ void QG_DlgPoint::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgPoint::setPoint(RS_Point& p) {
-    point = &p;
-
-    RS_Graphic* graphic = point->getGraphic();
-    if (graphic) {
-        cbLayer->init(*(graphic->getLayerList()), false, false);
+void QG_DlgPoint::initAttributes(RS_Layer* layer, RS_LayerList& layerList){
+    if (layer) {
+        cbLayer->setLayer(*layer);
     }
-    RS_Layer* lay = point->getLayer(false);
-    if (lay) {
-        cbLayer->setLayer(*lay);
-    }
-
-    wPen->setPen(point, lay,"Pen");
-
-    QString s;
-    s.setNum(point->getPos().x);
-    lePosX->setText(s);
-    s.setNum(point->getPos().y);
-    lePosY->setText(s);
+    cbLayer->init(layerList, false, false);
+    wPen->setPen(m_entity, layer, tr("Pen"));
 }
 
-void QG_DlgPoint::updatePoint() {
-    point->setPos(RS_Vector(RS_Math::eval(lePosX->text()),
-                            RS_Math::eval(lePosY->text())));
-    point->setPen(wPen->getPen());
-    point->setLayer(cbLayer->currentText());
+void QG_DlgPoint::setEntity(RS_Point* p) {
+    m_entity = p;
+    setAttributes(m_entity);
+    setProperties();
+}
+
+void QG_DlgPoint::updateEntity() {
+    updateProperties();
+    updateAttributes();
+}
+
+void QG_DlgPoint::setAttributes(RS_Entity* e) {
+    RS_Graphic* graphic = e->getGraphic();
+    if (graphic != nullptr){
+        RS_Layer* lay = e->getLayer(false);
+        RS_LayerList &layerList = *(graphic->getLayerList());
+        initAttributes(lay, layerList);
+    }
+}
+
+void QG_DlgPoint::setProperties() {
+    toUI(m_entity->getPos(), lePosX, lePosY);
+}
+
+void QG_DlgPoint::updateAttributes() {
+    const RS_Pen &rsPen = wPen->getPen();
+    RS_Layer *layer = cbLayer->getLayer();
+    m_entity->setPen(rsPen);
+    m_entity->setLayer(layer);
+}
+
+void QG_DlgPoint::updateProperties() {
+    m_entity->setPos(toWCS(lePosX, lePosY, m_entity->getPos()));
 }

@@ -33,12 +33,9 @@
 class RS_ActionDrawEllipseFociPoint:public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawEllipseFociPoint(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawEllipseFociPoint(LC_ActionContext *actionContext);
     ~RS_ActionDrawEllipseFociPoint() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
 protected:
     /**
@@ -49,11 +46,12 @@ protected:
         SetFocus2,    //  Setting the second focus. */
         SetPoint    //  Setting a point on ellipse
     };
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
     double findRatio() const;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     QString getAdditionalHelpMessage() override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;

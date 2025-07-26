@@ -27,16 +27,16 @@
 #include<iostream>
 #include "rs_block.h"
 
+#include "rs_blocklist.h"
 #include "rs_graphic.h"
 #include "rs_insert.h"
 
 RS_BlockData::RS_BlockData(const QString& _name,
-						   const RS_Vector& _basePoint,
-						   bool _frozen):
-	name(_name)
-  ,basePoint(_basePoint)
-  ,frozen(_frozen)
-{
+                           const RS_Vector& _basePoint,
+                           bool _frozen):
+    name(_name)
+    ,basePoint(_basePoint)
+    ,frozen(_frozen){
 }
 
 bool RS_BlockData::isValid() const{
@@ -50,17 +50,14 @@ bool RS_BlockData::isValid() const{
  */
 RS_Block::RS_Block(RS_EntityContainer* parent,
                    const RS_BlockData& d)
-        : RS_Document(parent), data(d) {
-
-    pen = RS_Pen(RS_Color(128,128,128), RS2::Width01, RS2::SolidLine);
+    : RS_Document(parent), data(d){
+    setPen({RS_Color(128,128,128), RS2::Width01, RS2::SolidLine});
 }
 
-
 RS_Entity* RS_Block::clone() const {
-    RS_Block* blk = new RS_Block(*this);
+    auto blk = new RS_Block(*this);
     blk->setOwner(isOwner());
     blk->detach();
-    blk->initId();
     return blk;
 }
 
@@ -71,34 +68,33 @@ RS_LayerList* RS_Block::getLayerList() {
     return (g != nullptr) ? g->getLayerList() : nullptr;
 }
 
-
-
 RS_BlockList* RS_Block::getBlockList() {
     RS_Graphic* g = getGraphic();
     return (g != nullptr) ? g->getBlockList() : nullptr;
 }
 
-
-bool RS_Block::save(bool isAutoSave) {
+LC_DimStylesList* RS_Block::getDimStyleList() {
     RS_Graphic* g = getGraphic();
-    if (g) {
-        return g->save(isAutoSave);
-    } else {
-        return false;
-    }
+    return (g != nullptr) ? g->getDimStyleList() : nullptr;
 }
 
+// bool RS_Block::save(bool isAutoSave) {
+//     RS_Graphic* g = getGraphic();
+//     if (g) {
+//         return g->save(isAutoSave);
+//     } else {
+//         return false;
+//     }
+// }
 
-bool RS_Block::saveAs(const QString& filename, RS2::FormatType type, bool force) {
-    RS_Graphic* g = getGraphic();
-    if (g) {
-        return g->saveAs(filename, type, force);
-    } else {
-        return false;
-    }
-}
-
-
+// bool RS_Block::saveAs(const QString& filename, RS2::FormatType type, bool force) {
+//     RS_Graphic* g = getGraphic();
+//     if (g) {
+//         return g->saveAs(filename, type, force);
+//     } else {
+//         return false;
+//     }
+// }
 
 /**
  * Sets the parent documents modified status to 'm'.
@@ -111,7 +107,6 @@ void RS_Block::setModified(bool m) {
     modified = m;
 }
 
-
 /**
  * Sets the visibility of the Block in block list
  *
@@ -121,14 +116,12 @@ void RS_Block::visibleInBlockList(bool v) {
     data.visibleInBlockList = v;
 }
 
-
 /**
  * Returns the visibility of the Block in block list
  */
 bool RS_Block::isVisibleInBlockList() const {
     return data.visibleInBlockList;
 }
-
 
 /**
  * Sets selection state of the block in block list
@@ -159,7 +152,7 @@ QStringList RS_Block::findNestedInsert(const QString& bName) {
 
     QStringList bnChain;
 
-    for (RS_Entity* e: entities) {
+    for (RS_Entity* e: *this) {
         if (e->rtti()==RS2::EntityInsert) {
             RS_Insert* i = ((RS_Insert*)e);
             QString iName = i->getName();

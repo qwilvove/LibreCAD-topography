@@ -36,17 +36,12 @@ struct RS_CircleData;
 class RS_ActionDrawCircleTan1_2P:public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawCircleTan1_2P(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawCircleTan1_2P(LC_ActionContext *actionContext);
     ~RS_ActionDrawCircleTan1_2P() override;
     void init(int status) override;
     bool getCenters();
     bool preparePreview();
-    void mouseMoveEvent(QMouseEvent *e) override;
-    //        void commandEvent(RS_CommandEvent* e) override;
     void finish(bool updateTB) override;
-    //    void setRadius(const double& r);
     double getRadius() const;
 protected:
     /**
@@ -58,17 +53,18 @@ protected:
         SetPoint2 = 2, //  Setting the Second Point.  */
         SetCenter //  Setting the internal or external tangent circle's center.  */
     };
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
+    RS_AtomicEntity *m_baseEntity = nullptr;
 
-    RS_Entity *catchCircle(QMouseEvent *e, bool forPreview);
-    RS_AtomicEntity *baseEntity = nullptr;
+    RS_Entity *catchCircle(LC_MouseEvent *e, bool forPreview);
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     RS_Vector getTangentPoint(RS_Vector &creatingCircleCenter, bool fromOriginalCircle) const;
     void updateMouseButtonHints() override;
     void doTrigger() override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
 };
 #endif

@@ -26,31 +26,29 @@
 #ifndef QG_LINEOPTIONS_H
 #define QG_LINEOPTIONS_H
 
-#include<memory>
-#include<QWidget>
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionInterface;
 class RS_ActionDrawLine;
+
 namespace Ui {
-class Ui_LineOptions;
+    class Ui_LineOptions;
 }
 
-class QG_LineOptions : public LC_ActionOptionsWidgetBase
-{
+class QG_LineOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     QG_LineOptions();
     ~QG_LineOptions() override;
 
+    void enableButtons();
 public slots:
-    virtual void close(); // fixme - rename
-    virtual void undo();
-    virtual void redo();
+    void close(); // fixme - rename
+    void undo();
+    void redo();
     void languageChange() override;
 protected:
-    RS_ActionDrawLine* action;
+    RS_ActionDrawLine* m_action = nullptr;
     void doSetAction(RS_ActionInterface *a, bool update) override;
     void doSaveSettings() override;
 private:

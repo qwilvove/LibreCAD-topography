@@ -24,7 +24,6 @@
 **
 **********************************************************************/
 
-
 #include "rs_overlayline.h"
 #include "rs_painter.h"
 // fixme - class is not used, but probably may be used again later, so won't remove it so far
@@ -37,10 +36,6 @@ RS_OverlayLine::RS_OverlayLine(RS_EntityContainer* parent,
 }
 
 
-void RS_OverlayLine::draw(RS_Painter* painter, [[maybe_unused]]RS_GraphicView* view, double& /*patternOffset*/) {
-   /* if (painter==NULL || view==NULL) {
-        return;
-    }*/
-        painter->drawLine(getStartpoint(),getEndpoint());
-
+void RS_OverlayLine::draw(RS_Painter* painter) {
+    painter->drawLineWCS(getStartpoint(),getEndpoint());
 }

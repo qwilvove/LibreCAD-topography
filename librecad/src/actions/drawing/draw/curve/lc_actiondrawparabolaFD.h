@@ -36,12 +36,9 @@ class LC_Parabola;
 class LC_ActionDrawParabolaFD : public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    LC_ActionDrawParabolaFD(RS_EntityContainer& container,
-                                 RS_GraphicView& graphicView);
+    LC_ActionDrawParabolaFD(LC_ActionContext *actionContext);
     ~LC_ActionDrawParabolaFD() override;
-
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
     QStringList getAvailableCommands() override;
 protected:
     /**
@@ -54,14 +51,15 @@ protected:
         SetEndPoint     //  Setting the End Point.  */
     };
 
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
     RS2::CursorType doGetMouseCursor(int status) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
     LC_Parabola* preparePreview();
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
     void doTrigger() override;
 };
 #endif

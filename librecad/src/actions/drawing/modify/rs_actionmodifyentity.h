@@ -39,22 +39,20 @@ class RS_Entity;
 class RS_ActionModifyEntity : public RS_PreviewActionInterface {
 Q_OBJECT
 public:
-    RS_ActionModifyEntity(RS_EntityContainer& container,RS_GraphicView& graphicView,bool modifyCursor);
-    void setEntity(RS_Entity* entity) {
-        en=entity;
-    }
-    // display the entity as selected
-    void setDisplaySelected(bool selected);
-    void mouseMoveEvent(QMouseEvent *event) override;
+    RS_ActionModifyEntity(LC_ActionContext *actionContext,RS_Entity* entity);
+    void init(int status) override;
 protected:
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
     void doTrigger() override;
+    // display the entity as selected
+    void setDisplaySelected(bool selected);
 private:
-    RS_Entity* en = nullptr;
-    bool modifyCursor = true;
+    RS_Entity* m_entity = nullptr;
+    bool m_modifyCursor = true;
 };
 
 #endif

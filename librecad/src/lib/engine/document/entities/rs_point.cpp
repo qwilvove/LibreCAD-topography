@@ -24,13 +24,10 @@
 **
 **********************************************************************/
 #include<iostream>
-#include<cmath>
 #include "rs_point.h"
+
 #include "rs_circle.h"
-#include "rs_graphic.h"
-#include "rs_graphicview.h"
 #include "rs_painter.h"
-#include "lc_defaults.h"
 
 RS_Point::RS_Point(RS_EntityContainer* parent,
                    const RS_PointData& d)
@@ -40,7 +37,6 @@ RS_Point::RS_Point(RS_EntityContainer* parent,
 
 RS_Entity* RS_Point::clone() const {
 	auto* p = new RS_Point(*this);
-	p->initId();
 	return p;
 }
 
@@ -159,7 +155,7 @@ void RS_Point::move(const RS_Vector& offset) {
     calculateBorders();
 }
 
-void RS_Point::rotate(const RS_Vector& center, const double& angle) {
+void RS_Point::rotate(const RS_Vector& center, double angle) {
     data.pos.rotate(center, angle);
     calculateBorders();
 }
@@ -185,29 +181,9 @@ RS_Entity& RS_Point::shear(double k){
     return *this;
 }
 
-void RS_Point::draw(RS_Painter* painter,RS_GraphicView* view, double& /*patternOffset*/) {
-/*    if (painter == nullptr || view == nullptr){
-        return;
-    }*/
-    RS_Vector guiPos = view->toGui(getPos());
-    painter->drawPoint(guiPos, view->getPointMode(), view->getPointSize());
+void RS_Point::draw(RS_Painter* painter) {
+    painter->drawPointEntityWCS(data.pos);
 }
-
-int RS_Point::determinePointSreenSize(const RS_Painter *painter, const RS_GraphicView *view, double pdsize) const{
-    int deviceHeight = painter->getHeight();
-    int screenPDSize;
-    if (pdsize == 0){
-        screenPDSize = deviceHeight / 20;
-    }
-    else if (DXF_FORMAT_PDSize_isPercent(pdsize)){
-        screenPDSize = (deviceHeight * DXF_FORMAT_PDSize_Percent(pdsize)) / 100;
-    }
-    else {
-        screenPDSize = view->toGuiDY(pdsize);
-    }
-    return screenPDSize;
-}
-
 
 /**
  * Dumps the point's data to stdout.

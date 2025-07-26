@@ -128,7 +128,7 @@
      </property>
      <property name="icon">
       <iconset resource="../../../../res/icons/icons.qrc">
-       <normaloff>:/icons/line.svg</normaloff>:/icons/line.svg</iconset>
+       <normaloff>:/icons/line.lci</normaloff>:/icons/line.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -148,7 +148,7 @@
      </property>
      <property name="icon">
       <iconset resource="../../../../res/icons/icons.qrc">
-       <normaloff>:/icons/arc_continuation.svg</normaloff>:/icons/arc_continuation.svg</iconset>
+       <normaloff>:/icons/arc_continuation.lci</normaloff>:/icons/arc_continuation.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -168,7 +168,7 @@
      </property>
      <property name="icon">
       <iconset resource="../../../../res/icons/icons.qrc">
-       <normaloff>:/icons/arc_2p_radius.svg</normaloff>:/icons/arc_2p_radius.svg</iconset>
+       <normaloff>:/icons/arc_2p_radius.lci</normaloff>:/icons/arc_2p_radius.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -188,7 +188,7 @@
      </property>
      <property name="icon">
       <iconset resource="../../../../res/icons/icons.qrc">
-       <normaloff>:/icons/arc_2p_length.svg</normaloff>:/icons/arc_2p_length.svg</iconset>
+       <normaloff>:/icons/arc_2p_length.lci</normaloff>:/icons/arc_2p_length.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -208,7 +208,7 @@
      </property>
      <property name="icon">
       <iconset resource="../../../../res/icons/icons.qrc">
-       <normaloff>:/icons/arc_2p_angle.svg</normaloff>:/icons/arc_2p_angle.svg</iconset>
+       <normaloff>:/icons/arc_2p_angle.lci</normaloff>:/icons/arc_2p_angle.lci</iconset>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -312,8 +312,8 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../res/extui/extui.qrc">
-          <normaloff>:/extui/dirneg.png</normaloff>:/extui/dirneg.png</iconset>
+         <iconset resource="../../../../res/icons/icons.qrc">
+          <normaloff>:/icons/dirneg.lci</normaloff>:/icons/dirneg.lci</iconset>
         </property>
        </widget>
       </item>
@@ -326,8 +326,8 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../../res/extui/extui.qrc">
-          <normaloff>:/extui/dirpos.png</normaloff>:/extui/dirpos.png</iconset>
+         <iconset resource="../../../../res/icons/icons.qrc">
+          <normaloff>:/icons/dirpos.lci</normaloff>:/icons/dirpos.lci</iconset>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -356,7 +356,6 @@
  <resources>
   <include location="../../../../res/icons/icons.qrc"/>
   <include location="../../../../res/icons/icons.qrc"/>
-  <include location="../../../../res/extui/extui.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -411,7 +410,7 @@
  <slots>
   <slot>undo()</slot>
   <slot>setRadiusToActionAndView(QString)</slot>
-  <slot>updateAngle(QString)</slot>
+  <slot>onAngleChanged(QString)</slot>
   <slot>setModeToActionAndView(int)</slot>
   <slot>updateDirection(bool)</slot>
  </slots>

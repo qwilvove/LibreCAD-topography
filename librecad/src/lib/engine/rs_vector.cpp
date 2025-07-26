@@ -233,9 +233,7 @@ double RS_Vector::distanceTo(const RS_Vector& v) const {
     if (!valid || !v.valid) {
         return RS_MAXDOUBLE;
     }
-    else {
-        return (*this - v).magnitude();
-    }
+    return (*this - v).magnitude();
 }
 
 /**
@@ -243,7 +241,8 @@ double RS_Vector::distanceTo(const RS_Vector& v) const {
  */
 bool RS_Vector::isInWindow(const RS_Vector& firstCorner,
                            const RS_Vector& secondCorner) const {
-    if (!valid) return false;
+    if (!valid)
+        return false;
     return LC_Rect{firstCorner, secondCorner}.inArea(*this);
 }
 
@@ -294,6 +293,19 @@ RS_Vector& RS_Vector::rotate(const RS_Vector& angleVector) {
     x = x0;
 
     return *this;
+}
+
+/**
+ * @brief RS_Vector::rotated - returns a rotated copy of the current vector
+ * @param angleVector - the direction vector of the rotation
+ * @return - the rotated vector
+ */
+RS_Vector RS_Vector::rotated(const RS_Vector& angleVector) const {
+    return RS_Vector{*this}.rotate(angleVector);
+}
+
+RS_Vector RS_Vector::rotated(double angle) const {
+    return rotated(RS_Vector{angle});
 }
 
 /**
@@ -596,15 +608,6 @@ RS_Vector RS_Vector::crossP(const RS_Vector& v1, const RS_Vector& v2) {
     return {v1.y*v2.z - v1.z*v2.y,
             v1.z*v2.x - v1.x*v2.z,
             v1.x*v2.y - v1.y*v2.x};
-}
-
-/**
- * Constructor for no solution.
- */
-RS_VectorSolutions::RS_VectorSolutions():
-    vector(0)
-    ,tangent(false)
-{
 }
 
 RS_VectorSolutions::RS_VectorSolutions(std::vector<RS_Vector> vectors):

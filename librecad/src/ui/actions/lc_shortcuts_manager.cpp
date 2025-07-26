@@ -21,11 +21,15 @@
  ******************************************************************************/
 
 #include <QApplication>
-#include <QDir>
 #include "lc_shortcuts_manager.h"
-#include "rs_settings.h"
+
+#include <QDir>
+#include <QFile>
+
 #include "lc_shortcutsstorage.h"
 #include "rs_debug.h"
+#include "rs_settings.h"
+#include "rs_system.h"
 
 const char* LC_ShortcutsManager::PROPERTY_SHORTCUT_BACKUP = "tooltip.original";
 
@@ -69,6 +73,17 @@ void LC_ShortcutsManager::updateActionTooltips(const QMap<QString, QAction *> &a
     updateActionShortcutTooltips(actionsMap, showShortcutsInActionsTooltips);
 }
 
+void LC_ShortcutsManager::init() {
+    QString defaultFileName = getDefaultShortcutsFileName();
+    if (!defaultFileName.isEmpty()) {
+        QFile defaultFile(defaultFileName);
+        if (defaultFile.exists()) {
+            QString backupFileName = defaultFileName + ".bak";
+            QFile::copy(defaultFileName, backupFileName);
+        }
+    }
+}
+
 void LC_ShortcutsManager::applyShortcutsMapToActionsMap(QMap<QString, LC_ShortcutInfo*> &shortcuts, QMap<QString, QAction *> &actionsMap) const{
     for (auto [key, shortcut] : shortcuts.asKeyValueRange()){
         QAction* action = actionsMap[key];
@@ -83,6 +98,7 @@ void LC_ShortcutsManager::applyKeySequencesMapToActionsMap(QMap<QString, QKeySeq
         QAction* action = actionsMap[name];
         if (action != nullptr){
             action->setShortcut(shortcut);
+            action->setShortcutContext(Qt::ApplicationShortcut);
         }
     }
 }
@@ -150,7 +166,7 @@ void LC_ShortcutsManager::updateActionShortcutTooltips(const QMap<QString, QActi
                 // it might be either due to incorrect data in settings file, or if the action was created somewhere in
                 // code that is outside actions factory.
                 // in any case, just ignore that key
-                LC_ERR << "Action is null in map, key "  << key;
+                LC_ERR << "LC_ShortcutsManager::updateActionShortcutTooltips - Action is null in the map, ignored. Key "  << key;
             }
         }
     }
@@ -175,11 +191,11 @@ QString LC_ShortcutsManager::strippedActionText(QString s) const{
 }
 
 QString LC_ShortcutsManager::getShortcutsMappingsFolder() const {
-    QString result = LC_GET_ONE_STR("Paths","ShortcutsMappings", QDir::homePath());
-    return result;
+    QString settingsDir = LC_GET_ONE_STR("Paths", "OtherSettingsDir", RS_System::instance()->getAppDataDir()).trimmed();
+    return settingsDir;
 }
 
 QString LC_ShortcutsManager::getDefaultShortcutsFileName() const {
-    QString path =  getShortcutsMappingsFolder() + "/default.lcs";
+    QString path =  getShortcutsMappingsFolder() + "/shortcuts.lcsc";
     return QDir::toNativeSeparators(path);
 }

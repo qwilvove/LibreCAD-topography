@@ -21,6 +21,7 @@
  ******************************************************************************/
 
 #include "lc_selectwindowoptions.h"
+#include "rs_actionselectwindow.h"
 #include "ui_lc_selectwindowoptions.h"
 
 LC_SelectWindowOptions::LC_SelectWindowOptions()
@@ -71,7 +72,7 @@ void LC_SelectWindowOptions::doSaveSettings() {
 }
 
 void LC_SelectWindowOptions::doSetAction(RS_ActionInterface *a, bool update) {
-    action = dynamic_cast<RS_ActionSelectWindow *>(a);
+    m_action = dynamic_cast<RS_ActionSelectWindow *>(a);
     bool all;
     bool line = false;
     bool arc  = false;
@@ -89,8 +90,8 @@ void LC_SelectWindowOptions::doSetAction(RS_ActionInterface *a, bool update) {
     bool insert = false;
     QList<RS2::EntityType> entityTypes;
     if (update){
-        all = action->isSelectAllEntityTypes();
-        entityTypes = action->getEntityTypesToSelect();
+        all = m_action->isSelectAllEntityTypes();
+        entityTypes = m_action->getEntityTypesToSelect();
     }
     else{
         all = loadBool("All", true);
@@ -156,6 +157,8 @@ void LC_SelectWindowOptions::doSetAction(RS_ActionInterface *a, bool update) {
             entityTypes << RS2::EntityDimDiametric;
             entityTypes << RS2::EntityDimLeader;
             entityTypes << RS2::EntityDimLinear;
+            entityTypes << RS2::EntityDimOrdinate;
+            entityTypes << RS2::EntityTolerance;
             entityTypes << RS2::EntityDimAngular;
             entityTypes << RS2::EntityDimAligned;
         }
@@ -211,14 +214,25 @@ void LC_SelectWindowOptions::onTypeToggled([[maybe_unused]]bool value) {
     if (ui->cbWipeout->isChecked()){
 //            entityTypes << RS2::EntityText;
     }
-    action->setEntityTypesToSelect(entityTypes);
+    if (ui->cbDimension->isChecked()) {
+        entityTypes << RS2::EntityDimRadial;
+        entityTypes << RS2::EntityDimArc;
+        entityTypes << RS2::EntityDimDiametric;
+        entityTypes << RS2::EntityDimLeader;
+        entityTypes << RS2::EntityDimLinear;
+        entityTypes << RS2::EntityDimOrdinate;
+        entityTypes << RS2::EntityTolerance;
+        entityTypes << RS2::EntityDimAngular;
+        entityTypes << RS2::EntityDimAligned;
+    }
+    m_action->setEntityTypesToSelect(entityTypes);
   /*  if (entityTypes.isEmpty()){
         setSelectAllToActionAndView(true);
     }*/
 }
 
 void LC_SelectWindowOptions::setEntityTypesToActinAndView(QList<RS2::EntityType> entityTypes) {
-    action->setEntityTypesToSelect(entityTypes);
+    m_action->setEntityTypesToSelect(entityTypes);
     ui->cbLine->setChecked(false);
     ui->cbArc->setChecked(false);
     ui->cbCircle->setChecked(false);
@@ -272,6 +286,8 @@ void LC_SelectWindowOptions::setEntityTypesToActinAndView(QList<RS2::EntityType>
             case RS2::EntityDimArc:
             case RS2::EntityDimAngular:
             case RS2::EntityDimLinear:
+            case RS2::EntityDimOrdinate:
+            case RS2::EntityTolerance:
             case RS2::EntityDimDiametric:
             case RS2::EntityDimRadial:
                 ui->cbDimension->setChecked(true);
@@ -285,7 +301,7 @@ void LC_SelectWindowOptions::setEntityTypesToActinAndView(QList<RS2::EntityType>
 
 void LC_SelectWindowOptions::setSelectAllToActionAndView(bool value) {
     ui->cbAll->setChecked(value);
-    action->setSelectAllEntityTypes(value);
+    m_action->setSelectAllEntityTypes(value);
     bool enable = !value;
     enableEntityTypes(enable);
     if (!value){

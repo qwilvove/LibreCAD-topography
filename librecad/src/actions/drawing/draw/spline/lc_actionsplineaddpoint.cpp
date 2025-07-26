@@ -19,38 +19,34 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
-#include <QMouseEvent>
-
 #include "lc_actionsplineaddpoint.h"
-#include "lc_actionsplinemodifybase.h"
+
 #include "lc_splinepoints.h"
-#include "rs_document.h"
-#include "rs_graphicview.h"
+#include "rs_entity.h"
 #include "rs_spline.h"
 
 namespace {
-    const EntityTypeList enTypeList = {RS2::EntitySpline, RS2::EntitySplinePoints};
+    const EntityTypeList g_enTypeList = {RS2::EntitySpline, RS2::EntitySplinePoints};
 }
 
-LC_ActionSplineAddPoint::LC_ActionSplineAddPoint(RS_EntityContainer &container, RS_GraphicView &graphicView)
-   :LC_ActionSplineModifyBase("SplineAddPoint", container, graphicView) {
-    actionType = RS2::ActionDrawSplinePointAdd;
+LC_ActionSplineAddPoint::LC_ActionSplineAddPoint(LC_ActionContext *actionContext)
+   :LC_ActionSplineModifyBase("SplineAddPoint", actionContext, RS2::ActionDrawSplinePointAdd) {
 }
 
 void LC_ActionSplineAddPoint::doCompleteTrigger() {
-    moveRelativeZero(vertexPoint);
+    moveRelativeZero(m_vertexPoint);
 }
 
 void LC_ActionSplineAddPoint::doAfterTrigger() {
-    directionFromStart = false;
-    endpointIsSelected = false;
+    m_directionFromStart = false;
+    m_endpointIsSelected = false;
     setStatus(SetBeforeControlPoint);
 }
 
-void LC_ActionSplineAddPoint::onMouseMove(RS_Vector mouse, int status, QMouseEvent *e) {
+void LC_ActionSplineAddPoint::onMouseMove(RS_Vector mouse, int status, LC_MouseEvent *e) {
     switch (status) {
         case SetEntity: {
-            auto entity = catchEntity(e, enTypeList);
+            auto entity = catchEntityByEvent(e, g_enTypeList);
             if (entity != nullptr){
                 if (mayModifySplineEntity(entity)) {
                     highlightHoverWithRefPoints(entity, true);
@@ -59,9 +55,9 @@ void LC_ActionSplineAddPoint::onMouseMove(RS_Vector mouse, int status, QMouseEve
             break;
         }
         case SetBeforeControlPoint:{
-            RS_Vector nearestRef = entityToModify->getNearestRef(mouse);
-            if (nearestRef != entityToModify->getStartpoint()){
-                RS_Vector nearestPointOnEntity = entityToModify->getNearestPointOnEntity(mouse, true);
+            RS_Vector nearestRef = m_entityToModify->getNearestRef(mouse);
+            if (nearestRef != m_entityToModify->getStartpoint()){
+                RS_Vector nearestPointOnEntity = m_entityToModify->getNearestPointOnEntity(mouse, true);
                 previewRefPoint(nearestPointOnEntity);
                 previewRefSelectablePoint(nearestRef);
             }
@@ -69,18 +65,18 @@ void LC_ActionSplineAddPoint::onMouseMove(RS_Vector mouse, int status, QMouseEve
         }
         case SetControlPoint:{
             previewRefSelectablePoint(mouse);
-            RS_Vector nearestPointOnEntity = entityToModify->getNearestPointOnEntity(mouse, true);
+            RS_Vector nearestPointOnEntity = m_entityToModify->getNearestPointOnEntity(mouse, true);
             if (nearestPointOnEntity.valid){
                 previewRefPoint(nearestPointOnEntity);
-                previewRefPoint(selectedVertexPoint);
+                previewRefPoint(m_selectedVertexPoint);
             }
             bool insertAfter = false;
-            if (isShift(e)){
-                if (!endpointIsSelected){ // don't let inserting after endpoint
+            if (e->isShift){
+                if (!m_endpointIsSelected){ // don't let inserting after endpoint
                     insertAfter = true;
                 }
             }
-            RS_Entity *previewUpdatedEntity = createModifiedSplineEntity(entityToModify, mouse, insertAfter);
+            RS_Entity *previewUpdatedEntity = createModifiedSplineEntity(m_entityToModify, mouse, insertAfter);
             if (previewUpdatedEntity != nullptr) {
                 previewEntity(previewUpdatedEntity);
             }
@@ -91,37 +87,36 @@ void LC_ActionSplineAddPoint::onMouseMove(RS_Vector mouse, int status, QMouseEve
     }
 }
 
-void LC_ActionSplineAddPoint::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
+void LC_ActionSplineAddPoint::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
     switch (status){
         case SetEntity:{
-            auto entity = catchEntity(e, enTypeList);
+            auto entity = catchEntityByEvent(e, g_enTypeList);
             if (entity != nullptr && mayModifySplineEntity(entity)){
-                entityToModify = entity;
-                entityToModify->setSelected(true);
-                graphicView->redraw(RS2::RedrawDrawing);
+                m_entityToModify = entity;
+                m_entityToModify->setSelected(true);
+                redrawDrawing();
                 setStatus(SetBeforeControlPoint);
             }
             break;
         }
         case SetBeforeControlPoint:{
-            RS_Vector mouse = snapPoint(e);
-            RS_Vector nearestRef = entityToModify->getNearestRef(mouse);
-            if (nearestRef != entityToModify->getStartpoint()){
-                selectedVertexPoint = nearestRef;
+            RS_Vector mouse = e->snapPoint;
+            RS_Vector nearestRef = m_entityToModify->getNearestRef(mouse);
+            if (nearestRef != m_entityToModify->getStartpoint()){
+                m_selectedVertexPoint = nearestRef;
                 moveRelativeZero(nearestRef);
                 setStatus(SetControlPoint);
-                endpointIsSelected = nearestRef == entityToModify->getEndpoint();
+                m_endpointIsSelected = nearestRef == m_entityToModify->getEndpoint();
             }
             break;
         }
         case SetControlPoint:{
-            if (isShift(e)){
-                if (!endpointIsSelected){ // don't let inserting after endpoint
-                    directionFromStart = true;
+            if (e->isShift){
+                if (!m_endpointIsSelected){ // don't let inserting after endpoint
+                    m_directionFromStart = true;
                 }
             }
             fireCoordinateEventForSnap(e);
-            trigger();
         }
         default:
             break;
@@ -140,7 +135,7 @@ RS_Entity *LC_ActionSplineAddPoint::createModifiedSplineEntity(RS_Entity *e, RS_
             if (splinePointsCount > 0){
                 for (unsigned int i = 0; i < splinePointsCount; i++) {
                     RS_Vector cp = data.splinePoints.at(i);
-                    if (cp == selectedVertexPoint) {
+                    if (cp == m_selectedVertexPoint) {
                         data.splinePoints.insert(data.splinePoints.begin()+ i + insertIndexAdjustment, controlPoint);
                         break;
                     }
@@ -149,7 +144,7 @@ RS_Entity *LC_ActionSplineAddPoint::createModifiedSplineEntity(RS_Entity *e, RS_
             else{
                 for (unsigned int i = 0; i < controlPointsCount; i++) {
                     RS_Vector cp = data.controlPoints.at(i);
-                    if (cp == selectedVertexPoint) {
+                    if (cp == m_selectedVertexPoint) {
                         data.controlPoints.insert(data.controlPoints.begin()+ i + insertIndexAdjustment, controlPoint);
                         break;
                     }
@@ -167,7 +162,7 @@ RS_Entity *LC_ActionSplineAddPoint::createModifiedSplineEntity(RS_Entity *e, RS_
             int insertIndexAdjustment = adjustPosition ? 1 : 0;
             for (unsigned int i = 0; i < controlPointsCount; i++) {
                 RS_Vector cp = data.controlPoints.at(i);
-                if (cp == selectedVertexPoint) {
+                if (cp == m_selectedVertexPoint) {
                     data.controlPoints.insert(data.controlPoints.begin()+ i + insertIndexAdjustment, controlPoint);
                     break;
                 }
@@ -191,7 +186,7 @@ RS_Entity *LC_ActionSplineAddPoint::createModifiedSplineEntity(RS_Entity *e, RS_
 
 void LC_ActionSplineAddPoint::onCoordinateEvent(int status, [[maybe_unused]]bool isZero, const RS_Vector &pos) {
     if (status == SetControlPoint){
-        vertexPoint = pos;
+        m_vertexPoint = pos;
         trigger();
     }
 }
@@ -207,7 +202,7 @@ void LC_ActionSplineAddPoint::updateMouseButtonHints() {
             break;
         }
         case SetControlPoint: {
-            updateMouseWidgetTRCancel(tr("Specify control point"), endpointIsSelected ? MOD_NONE : MOD_SHIFT_LC(tr("Insert AFTER selected point")));
+            updateMouseWidgetTRCancel(tr("Specify control point"), m_endpointIsSelected ? MOD_NONE : MOD_SHIFT_LC(tr("Insert AFTER selected point")));
             break;
         }
         default:

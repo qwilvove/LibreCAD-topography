@@ -25,46 +25,43 @@
 **
 **********************************************************************/
 
-
 #ifndef RS_ENTITY_H
 #define RS_ENTITY_H
 
-#include <map>
-#include "rs_vector.h"
-#include "rs_pen.h"
-#include "rs_undoable.h"
+#include <QString>
 
-class RS_Arc;
-class RS_Block;
-class RS_Circle;
-class RS_Document;
-class RS_EntityContainer;
-class RS_Graphic;
-class RS_GraphicView;
-class RS_Insert;
+#include "lc_drawable.h"
+#include "rs_undoable.h"
+#include "rs_vector.h"
+
+class RS_Pen;
 class RS_Line;
-class RS_Painter;
-class RS_Point;
-class RS_Polyline;
-class RS_Text;
 class RS_Layer;
+class RS_Document;
+class RS_Insert;
+class RS_Block;
+class RS_Graphic;
+class RS_EntityContainer;
 class LC_Quadratic;
-class RS_Vector;
-class RS_VectorSolutions;
-class QString;
 
 /**
  * Base class for an entity (line, arc, circle, ...)
  *
  * @author Andrew Mustun
  */
-class RS_Entity:public RS_Undoable {
+class RS_Entity:public RS_Undoable, public LC_Drawable {
 public:
     RS_Entity(RS_EntityContainer *parent = nullptr);
+    RS_Entity(const RS_Entity& entity);
+    RS_Entity& operator = (const RS_Entity& entity);
+    RS_Entity(RS_Entity&& entity);
+    RS_Entity& operator = (RS_Entity&& entity);
+    ~RS_Entity() override;
+
     void init();
-    virtual void initId();
+    void initId();
     virtual RS_Entity *clone() const = 0;
-    virtual RS_Entity *cloneProxy(RS_GraphicView *view) const;
+    virtual RS_Entity *cloneProxy() const;
 
     virtual void reparent(RS_EntityContainer *parent){
         this->parent = parent;
@@ -74,17 +71,6 @@ public:
     void moveBorders(const RS_Vector &offset);
     void scaleBorders(const RS_Vector &center, const RS_Vector &factor);
 
-    /**
-     * Must be overwritten to return the rtti of this entity
-     * (e.g. RS2::EntityArc).
-     */
-    virtual RS2::EntityType rtti() const{
-        return RS2::EntityUnknown;
-    }
-
-    bool is(RS2::EntityType rttiCandidate) const{
-        return rtti() == rttiCandidate;
-    }
 
     /**
      * Identify all entities as undoable entities.
@@ -97,9 +83,7 @@ public:
     /**
      * @return Unique Id of this entity.
      */
-    unsigned long int getId() const{
-        return id;
-    }
+    unsigned long long getId() const;
 
     /**
      * This method must be overwritten in subclasses and return the
@@ -153,9 +137,7 @@ public:
      * Sets the explicit pen for this entity or a pen with special
      * attributes such as BY_LAYER, ..
      */
-    void setPen(const RS_Pen &pen){
-        this->pen = pen;
-    }
+    void setPen(const RS_Pen &pen);
 
     void setPenToActive();
     RS_Pen getPen(bool resolve = true) const;
@@ -196,7 +178,7 @@ public:
     virtual void setProcessed(bool on);
     bool isInWindow(RS_Vector v1, RS_Vector v2) const;
 
-    virtual bool hasEndpointsWithinWindow(const RS_Vector & /*v1*/, const RS_Vector & /*v2*/){
+    virtual bool hasEndpointsWithinWindow(const RS_Vector & /*v1*/, const RS_Vector & /*v2*/) const {
         return false;
     }
 
@@ -469,7 +451,7 @@ public:
      * Implementations must rotate the entity by the given angle around
      * the given center.
      */
-    virtual void rotate(const RS_Vector &center, const double &angle) = 0;
+    virtual void rotate(const RS_Vector &center, double angle) = 0;
     virtual void rotate(const RS_Vector &center, const RS_Vector &angleVector) = 0;
     /**
      * Implementations must scale the entity by the given factors.
@@ -547,24 +529,15 @@ public:
         return;
     }
 
-    /** whether the entity's bounding box intersects with visible portion of graphic view */
-    virtual bool isVisibleInWindow(RS_GraphicView *view) const;
-    /**
-     * Implementations must draw the entity on the given device.
-     */
-    virtual void draw(
-        RS_Painter *painter, RS_GraphicView *view,
-        double &patternOffset) = 0;
-
-    virtual void drawAsChild(
-        RS_Painter *painter, RS_GraphicView *view,
-        double &patternOffset){
-        draw(painter, view, patternOffset);
+    virtual void drawAsChild(RS_Painter *painter){
+        draw(painter);
     }
-    virtual void drawDraft(
-        RS_Painter *painter, RS_GraphicView *view,
-        double &patternOffset) {draw(painter, view, patternOffset);};
-    double getStyleFactor(RS_GraphicView *view);
+
+    virtual void drawDraft(RS_Painter *painter) {
+        draw(painter);
+    };
+
+//    double getStyleFactor(RS_GraphicView *view);
     QString getUserDefVar(const QString &key) const;
     std::vector<QString> getAllKeys() const;
     void setUserDefVar(QString key, QString val);
@@ -620,16 +593,16 @@ protected:
     //! maximum coordinates
     RS_Vector maxV;
     //! Pointer to layer
-    RS_Layer *layer = nullptr;
-    //! Entity id
-    unsigned long long id = 0;
-    //! pen (attributes) for this entity
-    RS_Pen pen;
+    RS_Layer *m_layer = nullptr;
     //! auto updating enabled?
     bool updateEnabled = false;
 
 private:
-    std::map<QString, QString> varList;
+    //! Entity m_id
+    unsigned long long m_id = 0;
+    // pImp to delay pulling in Qt headers
+    struct Impl;
+    std::unique_ptr<Impl> m_pImpl;
 };
 
 #endif

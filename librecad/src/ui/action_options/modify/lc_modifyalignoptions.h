@@ -23,12 +23,11 @@
 #ifndef LC_MODIFYALIGNOPTIONS_H
 #define LC_MODIFYALIGNOPTIONS_H
 
-#include <QWidget>
-#include "lc_actionmodifyalign.h"
 #include "lc_actionoptionswidget.h"
 
+class LC_ActionModifyAlignData;
 namespace Ui {
-class LC_ModifyAlignOptions;
+    class LC_ModifyAlignOptions;
 }
 
 class LC_ModifyAlignOptions : public LC_ActionOptionsWidget{
@@ -49,18 +48,13 @@ protected:
     void doSetAction(RS_ActionInterface *a, bool update) override;
     int getHAlignFromUI();
     int getVAlignFromUI();
-
     bool checkActionRttiValid(RS2::ActionType actionType) override;
-
     QString getSettingsGroupName() override;
-
     QString getSettingsOptionNamePrefix() override;
-
 private:
     Ui::LC_ModifyAlignOptions *ui;
-    LC_ActionModifyAlignData* action;
-
-    bool forAlignAction = false;
+    LC_ActionModifyAlignData* m_action = nullptr;
+    bool m_forAlignAction = false;
     void setAlignTypeToActionAndView(int type);
     void setVAlignToActionAndView(int valign);
     void setHAlignToActionAndView(int halign);

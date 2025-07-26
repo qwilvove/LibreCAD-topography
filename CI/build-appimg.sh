@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 
 ## script to build LibreCAD AppImage
@@ -35,16 +35,16 @@ mkdir -p appdir/usr/share/metainfo
 mkdir -p appdir/usr/share/doc/librecad
 mkdir -p appdir/usr/share/icons/hicolor/256x256/apps
 mkdir -p appdir/usr/share/icons/hicolor/scalable/apps
-mkdir -p appdir/usr/share/librecad
+mkdir -p appdir/usr/share/librecad/qm
 
 # strip binaries
 strip unix/librecad
-strip unix/resources/plugins/*.so
+strip unix/resources/plugins/*/*.so
 
 # copy executables and binary resources
 cp unix/librecad appdir/usr/bin/
-cp unix/resources/plugins/*.so appdir/usr/lib/librecad/
-cp -r unix/resources/qm appdir/usr/share/librecad/
+cp unix/resources/plugins/*/*.so appdir/usr/lib/librecad/
+cp -r unix/*.qm appdir/usr/share/librecad/qm/
 
 cp desktop/librecad.desktop appdir/usr/share/applications/
 cp desktop/org.librecad.librecad.appdata.xml appdir/usr/share/metainfo/
@@ -59,10 +59,7 @@ convert -resize 256x256 CI/librecad.svg appdir/usr/share/icons/hicolor/256x256/a
 
 wget -c https://github.com/$(wget -q https://github.com/probonopd/go-appimage/releases/expanded_assets/continuous -O - | grep "appimagetool-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
 chmod +x appimagetool-*.AppImage
-wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+# Bundle EVERYTHING
+VERSION=`git describe --always` ARCH=x86_64 ./appimagetool-*.AppImage -s deploy appdir/usr/share/applications/*.desktop
+VERSION=`git describe --always` ./appimagetool-*.AppImage ./appdir
 chmod +x *.AppImage
-#ARCH=x86_64 ./appimagetool-*.AppImage deploy appdir/usr/share/applications/librecad.desktop
-ARCH=x86_64 ./linuxdeploy-x86_64.AppImage --appdir appdir -e appdir/usr/bin/librecad -d appdir/usr/share/applications/librecad.desktop
-ARCH=x86_64 ./linuxdeploy-plugin-qt-x86_64.AppImage --appdir appdir
-VERSION=`git describe --always` ARCH=x86_64 ./appimagetool-*.AppImage appdir/

@@ -40,22 +40,18 @@ class RS_Spline;
 class RS_ActionDrawSpline : public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionDrawSpline(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawSpline(LC_ActionContext *actionContext, RS2::ActionType actionType = RS2::ActionDrawSpline);
     ~RS_ActionDrawSpline() override;
     void reset();
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
-//    void updateToolBar() override;
-//void close();
     virtual void undo();
 
     virtual void setDegree(int deg);
     int getDegree();
     virtual void setClosed(bool c);
     virtual bool isClosed();
+
 protected:
     /**
       * Action States.
@@ -64,15 +60,20 @@ protected:
         SetStartPoint,   /**< Setting the startpoint.  */
         SetNextPoint      /**< Setting the next point. */
     };
-    struct Points;
-    std::unique_ptr<Points> pPoints;
+
+private:
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
+
     void doTrigger() override;
+
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
 };
 #endif

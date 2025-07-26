@@ -32,7 +32,6 @@
 #include <iosfwd>
 #include <set>
 
-#include "rs_entity.h"
 #include "rs_undoable.h"
 
 /**
@@ -69,7 +68,8 @@ public:
     /**
      * Return number of undoables in cycle
      */
-    size_t size(void);
+    size_t size() const;
+    bool empty() const;
 
 
     //! change undo state of all undoable in the current cycle

@@ -1,55 +1,73 @@
-#include "rs_math.h"
-#include "rs_actiondrawlinepolygon2.h"
-#include "rs_actioninterface.h"
-#include "rs_debug.h"
-#include "rs_preview.h"
-#include "rs_coordinateevent.h"
-#include "rs_point.h"
-#include "rs_creation.h"
-#include "rs_graphicview.h"
-#include "rs_dialogfactory.h"
-#include "rs_polyline.h"
-#include <QMouseEvent>
-#include "lc_actiondrawlinepolygonbase.h"
-#include "qg_linepolygonoptions.h"
-#include "rs_commandevent.h"
-#include "lc_linemath.h"
+/*******************************************************************************
+ *
+ This file is part of the LibreCAD project, a 2D CAD program
 
-LC_ActionDrawLinePolygonBase::LC_ActionDrawLinePolygonBase( const char *name, RS_EntityContainer &container,
-                                                            RS_GraphicView &graphicView,
-                                                            RS2::ActionType actionType)
-    :RS_PreviewActionInterface(name, container,graphicView,actionType),number(3), pPoints(std::make_unique<Points>()), lastStatus(SetPoint1){}
+ Copyright (C) 2024 LibreCAD.org
+ Copyright (C) 2024 sand1024
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ ******************************************************************************/
+
+#include "lc_actiondrawlinepolygonbase.h"
+
+#include "lc_actioninfomessagebuilder.h"
+#include "lc_containertraverser.h"
+#include "lc_cursoroverlayinfo.h"
+#include "lc_linemath.h"
+#include "qg_linepolygonoptions.h"
+#include "rs_document.h"
+#include "rs_graphic.h"
+#include "rs_graphicview.h"
+#include "rs_line.h"
+#include "rs_pen.h"
+#include "rs_polyline.h"
+
+class RS_Layer;
+
+LC_ActionDrawLinePolygonBase::LC_ActionDrawLinePolygonBase( const char *name, LC_ActionContext *actionContext, RS2::ActionType actionType)
+    :RS_PreviewActionInterface(name, actionContext, actionType),m_edgesNumber(3), m_actionData(std::make_unique<ActionData>()), m_lastStatus(SetPoint1){}
 
 LC_ActionDrawLinePolygonBase::~LC_ActionDrawLinePolygonBase() = default;
 
 void LC_ActionDrawLinePolygonBase::doTrigger() {
-    if (document != nullptr) {
+    if (m_document != nullptr) {
         PolygonInfo polygonInfo;
-        preparePolygonInfo(polygonInfo, pPoints->point2);
+        preparePolygonInfo(polygonInfo, m_actionData->point2);
         RS_Polyline *polyline = createShapePolyline(polygonInfo, false);
         if (polyline != nullptr) {
             undoCycleStart();
-            RS_Graphic* graphic = graphicView->getGraphic();
+            RS_Graphic* graphic = m_graphicView->getGraphic();
             RS_Layer* layer;
-            RS_Pen pen = document->getActivePen();
+            RS_Pen pen = m_document->getActivePen();
             layer = graphic->getActiveLayer();
 
-            if (createPolyline) {
+            if (c_createPolyline) {
                 polyline->setLayer(layer);
                 polyline->setPen(pen);
-                polyline->reparent(container);
-                container->addEntity(polyline);
+                polyline->reparent(m_container);
+                m_container->addEntity(polyline);
                 undoableAdd(polyline);
             }
             else{
-                for (RS_Entity *entity = polyline->firstEntity(RS2::ResolveAll); entity;
-                     entity = polyline->nextEntity(RS2::ResolveAll)) {
+                for(RS_Entity* entity: lc::LC_ContainerTraverser{*polyline, RS2::ResolveAll}.entities()) {
                     if (entity != nullptr){
                         auto *clone = entity->clone(); // use clone for safe deletion of polyline
                         clone->setPen(pen);
                         clone->setLayer(layer);
-                        clone->reparent(container);
-                        container->addEntity(clone);
+                        clone->reparent(m_container);
+                        m_container->addEntity(clone);
                         undoableAdd(clone);
                     }
                 }
@@ -58,28 +76,26 @@ void LC_ActionDrawLinePolygonBase::doTrigger() {
             undoCycleEnd();
         }
 
-        if (completeActionOnTrigger) {
+        if (m_completeActionOnTrigger) {
             setStatus(-1);
         }
     }
 }
 
-void LC_ActionDrawLinePolygonBase::mouseMoveEvent(QMouseEvent* e) {
-    deletePreview();
-    RS_DEBUG->print("RS_ActionDrawLinePolygon2::mouseMoveEvent begin");
-    RS_Vector mouse = snapPoint(e);
-    switch (getStatus()) {
+void LC_ActionDrawLinePolygonBase::onMouseMoveEvent(int status, LC_MouseEvent *e) {
+    RS_Vector mouse = e->snapPoint;
+    switch (status) {
         case SetPoint1: {
             trySnapToRelZeroCoordinateEvent(e);
             break;
         }
         case SetPoint2: {
-            if (pPoints->point1.valid){
-                mouse = getSnapAngleAwarePoint(e, pPoints->point1, mouse, true);
+            if (m_actionData->point1.valid){
+                mouse = getSnapAngleAwarePoint(e, m_actionData->point1, mouse, true);
                 createPolygonPreview(mouse);
-                if (showRefEntitiesOnPreview) {
-                    previewRefPoint(pPoints->point1);
-                    previewRefLine(pPoints->point1,mouse);
+                if (m_showRefEntitiesOnPreview) {
+                    previewRefPoint(m_actionData->point1);
+                    previewRefLine(m_actionData->point1,mouse);
                     previewRefSelectablePoint(mouse);
                     previewAdditionalReferences(mouse);
                 }
@@ -90,19 +106,18 @@ void LC_ActionDrawLinePolygonBase::mouseMoveEvent(QMouseEvent* e) {
         default:
             break;
     }
-    drawPreview();
 }
 
-void LC_ActionDrawLinePolygonBase::onMouseLeftButtonRelease(int status, QMouseEvent *e) {
-    RS_Vector coord = snapPoint(e);
+void LC_ActionDrawLinePolygonBase::onMouseLeftButtonRelease(int status, LC_MouseEvent *e) {
+    RS_Vector coord = e->snapPoint;
     if (status == SetPoint2){
-        coord = getSnapAngleAwarePoint(e, pPoints->point1, coord);
-        completeActionOnTrigger = isControl(e);
+        coord = getSnapAngleAwarePoint(e, m_actionData->point1, coord);
+        m_completeActionOnTrigger = e->isControl;
     }
     fireCoordinateEvent(coord);
 }
 
-void LC_ActionDrawLinePolygonBase::onMouseRightButtonRelease(int status, [[maybe_unused]]QMouseEvent *e) {
+void LC_ActionDrawLinePolygonBase::onMouseRightButtonRelease(int status, [[maybe_unused]]LC_MouseEvent *e) {
     deletePreview();
     initPrevious(status);
 }
@@ -110,13 +125,13 @@ void LC_ActionDrawLinePolygonBase::onMouseRightButtonRelease(int status, [[maybe
 void LC_ActionDrawLinePolygonBase::onCoordinateEvent(int status,  [[maybe_unused]]bool isZero, const RS_Vector &mouse) {
     switch (status) {
         case SetPoint1: {
-            pPoints->point1 = mouse;
+            m_actionData->point1 = mouse;
             setStatus(SetPoint2);
             moveRelativeZero(mouse);
             break;
         }
         case SetPoint2: {
-            pPoints->point2 = mouse;
+            m_actionData->point2 = mouse;
             trigger();
             break;
         }
@@ -129,29 +144,29 @@ bool LC_ActionDrawLinePolygonBase::doProcessCommand(int status, const QString &c
     bool accept = false;
     if (checkCommand("number", c)){
         deletePreview();
-        lastStatus = (Status) status;
+        m_lastStatus = (Status) status;
         setStatus(SetNumber);
         accept = true;
     }
     else if (checkCommand("radius", c)){
         deletePreview();
-        roundedCorners = true;
-        lastStatus = (Status) status;
+        m_roundedCorners = true;
+        m_lastStatus = (Status) status;
         setStatus(SetRadius);
         accept = true;
     }
     else if (checkCommand("str", c)){
-        roundedCorners = false;
+        m_roundedCorners = false;
         updateOptions();
         accept = true;
     }
     else if (checkCommand("usepoly", c)){
-        createPolyline = true;
+        c_createPolyline = true;
         updateOptions();
         accept = true;
     }
     else if (checkCommand("nopoly", c)){
-        createPolyline = false;
+        c_createPolyline = false;
         updateOptions();
         accept = true;
     }
@@ -160,14 +175,14 @@ bool LC_ActionDrawLinePolygonBase::doProcessCommand(int status, const QString &c
         bool ok = false;
         double value = RS_Math::eval(c, &ok);
         if (ok){
-            switch (getStatus()) {
+            switch (status) {
                 case SetNumber:{ // handling number of rays
                     // fixme - check range to conform to UI
                     if ((value >= 3) && (value <= 10000)){
-                        number = value;
+                        m_edgesNumber = value;
                         updateOptions();
                         accept = true;
-                        setStatus(lastStatus);
+                        setStatus(m_lastStatus);
                     }
                     else{
                         commandMessage(tr("Not a valid number. Try 1..9999"));
@@ -176,9 +191,9 @@ bool LC_ActionDrawLinePolygonBase::doProcessCommand(int status, const QString &c
                 }
                 case SetRadius: {
                     if (value > 0 && LC_LineMath::isMeaningful(value)) {
-                        roundingRadius = value;
+                        m_roundingRadius = value;
                         updateOptions();
-                        setStatus(lastStatus);
+                        setStatus(m_lastStatus);
                         accept = true;
                     }
                     else{
@@ -253,14 +268,13 @@ void LC_ActionDrawLinePolygonBase::createPolygonPreview(const RS_Vector &mouse) 
     RS_Polyline* polyline = createShapePolyline(polygonInfo, true);
     if (polyline != nullptr){
         previewEntity(polyline);
-        if (infoCursorOverlayPrefs->enabled && infoCursorOverlayPrefs->showEntityInfoOnCreation) {
-            LC_InfoMessageBuilder msg{};
-            msg.add(tr("To be created:"), tr("Polygon"));
-            msg.add(tr("Center:"), formatVector(polygonInfo.centerPoint));
-            msg.add(tr("Start angle:"), formatAngle(polygonInfo.startingAngle));
-            msg.add(tr("Radius:"), formatLinear(polygonInfo.vertexRadius));
-            msg.add(tr("Radius Inner:"), formatLinear(polygonInfo.innerRadius));
-            appendInfoCursorZoneMessage(msg.toString(), 2, false);
+        if (m_infoCursorOverlayPrefs->enabled && m_infoCursorOverlayPrefs->showEntityInfoOnCreation) {
+              msg(tr("To be created:"), tr("Polygon"))
+                .vector(tr("Center:"), polygonInfo.centerPoint)
+                .wcsAngle(tr("Start angle:"), polygonInfo.startingAngle)
+                .linear(tr("Radius:"), polygonInfo.vertexRadius)
+                .linear(tr("Radius Inner:"), polygonInfo.innerRadius)
+                .toInfoCursorZone2(false);
         }
     }
 }
@@ -273,7 +287,7 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
     double bulge = 0.0;
 
     // angle on circle that takes one segment (from one vertex to another vertex)
-    double segmentAngle = 2. * M_PI / number;
+    double segmentAngle = 2. * M_PI / m_edgesNumber;
 
     // distance to vertex if is not rounded, or distance to rounding joint point if rounded
     double vertexDistance = polygonInfo.vertexRadius;
@@ -283,8 +297,8 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
 
     RS_Vector centerPoint = polygonInfo.centerPoint;
 
-    bool drawRounded = roundedCorners;
-    if (roundedCorners && LC_LineMath::isMeaningful(roundingRadius)) {
+    bool drawRounded = m_roundedCorners;
+    if (m_roundedCorners && LC_LineMath::isMeaningful(m_roundingRadius)) {
 
         // if there is rounding, 2 additional vertexes is added for rounding joints. This is the angle that corrects outer angle for proper position of
         // rounding join vertexes
@@ -299,8 +313,8 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
 
         // create parallel lines that we'll use for defining position of rounding join points
         // these lines are within star ray
-        RS_LineData par1data = LC_LineMath::createParallel(plusVertex, horizontalVertex, -roundingRadius);
-        RS_LineData par2data = LC_LineMath::createParallel(minusVertex, horizontalVertex, roundingRadius);
+        RS_LineData par1data = LC_LineMath::createParallel(plusVertex, horizontalVertex, -m_roundingRadius);
+        RS_LineData par2data = LC_LineMath::createParallel(minusVertex, horizontalVertex, m_roundingRadius);
 
         // find intersection of parallel lines
         RS_Vector parallelsIntersection = LC_LineMath::getIntersectionLineLine(par1data.startpoint, par1data.endpoint, par2data.startpoint, par2data.endpoint);
@@ -321,9 +335,9 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
             double distanceToIntersection = parallelsIntersection.x - centerPoint.x;
             double outerShift;
             if (parallelsIntersection.x > 0) {
-                outerShift = vertexDistance - distanceToIntersection - roundingRadius;
+                outerShift = vertexDistance - distanceToIntersection - m_roundingRadius;
             } else {
-                outerShift = vertexDistance - roundingRadius + distanceToIntersection * 2;
+                outerShift = vertexDistance - m_roundingRadius + distanceToIntersection * 2;
             }
 
             parallelsIntersection.x = parallelsIntersection.x + outerShift; // just move to right
@@ -395,7 +409,7 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
             RS_Vector startingVertex;
 
             // create all necessary segments one by one. Here we'll draw 2 edges - from outer point to inner and from inner point to next outer point of rays
-              for (int i=0; i < number; ++i) {
+              for (int i=0; i < m_edgesNumber; ++i) {
 
                    double baseVertexAngle = vertexStartAngle + i * segmentAngle;
 
@@ -410,7 +424,7 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
                    result->addVertex(start);
                    result->addVertex(end);
                    result->setNextBulge(bulge);
-                   if (preview && DRAW_JOIN_POINTS_ON_PREVIEW && showRefEntitiesOnPreview){
+                   if (preview && DRAW_JOIN_POINTS_ON_PREVIEW && m_showRefEntitiesOnPreview){
                        // potential visualization of rounding point
                        previewRefPoint(end);
                        previewRefPoint(start);
@@ -423,7 +437,7 @@ RS_Polyline *LC_ActionDrawLinePolygonBase::createShapePolyline(PolygonInfo &poly
         }
     }
     if (!drawRounded){
-        for (int i = 0; i <= number; ++i) {
+        for (int i = 0; i <= m_edgesNumber; ++i) {
             RS_Vector const &vertex = centerPoint +
                                       RS_Vector::polar(vertexDistance, vertexStartAngle + i * segmentAngle);
 

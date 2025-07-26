@@ -30,7 +30,6 @@
 
 #include "rs_block.h"
 
-
 /**
  * A character in a font is represented by this special block class.
  *
@@ -49,23 +48,16 @@ public:
                 RS_Vector basePoint)
             : RS_Block(parent, RS_BlockData(name, basePoint, false)) {}
 
-    virtual ~RS_FontChar() {}
-
     /** @return RS2::EntityFontChar */
     RS2::EntityType rtti() const override {
         return RS2::EntityFontChar;
     }
-
 
     /*friend std::ostream& operator << (std::ostream& os, const RS_FontChar& b) {
        	os << " name: " << b.getName().latin1() << "\n";
     	os << " entities: " << (RS_EntityContainer&)b << "\n";
        	return os;
 }*/
-
-
 protected:
 };
-
-
 #endif

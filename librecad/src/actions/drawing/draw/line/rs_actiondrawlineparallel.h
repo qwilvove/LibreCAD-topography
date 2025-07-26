@@ -39,17 +39,15 @@ class RS_Vector;
 class RS_ActionDrawLineParallel:public RS_PreviewActionInterface {
     Q_OBJECT
 public:
-    RS_ActionDrawLineParallel(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView, RS2::ActionType actionType);
+    RS_ActionDrawLineParallel(LC_ActionContext *actionContext, RS2::ActionType actionType);
     ~RS_ActionDrawLineParallel() override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     double getDistance() const;
     void setDistance(double d);
     int getNumber() const;
     void setNumber(int n);
-protected:
+
+private:
     // fixme - why no possibility to set distance via command line?
     enum Status {
         SetEntity,    /**< Choose original entity. */
@@ -59,18 +57,19 @@ protected:
     };
 
     /** Closest parallel. */
-    RS_Entity *parallel = nullptr;
+    RS_Entity *m_parallel = nullptr;
     /** Distance of the parallel. */
-    double distance = 0.;
+    double m_distance = 0.;
 /** Number of parallels. */
-    int number = 0;
+    int m_numberToCreate = 0;
 /** Coordinate of the mouse. */
-    std::unique_ptr<RS_Vector> coord;
+    std::unique_ptr<RS_Vector> m_coord;
 /** Original entity. */
-    RS_Entity *entity = nullptr;
+    RS_Entity *m_entity = nullptr;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void updateMouseButtonHints() override;
     LC_ActionOptionsWidget* createOptionsWidget() override;

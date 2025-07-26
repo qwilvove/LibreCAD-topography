@@ -30,16 +30,15 @@ Q_OBJECT
 public:
     LC_ActionModifySelectionBase(
        const char *name,
-       RS_EntityContainer &container,
-       RS_GraphicView &graphicView,
+       LC_ActionContext *actionContext,
        RS2::ActionType actionType = RS2::ActionNone);
-
-    void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *e) override;
 protected:
-    bool selectionFinished = false;
+    bool m_selectionFinished = false;
     int countSelected();
+
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
 };
 
 #endif // LC_ACTIONMODIFYSELECTIONBASE_H

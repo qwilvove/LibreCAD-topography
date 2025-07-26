@@ -26,18 +26,17 @@
 #ifndef QG_LINEPARALLELTHROUGHOPTIONS_H
 #define QG_LINEPARALLELTHROUGHOPTIONS_H
 
-#include<memory>
-#include<QWidget>
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionInterface;
 class RS_ActionDrawLineParallelThrough;
-namespace Ui {
-class Ui_LineParallelThroughOptions;
-}
-class QG_LineParallelThroughOptions:public LC_ActionOptionsWidgetBase {
-Q_OBJECT
 
+namespace Ui {
+    class Ui_LineParallelThroughOptions;
+}
+
+class QG_LineParallelThroughOptions:public LC_ActionOptionsWidgetBase {
+    Q_OBJECT
 public:
     QG_LineParallelThroughOptions();
     ~QG_LineParallelThroughOptions() override;
@@ -49,7 +48,7 @@ protected:
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
 private:
-    RS_ActionDrawLineParallelThrough *action;
+    RS_ActionDrawLineParallelThrough *m_action = nullptr;
     std::unique_ptr<Ui::Ui_LineParallelThroughOptions> ui;
     void setCopyNumberToActionAndView(int number);
     void setSymmetricToActionAndView(bool symmetric);

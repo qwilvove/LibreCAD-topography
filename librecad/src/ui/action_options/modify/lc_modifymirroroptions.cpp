@@ -21,11 +21,12 @@
  ******************************************************************************/
 
 #include "lc_modifymirroroptions.h"
+#include "rs_actionmodifymirror.h"
 #include "ui_lc_modifymirroroptions.h"
 
 LC_ModifyMirrorOptions::LC_ModifyMirrorOptions()
     : LC_ActionOptionsWidgetBase(RS2::ActionModifyMirror,"Modify", "Mirror")
-    , ui(new Ui::LC_ModifyMirrorOptions), action(nullptr){
+    , ui(new Ui::LC_ModifyMirrorOptions), m_action(nullptr){
     ui->setupUi(this);
 
     connect(ui->cbMirrorToLine, &QCheckBox::toggled, this, &LC_ModifyMirrorOptions::onMirrorToLineClicked);
@@ -36,7 +37,7 @@ LC_ModifyMirrorOptions::LC_ModifyMirrorOptions()
 
 LC_ModifyMirrorOptions::~LC_ModifyMirrorOptions(){
     delete ui;
-    action = nullptr;
+    m_action = nullptr;
 }
 
 void LC_ModifyMirrorOptions::doSaveSettings() {
@@ -51,16 +52,16 @@ void LC_ModifyMirrorOptions::onMirrorToLineClicked(bool clicked){
 }
 
 void LC_ModifyMirrorOptions::doSetAction(RS_ActionInterface *a, bool update) {
-    action = dynamic_cast<RS_ActionModifyMirror *>(a);
+    m_action = dynamic_cast<RS_ActionModifyMirror *>(a);
     bool keepOriginals;
     bool useCurrentLayer;
     bool useCurrentAttributes;
     bool useLine;
     if (update){
-        useLine = action->isMirrorToExistingLine();
-        useCurrentLayer = action->isUseCurrentLayer();
-        useCurrentAttributes  = action->isUseCurrentAttributes();
-        keepOriginals = action->isKeepOriginals();
+        useLine = m_action->isMirrorToExistingLine();
+        useCurrentLayer = m_action->isUseCurrentLayer();
+        useCurrentAttributes  = m_action->isUseCurrentAttributes();
+        keepOriginals = m_action->isKeepOriginals();
     }
     else{
         useCurrentLayer = loadBool("UseCurrentLayer", false);
@@ -77,7 +78,7 @@ void LC_ModifyMirrorOptions::doSetAction(RS_ActionInterface *a, bool update) {
 }
 
 void LC_ModifyMirrorOptions::setMirrorToLineLineToActionAndView(bool value){
-    action->setMirrorToExistingLine(value);
+    m_action->setMirrorToExistingLine(value);
     ui->cbMirrorToLine->setChecked(value);
 }
 
@@ -86,17 +87,17 @@ void LC_ModifyMirrorOptions::languageChange() {
 }
 
 void LC_ModifyMirrorOptions::setUseCurrentLayerToActionAndView(bool val) {
-    action->setUseCurrentLayer(val);
+    m_action->setUseCurrentLayer(val);
     ui->cbLayer->setChecked(val);
 }
 
 void LC_ModifyMirrorOptions::setUseCurrentAttributesToActionAndView(bool val) {
-    action->setUseCurrentAttributes(val);
+    m_action->setUseCurrentAttributes(val);
     ui->cbCurrentAttr->setChecked(val);
 }
 
 void LC_ModifyMirrorOptions::setKeepOriginalsToActionAndView(bool val) {
-    action->setKeepOriginals(val);
+    m_action->setKeepOriginals(val);
     ui->cbKeepOriginals->setChecked(val);
 }
 

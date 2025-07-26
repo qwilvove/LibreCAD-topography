@@ -26,20 +26,17 @@
 #ifndef QG_LINEPOLYGONOPTIONS_H
 #define QG_LINEPOLYGONOPTIONS_H
 
-#include<memory>
-#include<QWidget>
 #include "lc_actionoptionswidgetbase.h"
-#include "lc_actiondrawlinepolygonbase.h"
 
-class RS_ActionInterface;
 class RS_ActionDrawLinePolygonCenCor;
+class LC_ActionDrawLinePolygonBase;
+
 namespace Ui {
-class Ui_LinePolygonOptions;
+    class Ui_LinePolygonOptions;
 }
 
 class QG_LinePolygonOptions : public LC_ActionOptionsWidgetBase{
     Q_OBJECT
-
 public:
     QG_LinePolygonOptions();
     ~QG_LinePolygonOptions() override;
@@ -50,15 +47,14 @@ public slots:
     void onVertexToggled(bool val);
     void onRadiusEditingFinished();
     void languageChange() override;
-
 protected:
-    bool sideSideAction = false;
+    bool m_sideSideAction = false;
     void doSaveSettings() override;
     void doSetAction(RS_ActionInterface *a, bool update) override;
     bool checkActionRttiValid(RS2::ActionType actionType) override;
     QString getSettingsOptionNamePrefix() override;
 private:
-    LC_ActionDrawLinePolygonBase* action;
+    LC_ActionDrawLinePolygonBase* m_action = nullptr;
 	   std::unique_ptr<Ui::Ui_LinePolygonOptions> ui;
     void setNumberToActionAndView(int number);
     void setPolylineToActionAndView(bool val);

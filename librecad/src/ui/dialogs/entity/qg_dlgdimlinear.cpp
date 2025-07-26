@@ -24,11 +24,8 @@
 **
 **********************************************************************/
 #include "qg_dlgdimlinear.h"
-
 #include "rs_dimlinear.h"
 #include "rs_graphic.h"
-#include "rs_math.h"
-
 /*
  *  Constructs a QG_DlgDimLinear as a child of 'parent', with the
  *  name 'name' and widget flags set to 'f'.
@@ -36,9 +33,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgDimLinear::QG_DlgDimLinear(QWidget* parent)
-    : LC_Dialog(parent, "DimLinearProperties"){
+QG_DlgDimLinear::QG_DlgDimLinear(QWidget *parent, LC_GraphicViewport *pViewport,RS_DimLinear* dim)
+    :LC_EntityPropertiesDlg(parent, "DimLinearProperties", pViewport){
     setupUi(this);
+    setEntity(dim);
 }
 
 /*
@@ -56,27 +54,29 @@ void QG_DlgDimLinear::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgDimLinear::setDim(RS_DimLinear& d) {
-    dim = &d;
+void QG_DlgDimLinear::setEntity(RS_DimLinear* d) {
+    m_entity = d;
 
-    RS_Graphic* graphic = dim->getGraphic();
+    RS_Graphic* graphic = m_entity->getGraphic();
     if (graphic) {
         cbLayer->init(*(graphic->getLayerList()), false, false);
     }
-    RS_Layer* lay = dim->getLayer(false);
+    RS_Layer* lay = m_entity->getLayer(false);
     if (lay) {
         cbLayer->setLayer(*lay);
     }
 
-    wPen->setPen(dim,lay, "Pen");
-
-    wLabel->setLabel(dim->getLabel(false));
-    leAngle->setText(QString("%1").arg(RS_Math::rad2deg(dim->getAngle())));
+    wPen->setPen(m_entity, lay, tr("Pen"));
+    wLabel->setLabel(m_entity->getLabel(false));
+    toUIAngleDeg(m_entity->getAngle(), leAngle);
 }
 
-void QG_DlgDimLinear::updateDim() {
-    dim->setLabel(wLabel->getLabel());
-    dim->setAngle(RS_Math::deg2rad(RS_Math::eval(leAngle->text(), 0.0)));
-    dim->setPen(wPen->getPen());
-    dim->setLayer(cbLayer->currentText());
+void QG_DlgDimLinear::updateEntity() {
+    m_entity->setLabel(wLabel->getLabel());
+    m_entity->setAngle(toWCSAngle(leAngle, m_entity->getAngle()));
+
+    m_entity->setPen(wPen->getPen());
+    m_entity->setLayer(cbLayer->getLayer());
+
+    m_entity->updateDim(true);
 }

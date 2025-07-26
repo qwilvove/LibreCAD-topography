@@ -25,12 +25,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define LC_QUICKINFOBASEDATA_H
 
 #include <QCoreApplication>
-
-#include "rs_document.h"
 #include "rs_vector.h"
-#include "qg_graphicview.h"
+#include "rs.h"
 
 class QString;
+class LC_GraphicViewport;
+class RS_Document;
 
 class LC_QuickInfoBaseData{
     Q_DECLARE_TR_FUNCTIONS(LC_QuickInfoBaseData)
@@ -42,14 +42,11 @@ public:
     virtual bool updateForCoordinateViewMode(int mode) = 0;
     virtual void clear() = 0;
     virtual bool hasData() const = 0;
-    void setDocumentAndView(RS_Document *document, QG_GraphicView* view);
+    void setDocumentAndView(RS_Document *document, LC_GraphicViewport* view);
+    void updateFormats(); // fixme - sand - this method should be called as soon as settings will be updated..
 
-    int getCoordinatesMode() const {
-        return coordinatesMode;
-    }
-    void setCoordinatesMode(int value) {
-        coordinatesMode = value;
-    }
+    int getCoordinatesMode() const{return m_coordinatesMode;};
+    void setCoordinatesMode(int value){m_coordinatesMode = value;};
 
     /**
      * Defines the mode for displaying coordinates
@@ -62,14 +59,43 @@ public:
     };
 
 protected:
-    RS_Document* document = nullptr;
-    RS_GraphicView* graphicView = nullptr;
-    int coordinatesMode = COORD_ABSOLUTE;
+    RS_Document* m_document = nullptr;
+    LC_GraphicViewport* m_viewport = nullptr;
+    int m_coordinatesMode = COORD_ABSOLUTE;
 
-    QString formatVector(const RS_Vector &vector) const;
-    QString formatAngle(double angle);
-    QString formatLinear(double length);
-    QString createLink(QString &data, const QString &path, int index, QString title, QString &value);
+    RS2::Unit m_unit;
+    RS2::LinearFormat m_linearFormat;
+    int m_linearPrecision;
+    RS2::AngleFormat m_angleFormat;
+    int m_anglePrecision;
+
+    double m_anglesBase = 0;
+    bool m_anglesCounterClockWise = true;
+
+    // fixme - sand - think about these formatting methods.. they are present there, and similar ones are in snapper...
+    // fixme - what about moving them to RS_GraphicView which is shared anyway may be? And this will simplify updating cached formats...
+    QString formatWCSVector(const RS_Vector &wcsPos) const;
+    QString formatUCSVector(const RS_Vector &ucsPos) const;
+    QString formatWCSDeltaVector(const RS_Vector &wcsDelta) const;
+    QString formatWCSAngle(double wcsAngle) const;
+    QString formatUCSAngle(double wcsAngle) const;
+    QString formatLinear(double length) const;
+    QString formatDouble(const double &x) const;
+    QString formatInt(const int &x) const;
+    QString createLink(QString &data, const QString &path, int index, const QString& title, const QString &value);
+    void appendLinear(QString &result, const QString &label, double value) const;
+    void appendDouble(QString &result, const QString &label, double value) const;
+    void appendWCSAngle(QString &result, const QString &label, double value) const;
+    void appendRawAngle(QString &result, const QString &label, double value) const;
+    void appendArea(QString &result, const QString &label, double value) const;
+    void appendWCSAbsolute(QString &result, const QString &label, const RS_Vector& value) const;
+    void appendWCSAbsoluteDelta(QString &result, const QString &label, const RS_Vector& value) const;
+    void appendRelativePolar(QString &result, const QString &label, const RS_Vector& value) const;
+    void appendInt(QString &result, const QString &label, const int& value) const;
+    void appendValue(QString &result, const QString &label, const QString& value);
+    QString formatRawAngle(double angle) const;
+
+    const RS_Vector& getRelativeZero() const;
 };
 
 #endif // LC_QUICKINFOBASEDATA_H

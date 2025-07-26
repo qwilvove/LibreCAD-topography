@@ -24,18 +24,12 @@
 **
 **********************************************************************/
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
-#include <numeric>
-
 #include "rs_spline.h"
-
-#include "rs_line.h"
 #include "rs_debug.h"
-#include "rs_graphicview.h"
+#include "rs_line.h"
 #include "rs_painter.h"
-
+#include "rs_pen.h"
 
 RS_SplineData::RS_SplineData(int _degree, bool _closed):
 	degree(_degree)
@@ -74,7 +68,6 @@ RS_Spline::RS_Spline(RS_EntityContainer* parent,
 RS_Entity* RS_Spline::clone() const{
     auto* l = new RS_Spline(*this);
     l->setOwner(isOwner());
-    l->initId();
     l->detach();
     return l;
 }
@@ -189,7 +182,7 @@ void RS_Spline::update() {
         if (prev.valid) {
             auto* line = new RS_Line{this, prev, vp};
             line->setLayer(nullptr);
-            line->setPen(RS2::FlagInvalid);
+            line->setPen(RS_Pen(RS2::FlagInvalid));
             addEntity(line);
         }
         prev = vp;
@@ -308,7 +301,7 @@ void RS_Spline::move(const RS_Vector& offset) {
     }
 }
 
-void RS_Spline::rotate(const RS_Vector& center, const double& angle) {
+void RS_Spline::rotate(const RS_Vector& center, double angle) {
     rotate(center,RS_Vector(angle));
 }
 
@@ -356,81 +349,10 @@ void RS_Spline::revertDirection() {
     std::reverse(data.controlPoints.begin(), data.controlPoints.end());
 }
 
-void RS_Spline::draw(RS_Painter* painter, RS_GraphicView* view, double& /*patternOffset*/) {
-//
-//	if (!(painter && view)) {
-//        return;
-//    }
-    painter->drawSpline(*this, *view);
+void RS_Spline::draw(RS_Painter* painter) {
+    painter->drawSplineWCS(*this);
 }
 
-/**
- * Todo: draw the spline, user patterns.
- */
-/*
-void RS_Spline::draw(RS_Painter* painter, RS_GraphicView* view) {
-   if (!(painter && view)) {
-       return;
-   }
-
-   / *
-      if (data.controlPoints.count()>0) {
-          RS_Vector prev(false);
-          QList<RS_Vector>::iterator it;
-          for (it = data.controlPoints.begin(); it!=data.controlPoints.end(); ++it) {
-              if (prev.valid) {
-                  painter->drawLine(view->toGui(prev),
-                                    view->toGui(*it));
-              }
-              prev = (*it);
-          }
-      }
-   * /
-
-   int i;
-   int npts = data.controlPoints.count();
-   // order:
-   int k = 4;
-   // resolution:
-   int p1 = 100;
-
-   double* b = new double[npts*3+1];
-   double* h = new double[npts+1];
-   double* p = new double[p1*3+1];
-
-   QList<RS_Vector>::iterator it;
-   i = 1;
-   for (it = data.controlPoints.begin(); it!=data.controlPoints.end(); ++it) {
-       b[i] = (*it).x;
-       b[i+1] = (*it).y;
-       b[i+2] = 0.0;
-
-        RS_DEBUG->print("RS_Spline::draw: b[%d]: %f/%f", i, b[i], b[i+1]);
-        i+=3;
-   }
-
-   // set all homogeneous weighting factors to 1.0
-   for (i=1; i <= npts; i++) {
-       h[i] = 1.0;
-   }
-
-   //
-   for (i = 1; i <= 3*p1; i++) {
-       p[i] = 0.0;
-   }
-
-   rbspline(npts,k,p1,b,h,p);
-
-   RS_Vector prev(false);
-   for (i = 1; i <= 3*p1; i=i+3) {
-       if (prev.valid) {
-           painter->drawLine(view->toGui(prev),
-                             view->toGui(RS_Vector(p[i], p[i+1])));
-       }
-       prev = RS_Vector(p[i], p[i+1]);
-   }
-}
-*/
 
 /**
  * @return The reference points of the spline.

@@ -28,8 +28,6 @@
 #ifndef RS_ENTITYCONTAINER_H
 #define RS_ENTITYCONTAINER_H
 
-#include <memory>
-#include <vector>
 #include <QList>
 #include "rs_entity.h"
 
@@ -40,13 +38,13 @@
  * @author Andrew Mustun
  */
 class RS_EntityContainer : public RS_Entity {
-	typedef RS_Entity * value_type;
 
 public:
+    using value_type = RS_Entity * ;
 
     struct RefInfo{
         RS_Vector ref;
-        RS_Entity* entity;
+        RS_Entity* entity = nullptr;
     };
 
     struct LC_SelectionInfo{
@@ -55,6 +53,10 @@ public:
     };
 
     RS_EntityContainer(RS_EntityContainer* parent=nullptr, bool owner=true);
+    RS_EntityContainer(const RS_EntityContainer& other);
+    RS_EntityContainer& operator = (const RS_EntityContainer& other);
+    RS_EntityContainer(RS_EntityContainer&& other);
+    RS_EntityContainer& operator = (RS_EntityContainer&& other);
     //RS_EntityContainer(const RS_EntityContainer& ec);
 
     ~RS_EntityContainer() override;
@@ -113,12 +115,13 @@ public:
 //! \param v0,v1 diagonal vertices of the rectangle
 //!
     void addRectangle(RS_Vector const& v0, RS_Vector const& v1);
+    void addRectangle(RS_Vector const& v0, RS_Vector const& v1,RS_Vector const& v2, RS_Vector const& v3);
 
     virtual RS_Entity* firstEntity(RS2::ResolveLevel level=RS2::ResolveNone) const;
     virtual RS_Entity* lastEntity(RS2::ResolveLevel level=RS2::ResolveNone) const;
     virtual RS_Entity* nextEntity(RS2::ResolveLevel level=RS2::ResolveNone) const;
     virtual RS_Entity* prevEntity(RS2::ResolveLevel level=RS2::ResolveNone) const;
-    virtual RS_Entity* entityAt(int index);
+    virtual RS_Entity* entityAt(int index) const;
     virtual void setEntityAt(int index,RS_Entity* en);
     virtual int findEntity(RS_Entity const* const entity);
     virtual void clear();
@@ -126,11 +129,18 @@ public:
     //virtual unsigned long int count() {
     //	return count(false);
     //}
-    virtual bool isEmpty() const{
+    virtual bool isEmpty() const {
         return count()==0;
+    }
+    bool empty() const {
+        return isEmpty();
     }
     unsigned count() const override;
     unsigned countDeep() const override;
+    size_t size() const
+    {
+        return m_entities.size();
+    }
 //virtual unsigned long int countLayerEntities(RS_Layer* layer);
 /** \brief countSelected number of selected
 * @param deep count sub-containers, if true
@@ -145,8 +155,11 @@ public:
      * Enables / disables automatic update of borders on entity removals
      * and additions. By default this is turned on.
      */
-    virtual void setAutoUpdateBorders(bool enable) {
-        autoUpdateBorders = enable;
+    void setAutoUpdateBorders(bool enable) {
+        m_autoUpdateBorders = enable;
+    }
+    bool getAutoUpdateBorders() const {
+        return m_autoUpdateBorders;
     }
     virtual void adjustBorders(RS_Entity* entity);
     void calculateBorders() override;
@@ -201,10 +214,10 @@ public:
 
     virtual bool optimizeContours();
 
-    bool hasEndpointsWithinWindow(const RS_Vector& v1, const RS_Vector& v2) override;
+    bool hasEndpointsWithinWindow(const RS_Vector& v1, const RS_Vector& v2) const override;
 
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     void mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2a) override;
@@ -217,8 +230,7 @@ public:
     void moveSelectedRef(const RS_Vector& ref, const RS_Vector& offset) override;
     void revertDirection() override;
 
-
-    void draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
 
     friend std::ostream& operator << (std::ostream& os, RS_EntityContainer& ec);
 
@@ -237,6 +249,15 @@ public:
      * @return, true, indicate this entity container should be ignored
      */
     bool ignoredOnModification() const;
+
+    void push_back(RS_Entity* entity) {
+        m_entities.push_back(entity);
+    }
+    void pop_back()
+    {
+        if (!isEmpty())
+            m_entities.pop_back();
+    }
 
 /**
  * @brief begin/end to support range based loop
@@ -257,11 +278,11 @@ public:
 
     const QList<RS_Entity*>& getEntityList();
 
-    inline RS_Entity* unsafeEntityAt(int index) const {return entities.at(index);}
+    inline RS_Entity* unsafeEntityAt(int index) const {return m_entities.at(index);}
 
-    void drawAsChild(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) override;
+    void drawAsChild(RS_Painter *painter) override;
 
-    RS_Entity *cloneProxy(RS_GraphicView *view) const override;
+    RS_Entity *cloneProxy() const override;
 
 protected:
     /**
@@ -272,17 +293,10 @@ protected:
      */
     virtual std::vector<std::unique_ptr<RS_EntityContainer>> getLoops() const;
 
-    /** entities in the container */
-    QList<RS_Entity *> entities;
 
     /** sub container used only temporarily for iteration. */
     mutable RS_EntityContainer* subContainer = nullptr;
 
-    /**
-     * Automatically update the borders of the container when entities
-     * are added or removed.
-     */
-    bool autoUpdateBorders = true;
 
 private:
 /**
@@ -290,6 +304,14 @@ private:
  * @return true when entity of this container won't be considered for snapping points
  */
     bool ignoredSnap() const;
+
+    /** m_entities in the container */
+    QList<RS_Entity *> m_entities;
+    /**
+     * Automatically update the borders of the container when entities
+     * are added or removed.
+     */
+    bool m_autoUpdateBorders = true;
     mutable int entIdx = 0;
     bool autoDelete = false;
 

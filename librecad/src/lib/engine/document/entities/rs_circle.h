@@ -29,8 +29,7 @@
 #ifndef RS_CIRCLE_H
 #define RS_CIRCLE_H
 
-#include <vector>
-#include "rs_atomicentity.h"
+#include "rs_vector.h"
 #include "lc_cachedlengthentity.h"
 
 class LC_Quadratic;
@@ -121,7 +120,15 @@ public:
 | Cx - Ci|^2=(Rx+Ri)^2
 with Cx the center of the common tangent circle, Rx the radius. Ci and Ri are the Center and radius of the i-th existing circle
 **/
-    static std::vector<RS_Circle> solveAppolloniusSingle(const std::vector<RS_Circle>& circles);
+    static std::vector<RS_Circle> solveAolloniusSingle(const std::vector<RS_Circle>& circles);
+    /**
+     * @brief solveApolloniusHyperbola a more generic solution based on hyperbola intersections.
+     *        this algorithm is likely worse in precision compared with solveAolloniusSingle().
+     *        Provided as a backup when solveAolloniusSingle() fails.
+     * @param circles - the three input circles
+     * @return candidates circles
+     */
+    static std::vector<RS_Circle> solveApolloniusHyperbola(const std::vector<RS_Circle>& circles);
 
     std::vector<RS_Circle> createTan3(const std::vector<RS_AtomicEntity*>& circles);
     bool testTan3(const std::vector<RS_AtomicEntity*>& circles) const;
@@ -129,15 +136,15 @@ with Cx the center of the common tangent circle, Rx the radius. Ci and Ri are th
     RS_Vector getNearestEndpoint(const RS_Vector& coord,
                                  double* dist = nullptr) const override;
     RS_Vector getNearestPointOnEntity(const RS_Vector& coord,
-                                      bool onEntity = true, double* dist = NULL, RS_Entity** entity=NULL)const override;
+                                      bool onEntity = true, double* dist = nullptr, RS_Entity** entity=nullptr)const override;
     RS_Vector getNearestCenter(const RS_Vector& coord,
-                               double* dist = NULL)const override;
+                               double* dist = nullptr)const override;
     RS_Vector getNearestMiddle(const RS_Vector& coord,
                                double* dist = nullptr,
                                int middlePoints = 1 ) const override;
     RS_Vector getNearestDist(double distance,
                              const RS_Vector& coord,
-                             double* dist = NULL)const override;
+                             double* dist = nullptr)const override;
     RS_Vector getNearestDist(double distance,
                              bool startp)const override;
     RS_Vector getNearestOrthTan(const RS_Vector& coord,
@@ -150,7 +157,7 @@ with Cx the center of the common tangent circle, Rx the radius. Ci and Ri are th
     RS_VectorSolutions getTangentPoint(const RS_Vector& point) const override;//find the tangential points seeing from given point
     RS_Vector getTangentDirection(const RS_Vector& point)const override;
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     void mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) override;
@@ -166,9 +173,7 @@ with Cx the center of the common tangent circle, Rx the radius. Ci and Ri are th
      */
     RS_Entity& shear(double k) override;
     void moveRef(const RS_Vector& ref, const RS_Vector& offset) override;
-    /** whether the entity's bounding box intersects with visible portion of graphic view */
-    bool isVisibleInWindow(RS_GraphicView* view) const override;
-    void draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
     /** return the equation of the entity
 for quadratic,
 

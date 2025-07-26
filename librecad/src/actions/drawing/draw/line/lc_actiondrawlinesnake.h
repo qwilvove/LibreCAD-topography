@@ -22,22 +22,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_ACTIONDRAWLINESNAKE_H
 #define LC_ACTIONDRAWLINESNAKE_H
 
-#include "rs_previewactioninterface.h"
-#include "rs_vector.h"
-#include "rs_line.h"
 #include "lc_abstractactiondrawline.h"
+#include "rs_line.h"
 
 class LC_ActionDrawLineSnake :public LC_AbstractActionDrawLine {
     Q_OBJECT
 public:
-    LC_ActionDrawLineSnake(RS_EntityContainer& container, RS_GraphicView& graphicView, int direction = LC_ActionDrawLineSnake::DIRECTION_NONE);
+    LC_ActionDrawLineSnake(LC_ActionContext *actionContext, RS2::ActionType actionType);
     ~LC_ActionDrawLineSnake() override;
     void init(int status) override;
     void close();
     void next();
     void undo();
     void redo();
-    void polyline();;
+    void polyline();
     bool mayClose();
     bool mayUndo() const;
     bool mayStart() override;
@@ -48,13 +46,13 @@ protected:
     bool doProceedCommand(int status, const QString &qString) override;
     bool doProcessCommandValue(int status, const QString &c) override;
     const RS_Vector& getStartPointForAngleSnap() const override;
-    void doBack(QMouseEvent *pEvent, int status) override;
+    void doBack(LC_MouseEvent *pEvent, int status) override;
     bool isStartPointValid() const override;
-    void doPreparePreviewEntities(QMouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status) override;
+    void doPreparePreviewEntities(LC_MouseEvent *e, RS_Vector &snap, QList<RS_Entity *> &list, int status) override;
     void doPrepareTriggerEntities(QList<RS_Entity *> &list) override;
     RS_Vector doGetRelativeZeroAfterTrigger() override;
     void doSetStartPoint(RS_Vector vector) override;
-    bool doCheckMayDrawPreview(QMouseEvent *pEvent, int status) override;
+    bool doCheckMayDrawPreview(LC_MouseEvent *pEvent, int status) override;
     void updateMouseButtonHints() override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
 private:
@@ -98,7 +96,7 @@ private:
         int             startOffset;// offset to start point for close method
     };
 
-    struct Points
+    struct ActionData
     {
         /// Line data defined so far
         RS_LineData data = RS_LineData();
@@ -118,13 +116,13 @@ private:
     /**
      * points data
      */
-    std::unique_ptr<Points> pPoints;
+    std::unique_ptr<ActionData> m_actionData;
     void resetPoints();
     void addHistory(HistoryAction a, const RS_Vector& p, const RS_Vector& c, const int s);
     void completeLineSegment(bool close);
     void calculateAngleSegment(double distance);
     RS_Vector calculateAngleEndpoint(const RS_Vector &snap);
-    double defineActualSegmentAngle(double realAngle);
+    double defineActualSegmentAngle(double relativeAngleRad);
     bool isNonZeroLine(const RS_Vector &possiblePoint) const;
     void createEntities(RS_Vector &potentialEndPoint, QList<RS_Entity *> &entitiesList);
 };

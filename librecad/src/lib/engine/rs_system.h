@@ -29,14 +29,12 @@
 #ifndef RS_SYSTEM_H
 #define RS_SYSTEM_H
 
-#include <QDir>
+
+#define RS_SYSTEM RS_System::instance()
 #include <QList>
 #include <QSharedPointer>
 
-#include "rs_locale.h"
-
-#define RS_SYSTEM RS_System::instance()
-
+class RS_Locale;
 /**
  * Class for some system methods such as file system operations.
  * Implemented as singleton. Use init to Initialize the class
@@ -64,39 +62,32 @@ public:
     void initLanguageList();
     void initAllLanguagesList();
 
-    bool checkInit();
+    bool checkInit() const;
     bool createPaths(const QString& p);
 
     /**
      * @return Users home directory.
      */
-    QString getHomeDir() {
-        return QDir::homePath();
-    }
-
+    static QString getHomeDir();
     /**
      * @return Users home directory.
      */
-    QString getTempDir() {
-        return QDir::tempPath();
-    }
-
+    static QString getTempDir();
     /**
      * @return Current directory.
      */
-    QString getCurrentDir() {
-        return QDir::currentPath();
-    }
+    static QString getCurrentDir();
 
     /**
      * @return Application Data directory.
      */
-    QString getAppDataDir();
+    QString getAppDataDir() const;
 
     /**
      * @return A list of absolute paths to all font files found.
      */
-    QStringList getFontList() {
+    QStringList getFontList() const
+    {
         QStringList ret = getFileList("fonts", "cxf");
         return ret;
     }
@@ -150,23 +141,24 @@ public:
     /**
      * @return The application name.
      */
-    QString getAppName() {
+    QString getAppName() const {
         return appName;
     }
 
     /**
      * @return The application version.
      */
-    QString getAppVersion() {
+    QString getAppVersion() const {
         return appVersion;
     }
 
-    QStringList getFileList(const QString& subDirectory,
-                            const QString& fileExtension);
+    QStringList getFileList (const QString& subDirectory,
+                            const QString& fileExtension) const;
 
-    QStringList getDirectoryList(const QString& subDirectory);
+    QStringList getDirectoryList(const QString&
+		   subDirectory) const;
 
-    QStringList getLanguageList() {
+    QStringList getLanguageList() const {
         return languageList;
     }
 
@@ -187,9 +179,7 @@ public:
 private:
     RS_System() = default;
     void addLocale(RS_Locale *locale);
-
 protected:
-
     QString appName;
     QString appVersion;
     QString appDirName;
@@ -198,7 +188,7 @@ protected:
     QStringList languageList;   //< List of available translations
     bool initialized {false};
     bool externalAppDir {false};
-    QList<QSharedPointer<RS_Locale> > allKnownLocales;
+    QList<QSharedPointer<RS_Locale>> allKnownLocales;
 };
 
 #endif

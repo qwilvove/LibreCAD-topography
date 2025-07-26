@@ -23,10 +23,14 @@
 #ifndef LC_GRIDSYSTEM_H
 #define LC_GRIDSYSTEM_H
 
+#include <memory>
+
 #include "rs_vector.h"
-#include "rs_painter.h"
 #include "rs_color.h"
-#include "lc_lattice.h"
+
+class RS_Painter;
+class LC_Lattice;
+class LC_GraphicViewport;
 
 class LC_GridSystem {
 public:
@@ -35,7 +39,7 @@ public:
         bool drawLines = false;
 
         bool drawGrid = true;
-        RS2::LineType gridLineType;
+        RS2::LineType gridLineType{};
         int gridWidthPx = 1;
 
         RS_Color gridColorLine;
@@ -43,36 +47,38 @@ public:
         bool drawMetaGrid = true;
         RS_Color metaGridColor;
         int metaGridLineWidthPx = 1;
-        RS2::LineType metaGridLineType;
+        RS2::LineType metaGridLineType{};
         bool disableGridOnPanning = false;
         bool drawIsometricVerticalsAlways = true; // fixme - complete initialization
     };
 
     LC_GridSystem(LC_GridOptions* options);
-    virtual ~LC_GridSystem();
+    virtual ~LC_GridSystem() ;
 
-    void setOptions(LC_GridOptions* options);
+    void setOptions(std::unique_ptr<LC_GridOptions> options);
     void invalidate();
-    RS_Vector const &getCellVector() {return cellVector;};
+    RS_Vector const &getCellVector() const {
+        return cellVector;
+    }
 
     virtual RS_Vector snapGrid(const RS_Vector &coord) const = 0;
-    void createGrid(RS_GraphicView* view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth);
-    void draw(RS_Painter *painter, RS_GraphicView* view);
+    void createGrid(LC_GraphicViewport* view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth);
+    void draw(RS_Painter *painter, LC_GraphicViewport* view);
 
     void clearGrid();
 
     void setGridInfiniteState(bool hasIndefiniteAxis, bool undefinedX);
-    bool isGridDisabledByPanning(RS_GraphicView *view);
+    bool isGridDisabledByPanning(LC_GraphicViewport *view);
     bool isValid() const;
 
     void calculateSnapInfo(RS_Vector& viewZero,RS_Vector& viewSize,RS_Vector& metaGridWidthToUse,RS_Vector& gridWidthToUse);
 
 protected:
     bool valid = false;
-    RS_Vector cellVector = RS_Vector(0,0);
-    LC_GridOptions* gridOptions = nullptr;
-    LC_Lattice* gridLattice = nullptr;
-    LC_Lattice* metaGridLattice = nullptr;
+    RS_Vector cellVector = {0., 0.};
+    std::unique_ptr<LC_GridOptions> gridOptions;
+    std::unique_ptr<LC_Lattice> gridLattice;
+    std::unique_ptr<LC_Lattice> metaGridLattice;
 
     /**
     * Grid metrics
@@ -119,14 +125,14 @@ protected:
     bool hasAxisIndefinite = false;
     bool indefiniteX  = false;
 
-    void doCreateGrid(RS_GraphicView* view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth);
+    void doCreateGrid(LC_GraphicViewport* view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth);
     virtual void createMetaGridLines(const RS_Vector& min, const RS_Vector &max)  = 0;
-    void drawMetaGrid(RS_Painter *painter, RS_GraphicView *view);
-    void drawGrid(RS_Painter *painter, RS_GraphicView *view);
-    void drawGridPoints(RS_Painter *painter, RS_GraphicView *view);
-    void drawGridLines(RS_Painter *painter, RS_GraphicView *view);
+    void drawMetaGrid(RS_Painter *painter, LC_GraphicViewport *view);
+    void drawGrid(RS_Painter *painter, LC_GraphicViewport *view);
+    void drawGridPoints(RS_Painter *painter, LC_GraphicViewport *view);
+    void drawGridLines(RS_Painter *painter, LC_GraphicViewport *view);
     int getGridPointsCount();
-    virtual void drawMetaGridLines(RS_Painter *painter, RS_GraphicView *view) = 0;
+    virtual void drawMetaGridLines(RS_Painter *painter, LC_GraphicViewport *view) = 0;
     virtual void createGridPoints(const RS_Vector &min, const RS_Vector &max,const RS_Vector &gridWidth, bool drawGridWithoutGaps, int numPointsTotal) = 0;
     virtual void createGridLines(const RS_Vector& min, const RS_Vector &max, const RS_Vector & gridWidth, bool gaps, const RS_Vector& lineOffset) = 0;
     virtual int  determineTotalPointsAmount(bool drawGridWithoutGaps) = 0;
@@ -135,7 +141,7 @@ protected:
     virtual void determineMetaGridBoundaries(const RS_Vector &viewZero, const RS_Vector &viewSize) = 0;
     virtual void prepareGridOther(const RS_Vector &viewZero, const RS_Vector &viewSize) = 0;
     double truncToStep(double value, double step);
-    void doDrawLines(RS_Painter *painter, RS_GraphicView *view, LC_Lattice *lattice);
+    void doDrawLines(RS_Painter *painter, LC_GraphicViewport *view, LC_Lattice *lattice);
     bool isNumberOfPointsValid(int numberOfPoints);
 
     virtual void setCellSize(const RS_Vector &gridWidth, const RS_Vector &metaGridWidth);

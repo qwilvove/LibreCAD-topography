@@ -24,13 +24,8 @@
 **
 **********************************************************************/
 #include "qg_dlgcircle.h"
-
-
 #include "rs_circle.h"
 #include "rs_graphic.h"
-#include "rs_math.h"
-//#include "rs_debug.h"
-
 /*
  *  Constructs a QG_DlgCircle as a child of 'parent', with the
  *  name 'name' and widget flags set to 'f'.
@@ -38,9 +33,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgCircle::QG_DlgCircle(QWidget* parent)
-    : LC_Dialog(parent, "CircleProperties"){
+QG_DlgCircle::QG_DlgCircle(QWidget *parent, LC_GraphicViewport *pViewport, RS_Circle* circle)
+    :LC_EntityPropertiesDlg(parent, "CircleProperties", pViewport){
     setupUi(this);
+    setEntity(circle);
 }
 
 /*
@@ -58,31 +54,30 @@ void QG_DlgCircle::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgCircle::setCircle(RS_Circle& c) {
-    circle = &c;
+void QG_DlgCircle::setEntity(RS_Circle* c) {
+    m_entity = c;
 
-    RS_Graphic *graphic = circle->getGraphic();
+    RS_Graphic *graphic = m_entity->getGraphic();
     if (graphic != nullptr) {
         cbLayer->init(*(graphic->getLayerList()), false, false);
     }
-    RS_Layer *lay = circle->getLayer(false);
+    RS_Layer *lay = m_entity->getLayer(false);
     if (lay != nullptr) {
         cbLayer->setLayer(*lay);
     }
 
-    wPen->setPen(circle, lay, "Pen");
-    leCenterX->setText(asString(circle->getCenter().x));
-    leCenterY->setText(asString(circle->getCenter().y));
-    leRadius->setText(asString(circle->getRadius()));
+    wPen->setPen(m_entity, lay, tr("Pen"));
+
+    toUI(m_entity->getCenter(), leCenterX, leCenterY);
+    toUIValue(m_entity->getRadius(), leRadius);
 //	RS_DEBUG->print(RS_Debug::D_ERROR,"QG_DlgCircle::setCircle, leRadius->setText '%s'",qPrintable(s));
 }
 
-void QG_DlgCircle::updateCircle() {
-    circle->setCenter(RS_Vector(RS_Math::eval(leCenterX->text()),
-                                  RS_Math::eval(leCenterY->text())));
-//	RS_DEBUG->print(RS_Debug::D_ERROR,"QG_DlgCircle::updateCircle, setRadius '%s'",qPrintable(leRadius->text()));
-    circle->setRadius(RS_Math::eval(leRadius->text()));
-    circle->setPen(wPen->getPen());
-    circle->setLayer(cbLayer->currentText());
-    circle->calculateBorders();
+void QG_DlgCircle::updateEntity() {
+    m_entity->setCenter(toWCS(leCenterX, leCenterY, m_entity->getCenter()));
+    m_entity->setRadius(toWCSValue(leRadius, m_entity->getRadius()));
+
+    m_entity->setPen(wPen->getPen());
+    m_entity->setLayer(cbLayer->getLayer());
+    m_entity->calculateBorders();
 }

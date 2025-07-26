@@ -28,14 +28,10 @@
 #ifndef RS_SETTINGS_H
 #define RS_SETTINGS_H
 
-#include <map>
-#include <memory>
-
-#include <QString>
 #include <QObject>
 #include <QVariant>
-#include "rs_pen.h"
 
+class RS_Pen;
 class QSettings;
 
 // ---------------------------------------------------------------------------
@@ -97,6 +93,9 @@ public:
     static constexpr char const* overlayInfoCursorRelativePos = "Orange";
     static constexpr char const* overlayInfoCursorCommandPrompt = "Gray";
 
+    static constexpr char const* anglesBasisDirection = "#017CFF";
+    static constexpr char const* anglesBasisAngleRay = "#00FFFF";
+
 
 
     // Used to have RAII style GroupGuard: endGroup is called automatically whenever a unique_ptr<GroupGuard>
@@ -109,7 +108,7 @@ public:
         QString m_group;
     };
 
-    virtual ~RS_Settings();
+    ~RS_Settings() override;
 
 /**
     * @return Instance to the unique settings object.
@@ -161,6 +160,10 @@ public:
     static void writePen(QString name, RS_Pen const &pen);
     static RS_Pen readPen(QString name, RS_Pen &defaultPen);
 
+    QSettings* getSettings() const {
+        return settings;
+    }
+
 signals:
     void optionChanged(const QString& groupName, const QString &propertyName, QVariant oldValue, QVariant newValue);
     void optionsChanged();
@@ -172,14 +175,11 @@ private:
 protected:
     std::map<QString, QVariant> cache;
     QString m_group;
-    QSettings *settings;
+    QSettings *settings = nullptr;
     static inline RS_Settings* INSTANCE;
 
     bool writeEntrySingle(const QString &group, const QString &key, const QVariant &value);
-
     QString getFullName(const QString &group, const QString &key) const;
-
-
 };
 
 #endif

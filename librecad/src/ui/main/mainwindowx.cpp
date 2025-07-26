@@ -23,107 +23,92 @@
 */
 
 #include "mainwindowx.h"
-#include "rs_debug.h"
 
 #include <QDockWidget>
 #include <QToolBar>
 
-namespace Sorting
+namespace
 {
-    bool byWindowTitle(QWidget* left, QWidget* right)
+    namespace Sorting
     {
-        return left->windowTitle() < right->windowTitle();
-    }
-
-    bool byGroupAndWindowTitle(QWidget* left, QWidget* right) {
-
-        const QVariant &leftGroup = left->property("_group");
-        const QVariant &rightGroup = right->property("_group");
-
-        int iLeftGroup = -100;
-        if (leftGroup.isValid()) {
-            bool ok = false;
-            iLeftGroup = leftGroup.toInt(&ok);
-            if (!ok) {
-                iLeftGroup = -100;
-            }
+        bool byWindowTitle(QWidget* left, QWidget* right) {
+            return left->windowTitle() < right->windowTitle();
         }
 
-        int iRightGroup = -100;
-        if (rightGroup.isValid()) {
-            bool ok = false;
-            iRightGroup = rightGroup.toInt(&ok);
-            if (!ok) {
-                iRightGroup = -100;
-            }
+        /**
+             * @brief getGroup find the integer widget property ("_group"), the default value is -100
+             * @param widget - a widget
+             * @return the "_group" property
+             */
+        int getGroup(const QWidget* widget) {
+            const int defaultGroup = -100;
+            if (widget == nullptr)
+                return defaultGroup;
+            const QVariant groupProperty = widget->property("_group");
+            bool okay = false;
+            const int ret = groupProperty.toInt(&okay);
+            return okay ? ret : defaultGroup;
         }
 
-        bool result;
+        bool byGroupAndWindowTitle(QWidget* left, QWidget* right) {
+            const int iLeftGroup = getGroup(left);
+            const int iRightGroup = getGroup(right);
 
-        if (iLeftGroup < iRightGroup) {
-            result =  true;
-        } else if (iLeftGroup == iRightGroup) {
-            result = QString::compare(left->windowTitle(),right->windowTitle()) < 0;
-        } else if (iLeftGroup > iRightGroup) {
-            result = false;
+            //        LC_ERR << iLeftGroup << " " << iRightGroup << " " << result;
+
+            return (iLeftGroup < iRightGroup)
+                || (iLeftGroup == iRightGroup
+                    && QString::compare(left->windowTitle(), right->windowTitle()) < 0);
         }
-//        LC_ERR << iLeftGroup << " " << iRightGroup << " " << result;
-        return result;
     }
 }
 
 MainWindowX::MainWindowX(QWidget* parent)
-    : QMainWindow(parent) {}
+    : QMainWindow(parent) {
+}
 
-void MainWindowX::sortWidgetsByTitle(QList<QDockWidget*>& list){
+void MainWindowX::sortWidgetsByTitle(QList<QDockWidget*>& list) {
     std::sort(list.begin(), list.end(), Sorting::byWindowTitle);
 }
 
-void MainWindowX::sortWidgetsByTitle(QList<QToolBar*>& list){
+void MainWindowX::sortWidgetsByTitle(QList<QToolBar*>& list) {
     std::sort(list.begin(), list.end(), Sorting::byWindowTitle);
 }
 
-void MainWindowX::sortWidgetsByGroupAndTitle(QList<QToolBar *> &list) {
-        std::sort(list.begin(), list.end(), Sorting::byGroupAndWindowTitle);
+void MainWindowX::sortWidgetsByGroupAndTitle(QList<QToolBar*>& list) {
+    std::sort(list.begin(), list.end(), Sorting::byGroupAndWindowTitle);
 }
 
-void MainWindowX::toggleLeftDockArea(bool state){
-    foreach (QDockWidget* dw, findChildren<QDockWidget*>())
-    {
+void MainWindowX::toggleLeftDockArea(bool state) {
+    foreach(QDockWidget* dw, findChildren<QDockWidget*>()) {
         if (dockWidgetArea(dw) == Qt::LeftDockWidgetArea && !dw->isFloating())
             dw->setVisible(state);
     }
 }
 
-void MainWindowX::toggleRightDockArea(bool state){
-    foreach (QDockWidget* dw, findChildren<QDockWidget*>())
-    {
+void MainWindowX::toggleRightDockArea(bool state) {
+    foreach(QDockWidget* dw, findChildren<QDockWidget*>()) {
         if (dockWidgetArea(dw) == Qt::RightDockWidgetArea && !dw->isFloating())
             dw->setVisible(state);
     }
 }
 
-void MainWindowX::toggleTopDockArea(bool state){
-    foreach (QDockWidget* dw, findChildren<QDockWidget*>())
-    {
+void MainWindowX::toggleTopDockArea(bool state) {
+    foreach(QDockWidget* dw, findChildren<QDockWidget*>()) {
         if (dockWidgetArea(dw) == Qt::TopDockWidgetArea && !dw->isFloating())
             dw->setVisible(state);
     }
 }
 
-void MainWindowX::toggleBottomDockArea(bool state)
-{
-    foreach (QDockWidget* dw, findChildren<QDockWidget*>())
-    {
+void MainWindowX::toggleBottomDockArea(bool state) {
+    foreach(QDockWidget* dw, findChildren<QDockWidget*>()) {
         if (dockWidgetArea(dw) == Qt::BottomDockWidgetArea && !dw->isFloating())
             dw->setVisible(state);
     }
 }
 
-void MainWindowX::toggleFloatingDockwidgets(bool state)
-{
-    foreach (QDockWidget* dw, findChildren<QDockWidget*>())
-    {
+void MainWindowX::toggleFloatingDockwidgets(bool state) {
+    foreach(QDockWidget* dw, findChildren<QDockWidget*>()) {
         if (dw->isFloating())
             dw->setVisible(state);
     }

@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef RS_ACTIONDRAWCIRCLEINSCRIBE_H
 #define RS_ACTIONDRAWCIRCLEINSCRIBE_H
 
-#include "rs_previewactioninterface.h"
 #include "lc_actiondrawcirclebase.h"
 
 class RS_Line;
@@ -37,15 +36,9 @@ struct RS_CircleData;
 class RS_ActionDrawCircleInscribe:public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawCircleInscribe(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView);
+    RS_ActionDrawCircleInscribe(LC_ActionContext *actionContext);
     ~RS_ActionDrawCircleInscribe() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
-
-//        void coordinateEvent(RS_CoordinateEvent* e) override;
-//    void commandEvent(RS_CommandEvent* e) override;
     void finish(bool updateTB) override;
     void drawSnapper() override;
 protected:
@@ -58,9 +51,9 @@ protected:
         SetLine3   //  Setting the Third Line.  */
     };
 
-    struct Points;
-    std::unique_ptr<Points> pPoints;
-    bool valid = false;
+    struct ActionData;
+    std::unique_ptr<ActionData> m_actionData;
+    bool m_valid = false;
 
     bool preparePreview(RS_Line *en);
     /**
@@ -69,8 +62,9 @@ protected:
 	 */
     void clearLines(bool checkStatus = false);
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
     void doTrigger() override;
 };

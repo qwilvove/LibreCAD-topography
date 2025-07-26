@@ -24,16 +24,16 @@
 **
 **********************************************************************/
 
-
 #ifndef RS_ACTIONINTERFACE_H
 #define RS_ACTIONINTERFACE_H
 
-#include <QtCore/QtContainerFwd>
-
-#include "rs.h"
-#include "rs_snapper.h"
 #include "lc_modifiersinfo.h"
+#include "rs.h"
+#include "rs_math.h"
+#include "rs_snapper.h"
 
+class RS_Undoable;
+class LC_ModifiersInfo;
 class QInputEvent;
 class QKeyEvent;
 class QMouseEvent;
@@ -45,6 +45,10 @@ class RS_Document;
 class QAction;
 class QString;
 class LC_ActionOptionsWidget; // todo - think about depencency - options in in ui, while this action in lib... quite artificial separation, actually
+
+namespace{
+   const double DEFAULT_SNAP_ANGLE_STEP =  RS_Math::deg2rad(15.0);
+}
 
 /**
  * This is the interface that must be implemented for all
@@ -58,12 +62,12 @@ class LC_ActionOptionsWidget; // todo - think about depencency - options in in u
 //fixme - actually, inheritance from snapper is rather bad design... not all actions (say, file open or print-preview) should be
 // inherited from snapper - only ones that really work with drawing should be snap-aware
 class RS_ActionInterface : public RS_Snapper {
+Q_OBJECT
 public:
     RS_ActionInterface(const char* name,
-                       RS_EntityContainer& container,
-                       RS_GraphicView& graphicView,
-                       RS2::ActionType actionType = RS2::ActionNone);
-	   ~RS_ActionInterface() override;
+                       LC_ActionContext *actionContext,
+                       RS2::ActionType actionType /*= RS2::ActionNone*/);
+   ~RS_ActionInterface() override;
 
     virtual RS2::ActionType rtti() const;
 
@@ -100,40 +104,37 @@ private:
      * first corner (status 0), and selecting the second
      * corner (status 1).
      */
-    int status = 0;
+    int m_status = 0;
 protected:
     /** Action name. Used internally for debugging */
-    QString name;
+    QString m_name;
 
     /**
      * This flag is set when the action has terminated and
      * can be deleted.
      */
-    bool finished = false;
+    bool m_finished = false; // fixme- sand - review!!! Hides one from super?
 
     /**
      * Pointer to the graphic is this container is a graphic.
      * NULL otherwise
      */
-    RS_Graphic *graphic = nullptr;
+    RS_Graphic *m_graphic = nullptr; // // fixme- sand - review!!!
 
     /**
     * Pointer to the document (graphic or block) or NULL.
     */
 
-    RS_Document *document = nullptr;
+    RS_Document *m_document = nullptr;// fixme- sand - review!!!
     /**
      * Predecessor of this action or NULL.
      */
-    RS_ActionInterface* predecessor = nullptr;
-
-
-    RS2::ActionType actionType = RS2::ActionNone;
-
+    RS_ActionInterface* m_predecessor = nullptr; // fixme- sand - review!!!
+    RS2::ActionType m_actionType = RS2::ActionNone;
     std::unique_ptr<LC_ActionOptionsWidget> m_optionWidget;
+    double m_snapToAngleStep = DEFAULT_SNAP_ANGLE_STEP;
 
-    double snapToAngleStep = 15.0;
-
+    void switchToAction(RS2::ActionType actionType, void* data = nullptr);
     QString msgAvailableCommands();
     void setActionType(RS2::ActionType actionType);
     // Accessor for drawing keys
@@ -163,6 +164,8 @@ protected:
 
     virtual void onMouseLeftButtonRelease(int status, QMouseEvent * e);
     virtual void onMouseRightButtonRelease(int status, QMouseEvent * e);
+    virtual void onMouseLeftButtonPress(int status, QMouseEvent * e);
+    virtual void onMouseRightButtonPress(int status, QMouseEvent * e);
 
     void updateSnapAngleStep();
     /**
@@ -174,15 +177,15 @@ protected:
     virtual bool doProcessCommand([[maybe_unused]]int status, const QString &command);
 
     bool checkCommand(const QString& cmd, const QString& str,
-                      RS2::ActionType action=RS2::ActionNone);
+                      RS2::ActionType action=RS2::ActionType::ActionNone);
     QString command(const QString& cmd);
     virtual QString getAdditionalHelpMessage();
     virtual QString prepareCommand(RS_CommandEvent *e) const;
 
     void commandMessage(const QString &msg) const;
+    void commandPrompt(const QString &msg) const;
 
     void fireCoordinateEvent(const RS_Vector& coord);
-    void fireCoordinateEventForSnap(QMouseEvent *e);
 
     virtual void onCoordinateEvent(int status, bool isZero, const RS_Vector& pos);
     void initPrevious(int status);
@@ -194,7 +197,7 @@ protected:
     void undoCycleReplace(RS_Entity *entityToReplace, RS_Entity* entityReplacing);
     void undoCycleEnd() const;
     void undoCycleStart() const;
-
     void setPenAndLayerToActive(RS_Entity* e);
+
 };
 #endif

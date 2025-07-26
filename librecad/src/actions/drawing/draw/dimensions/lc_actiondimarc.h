@@ -32,27 +32,26 @@
 #include "lc_dimarc.h"
 #include "rs_actiondimension.h"
 
-
 class LC_ActionDimArc : public RS_ActionDimension{
    Q_OBJECT
 public:
-    LC_ActionDimArc(RS_EntityContainer& container, RS_GraphicView& graphicView);
+    LC_ActionDimArc(LC_ActionContext *actionContext);
     ~LC_ActionDimArc() override;
-    void mouseMoveEvent(QMouseEvent* e) override;
     QStringList getAvailableCommands() override;
 protected:
     enum Status{
         SetEntity,
         SetPos
     };
-    RS_Entity* selectedArcEntity = nullptr;
-    LC_DimArcData dimArcData;
+    RS_Entity* m_selectedArcEntity = nullptr;
+    LC_DimArcData m_dimArcData;
     void reset()   override;
     void setRadius(const RS_Vector& selectedPosition);
     void updateMouseButtonHints() override;
     bool doProcessCommand(int status, const QString &command)  override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void doTrigger() override;
 };

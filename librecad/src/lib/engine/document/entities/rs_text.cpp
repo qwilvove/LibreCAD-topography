@@ -25,29 +25,31 @@
 **********************************************************************/
 
 #include<iostream>
-#include<cmath>
-#include "rs_font.h"
+
 #include "rs_text.h"
 
+#include "rs_debug.h"
+#include "rs_font.h"
 #include "rs_fontlist.h"
 #include "rs_insert.h"
-#include "rs_math.h"
-#include "rs_debug.h"
-#include "rs_graphicview.h"
 #include "rs_line.h"
+#include "rs_math.h"
 #include "rs_painter.h"
+#include "rs_pen.h"
+
+class RS_Font;
 
 RS_TextData::RS_TextData(const RS_Vector& _insertionPoint,
-						 const RS_Vector& _secondPoint,
-						 double _height,
-						 double _widthRel,
-						 VAlign _valign,
-						 HAlign _halign,
-						 TextGeneration _textGeneration,
-						 const QString& _text,
-						 const QString& _style,
-						 double _angle,
-						 RS2::UpdateMode _updateMode):
+                         const RS_Vector& _secondPoint,
+                         double _height,
+                         double _widthRel,
+                         VAlign _valign,
+                         HAlign _halign,
+                         TextGeneration _textGeneration,
+                         const QString& _text,
+                         const QString& _style,
+                         double _angle,
+                         RS2::UpdateMode _updateMode):
 	insertionPoint(_insertionPoint)
   ,secondPoint(_secondPoint)
   ,height(_height)
@@ -92,7 +94,6 @@ RS_Text::RS_Text(RS_EntityContainer* parent,
 RS_Entity* RS_Text::clone() const{
     RS_Text* t = new RS_Text(*this);
     t->setOwner(isOwner());
-    t->initId();
     t->detach();
     return t;
 }
@@ -251,7 +252,7 @@ void RS_Text::update() {
 
     RS_Font* font = RS_FONTLIST->requestFont(data.style);
 
-    if (font==NULL) {
+    if (font==nullptr) {
         return;
     }
 
@@ -306,7 +307,7 @@ void RS_Text::update() {
         }
     }
 
-    if( ! RS_EntityContainer::autoUpdateBorders) {
+    if (!getAutoUpdateBorders()) {
         //only update borders when needed
         forcedCalculateBorders();
     }
@@ -391,7 +392,7 @@ void RS_Text::update() {
     // Rotate:
     if (data.halign==RS_TextData::HAAligned || data.halign==RS_TextData::HAFit){
         double angle = data.insertionPoint.angleTo(data.secondPoint);
-        data.angle = angle;
+        data.angle =  angle;
     } else {
         data.secondPoint.rotate(RS_Vector(0.0,0.0), data.angle);
         data.secondPoint.move(data.insertionPoint);
@@ -415,7 +416,7 @@ void RS_Text::updateBaselinePoints() {
 }
 
 RS_Vector RS_Text::getNearestEndpoint(const RS_Vector& coord, double* dist)const {
-    if (dist) {
+    if (dist != nullptr) {
         *dist = data.insertionPoint.distanceTo(coord);
     }
     return data.insertionPoint;
@@ -452,7 +453,7 @@ void RS_Text::move(const RS_Vector& offset) {
 //    update();
 }
 
-void RS_Text::rotate(const RS_Vector& center, const double& angle) {
+void RS_Text::rotate(const RS_Vector& center, double angle) {
     RS_Vector angleVector(angle);
     RS_EntityContainer::rotate(center, angleVector);
     data.insertionPoint.rotate(center, angleVector);
@@ -484,7 +485,7 @@ void RS_Text::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) {
     vec.mirror(RS_Vector(0.0,0.0), axisPoint2-axisPoint1);
     data.angle = vec.angle();
 
-    bool corr;
+    bool corr = false;
     data.angle = RS_Math::makeAngleReadable(data.angle, readable, &corr);
 
     if (corr) {
@@ -500,7 +501,7 @@ void RS_Text::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) {
             data.secondPoint = tmp;
         }
     } else {
-        RS_Vector minP = RS_Vector(getMin().x, getMax().y);
+        RS_Vector minP{getMin().x, getMax().y};
         minP = minP.mirror(axisPoint1, axisPoint2);
         double mirrAngle = axisPoint1.angleTo(axisPoint2)*2.0;
         data.insertionPoint.move(minP - getMin());
@@ -511,7 +512,8 @@ void RS_Text::mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) {
     update();
 }
 
-bool RS_Text::hasEndpointsWithinWindow(const RS_Vector& /*v1*/, const RS_Vector& /*v2*/) {
+bool RS_Text::hasEndpointsWithinWindow(const RS_Vector& /*v1*/, const RS_Vector& /*v2*/) const
+{
     return false;
 }
 
@@ -534,32 +536,22 @@ std::ostream& operator << (std::ostream& os, const RS_Text& p) {
     return os;
 }
 
-RS_Entity *RS_Text::cloneProxy(RS_GraphicView* view) const {
-    if (view->isDrawTextsAsDraftForPreview()) {
-        return new RS_Line(nullptr, baselineStartPoint, baselineEndPoint);
-    }
-    else{
-        return clone();
-    }
+RS_Entity *RS_Text::cloneProxy() const {
+   return new RS_Line(nullptr, baselineStartPoint, baselineEndPoint);
 }
 
-void RS_Text::drawDraft(RS_Painter *painter, RS_GraphicView *view, [[maybe_unused]]double &patternOffset) {
-//    painter->drawRect(view->toGui(getMin()), view->toGui(getMax()));
-    painter->drawLine(view->toGui(baselineStartPoint), view->toGui(baselineEndPoint));
+void RS_Text::drawDraft(RS_Painter *painter) {
+    painter->drawLineWCS(baselineStartPoint, baselineEndPoint);
 }
 
-void RS_Text::draw(RS_Painter* painter, RS_GraphicView* view, double& patternOffset){
-//    if (!(painter && view)) {
-//        return;
-//    }
-//    if (!view->isPrintPreview() && !view->isPrinting()){
-        if (/*view->isPanning() || */view->toGuiDY(getHeight()) < view->getMinRenderableTextHeightInPx()){
-            drawDraft(painter, view, patternOffset);
-            return;
-        }
-//    }
+void RS_Text::draw(RS_Painter* painter){
+    bool drawAsDraft = painter->isTextLineNotRenderable(getHeight());
+    if (drawAsDraft){
+        drawDraft(painter);
+        return;
+    }
 
-    foreach (auto e, entities){
-       view->drawAsChild(painter, e, patternOffset);
+    for(RS_Entity* e: *this){
+       painter->drawAsChild(e);
     }
 }

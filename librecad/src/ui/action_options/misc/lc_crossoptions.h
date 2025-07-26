@@ -22,11 +22,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef LC_CROSSOPTIONS_H
 #define LC_CROSSOPTIONS_H
 
-#include "lc_actiondrawcross.h"
 #include "lc_actionoptionswidgetbase.h"
 
+class LC_ActionDrawCross;
+
 namespace Ui {
-class LC_CrossOptions;
+    class LC_CrossOptions;
 }
 
 class LC_CrossOptions : public LC_ActionOptionsWidgetBase{
@@ -34,7 +35,6 @@ class LC_CrossOptions : public LC_ActionOptionsWidgetBase{
 public:
     explicit LC_CrossOptions();
     ~LC_CrossOptions() override;
-
 public slots:
     void onXEditingFinished();
     void onYEditingFinished();
@@ -46,8 +46,7 @@ protected:
     void doSetAction( RS_ActionInterface * a, bool update) override;
 private:
     Ui::LC_CrossOptions *ui;
-    LC_ActionDrawCross* action = nullptr;
-
+    LC_ActionDrawCross* m_action = nullptr;
     void setXToActionAndView(const QString &strValue);
     void setYToActionAndView(const QString &strValue);
     void setAngleToActionAndView(const QString &expr);

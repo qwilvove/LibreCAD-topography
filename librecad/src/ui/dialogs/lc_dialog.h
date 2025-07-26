@@ -28,23 +28,16 @@
 class LC_Dialog : public QDialog{
 public:
     LC_Dialog(QWidget *parent, const QString &dlgName);
+    virtual ~LC_Dialog() = default;
     void accept() override;
     void reject() override;
 protected:
-    QString dialogName;
-    bool positionLoaded = false;
+    QString m_dialogName;
+    bool m_positionLoaded = false;
     void saveDialogPosition() const;
     void loadDialogPosition();
     QString getPositionSettingsGroupName() const;
     void showEvent(QShowEvent *event) override;
-
-    QString asString(double value);
-    bool toDouble(const QString &strValue, double &res, double notMeaningful, bool positiveOnly);
-    bool toDoubleAngle(const QString &strValue, double &res, double notMeaningful, bool positiveOnly);
-
-    QString asStringAngleDeg(double value);
-
-    QString asStringAngle(double value);
 };
 
 #endif // LC_DIALOG_H

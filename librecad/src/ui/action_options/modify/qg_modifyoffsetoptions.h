@@ -29,14 +29,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef QG_MODIFYOFFSETOPTIONS_H
 #define QG_MODIFYOFFSETOPTIONS_H
 
-
 #include "lc_actionoptionswidgetbase.h"
 
 class RS_ActionInterface;
 class RS_ActionModifyOffset;
 
 namespace Ui {
-class Ui_ModifyOffsetOptions;
+    class Ui_ModifyOffsetOptions;
 }
 
 class QG_ModifyOffsetOptions : public LC_ActionOptionsWidgetBase{
@@ -60,7 +59,7 @@ protected slots:
     void onNumberOfCopiesValueChanged(int number);
 private:
     std::unique_ptr<Ui::Ui_ModifyOffsetOptions> ui;
-    RS_ActionModifyOffset* action = nullptr;
+    RS_ActionModifyOffset* m_action = nullptr;
     void setCopiesNumberToActionAndView(int number);
     void setUseMultipleCopiesToActionAndView(bool copies);
     void setUseCurrentLayerToActionAndView(bool val);

@@ -98,7 +98,7 @@ public:
         RS2::ResolveLevel level = RS2::ResolveNone,
         double solidDist = RS_MAXDOUBLE) const override;
     void move(const RS_Vector &offset) override;
-    void rotate(const RS_Vector &center, const double &angle) override;
+    void rotate(const RS_Vector &center, double angle) override;
     void rotate(const RS_Vector &center, const RS_Vector &angleVector) override;
     void scale(const RS_Vector &center, const RS_Vector &factor) override;
     void mirror(const RS_Vector &axisPoint1, const RS_Vector &axisPoint2) override;
@@ -108,10 +108,9 @@ public:
     void calculateBorders() override;
 
     //RS_Vector point;
-    void draw(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) override;
+    void draw(RS_Painter *painter) override;
 
 protected:
     RS_PointData data;
-    int determinePointSreenSize(const RS_Painter *painter, const RS_GraphicView *view, double pdsize) const;
 };
 #endif

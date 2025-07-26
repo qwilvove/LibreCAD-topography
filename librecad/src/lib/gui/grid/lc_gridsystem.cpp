@@ -20,13 +20,12 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  ******************************************************************************/
 
-#include "rs.h"
-#include "rs_math.h"
-#include "rs_vector.h"
 #include "lc_gridsystem.h"
-#include "rs_graphicview.h"
+
+#include "lc_graphicviewport.h"
+#include "lc_lattice.h"
+#include "rs_painter.h"
 #include "rs_pen.h"
-#include "rs_debug.h"
 
 namespace {
 //maximum number grid points to draw, for performance consideration
@@ -35,20 +34,16 @@ namespace {
     const double minimumGridWidth=1.0e-8;
 }
 
-LC_GridSystem::LC_GridSystem(LC_GridSystem::LC_GridOptions *options) {
-   gridOptions = options;
-   gridLattice = new LC_Lattice();
-   metaGridLattice = new LC_Lattice();
+LC_GridSystem::LC_GridSystem(LC_GridSystem::LC_GridOptions *options):
+    gridOptions{std::make_unique<LC_GridSystem::LC_GridOptions>(options != nullptr ? *options: LC_GridSystem::LC_GridOptions{})}
+, gridLattice{std::make_unique<LC_Lattice>()}
+, metaGridLattice{std::make_unique<LC_Lattice>()}{
 }
 
-LC_GridSystem::~LC_GridSystem() {
-    delete gridOptions;
-    delete gridLattice;
-    delete metaGridLattice;
-}
+LC_GridSystem::~LC_GridSystem() = default;
 
 void LC_GridSystem::createGrid(
-    RS_GraphicView* view,
+    LC_GraphicViewport* view,
     const RS_Vector &viewZero, const RS_Vector &viewSize,
     const RS_Vector &metaGridWidth, const RS_Vector &gridWidth) {
 
@@ -58,7 +53,7 @@ void LC_GridSystem::createGrid(
     }
 }
 
-bool LC_GridSystem::isGridDisabledByPanning(RS_GraphicView* view){
+bool LC_GridSystem::isGridDisabledByPanning(LC_GraphicViewport* view){
     return gridOptions->disableGridOnPanning && view->isPanning();
 }
 
@@ -70,7 +65,7 @@ void LC_GridSystem::doCalculateSnapInfo(RS_Vector &viewZero, RS_Vector &viewSize
 }
 
 void LC_GridSystem::doCreateGrid(
-    RS_GraphicView *view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth) {
+    LC_GraphicViewport *view, const RS_Vector &viewZero, const RS_Vector &viewSize, const RS_Vector &metaGridWidth, const RS_Vector &gridWidth) {
 
     bool gridVisible = gridOptions->drawGrid && gridWidth.valid;
     bool metaGridVisible = gridOptions->drawMetaGrid && metaGridWidth.valid;
@@ -90,7 +85,10 @@ void LC_GridSystem::doCreateGrid(
         if (gridOptions->drawLines || hasAxisIndefinite) {
             // grid lines data
             int lineOffsetPx = gridOptions->metaGridLineWidthPx * 2;
-            RS_Vector lineOffset = view->toGraphD(lineOffsetPx, lineOffsetPx);
+
+            double ucsOffsetX = view->toUcsDX(lineOffsetPx);
+            double ucsOffsetY = view->toUcsDY(lineOffsetPx);
+            RS_Vector lineOffset = RS_Vector(ucsOffsetX, ucsOffsetY);
             createGridLines(viewZero, viewSize, gridCellSize, drawGridWithoutGaps, lineOffset);
             gridLattice->toGui(view);
         } else {
@@ -121,9 +119,8 @@ void LC_GridSystem::setCellSize(const RS_Vector &gridWidth, const RS_Vector &met
     gridCellSize = gridWidth;
 }
 
-void LC_GridSystem::setOptions(LC_GridSystem::LC_GridOptions *options) {
-    delete gridOptions;
-    gridOptions = options;
+void LC_GridSystem::setOptions(std::unique_ptr<LC_GridSystem::LC_GridOptions> options) {
+    gridOptions = std::move(options);
 }
 
 void LC_GridSystem::invalidate() {
@@ -134,7 +131,7 @@ bool LC_GridSystem::isValid() const {
     return valid;
 }
 
-void LC_GridSystem::draw(RS_Painter *painter, RS_GraphicView *view) {
+void LC_GridSystem::draw(RS_Painter *painter, LC_GraphicViewport *view) {
     if (isGridDisabledByPanning(view)){
         return;
     }
@@ -147,7 +144,7 @@ void LC_GridSystem::draw(RS_Painter *painter, RS_GraphicView *view) {
     }
 }
 
-void LC_GridSystem::drawMetaGrid(RS_Painter *painter, RS_GraphicView *view) {
+void LC_GridSystem::drawMetaGrid(RS_Painter *painter, LC_GraphicViewport *view) {
     RS_Pen pen = RS_Pen(gridOptions->metaGridColor, RS2::Width00, gridOptions->metaGridLineType);
     pen.setScreenWidth(gridOptions->metaGridLineWidthPx);
     painter->setPen(pen);
@@ -155,7 +152,7 @@ void LC_GridSystem::drawMetaGrid(RS_Painter *painter, RS_GraphicView *view) {
     drawMetaGridLines(painter, view);
 }
 
-void LC_GridSystem::drawGrid(RS_Painter *painter, RS_GraphicView *view) {
+void LC_GridSystem::drawGrid(RS_Painter *painter, LC_GraphicViewport *view) {
     if (gridOptions->drawLines || hasAxisIndefinite){
         RS_Pen pen = RS_Pen(gridOptions->gridColorLine, RS2::Width00, gridOptions->gridLineType);
         pen.setScreenWidth(gridOptions->gridWidthPx);
@@ -169,7 +166,7 @@ void LC_GridSystem::drawGrid(RS_Painter *painter, RS_GraphicView *view) {
     }
 }
 
-void LC_GridSystem::drawGridPoints(RS_Painter *painter, [[maybe_unused]]RS_GraphicView *view) {
+void LC_GridSystem::drawGridPoints(RS_Painter *painter, [[maybe_unused]]LC_GraphicViewport *view) {
     int pointsCount = getGridPointsCount();
     for (int i = 0; i < pointsCount; i++){
         double pX = gridLattice->getPointX(i);
@@ -178,11 +175,11 @@ void LC_GridSystem::drawGridPoints(RS_Painter *painter, [[maybe_unused]]RS_Graph
     }
 }
 
-void LC_GridSystem::drawGridLines(RS_Painter *painter, RS_GraphicView *view) {
-    doDrawLines(painter, view, gridLattice);
+void LC_GridSystem::drawGridLines(RS_Painter *painter, LC_GraphicViewport *view) {
+    doDrawLines(painter, view, gridLattice.get());
 }
 
-void LC_GridSystem::doDrawLines(RS_Painter *painter, [[maybe_unused]]RS_GraphicView *view, LC_Lattice* linesLattice) {
+void LC_GridSystem::doDrawLines(RS_Painter *painter, [[maybe_unused]]LC_GraphicViewport *view, LC_Lattice* linesLattice) {
     int pointsCount = linesLattice->getPointsSize();
 //    LC_ERR << "Lines Points Count: " << pointsCount;
     int i = 0;
@@ -193,7 +190,7 @@ void LC_GridSystem::doDrawLines(RS_Painter *painter, [[maybe_unused]]RS_GraphicV
         double endPointX = linesLattice->getPointX(i);
         double endPointY = linesLattice->getPointY(i);
         i++;
-        painter->drawLineSimple(startPointX, startPointY, endPointX, endPointY);
+        painter->drawLineUISimple(startPointX, startPointY, endPointX, endPointY);
     }
 }
 

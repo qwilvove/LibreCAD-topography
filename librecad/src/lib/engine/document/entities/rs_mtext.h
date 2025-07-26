@@ -28,8 +28,8 @@
 #define RS_MTEXT_H
 
 #include "rs_entitycontainer.h"
-#include <iosfwd>
 
+class RS_Text;
 class RS_Font;
 
 /**
@@ -199,23 +199,22 @@ public:
    RS_VectorSolutions getRefPoints() const override;
 
    void move(const RS_Vector &offset) override;
-   void rotate(const RS_Vector &center, const double &angle) override;
+   void rotate(const RS_Vector &center, double angle) override;
   virtual void rotate(const RS_Vector &center,
                       const RS_Vector &angleVector) override;
    void scale(const RS_Vector &center, const RS_Vector &factor) override;
   virtual void mirror(const RS_Vector &axisPoint1,
                       const RS_Vector &axisPoint2) override;
   virtual bool hasEndpointsWithinWindow(const RS_Vector &v1,
-                                         const RS_Vector &v2) override;
+                                         const RS_Vector &v2) const override;
    virtual void stretch(const RS_Vector &firstCorner,
                        const RS_Vector &secondCorner,
                        const RS_Vector &offset) override;
 
     friend std::ostream &operator<<(std::ostream &os, const RS_Text &p);
 
-    void draw(RS_Painter *painter, RS_GraphicView *view,
-            double &patternOffset) override;
-    void drawDraft(RS_Painter *painter, RS_GraphicView *view, double &patternOffset) override;
+    void draw(RS_Painter *painter) override;
+    void drawDraft(RS_Painter *painter) override;
     void moveRef(const RS_Vector &ref, const RS_Vector &offset) override;
     RS_Vector getNearestRef(const RS_Vector &coord, double *dist) const override;
     RS_Vector getNearestSelectedRef(const RS_Vector &coord, double *dist) const override;
@@ -223,7 +222,7 @@ public:
 protected:
     class LC_TextLine:public RS_EntityContainer{
     public:
-        LC_TextLine(RS_EntityContainer* parent=nullptr, bool owner=true):RS_EntityContainer(parent, owner){};
+        LC_TextLine(RS_EntityContainer* parent=nullptr, bool owner=true):RS_EntityContainer(parent, owner){}
         ~LC_TextLine() override = default;
 
         LC_TextLine* clone() const override;
@@ -264,7 +263,7 @@ protected:
      */
     double usedTextHeight = 0.;
     void rotateLinesRefs() const;
-    RS_Entity *cloneProxy(RS_GraphicView* view) const override;
+    RS_Entity *cloneProxy() const override;
 };
 
 #endif

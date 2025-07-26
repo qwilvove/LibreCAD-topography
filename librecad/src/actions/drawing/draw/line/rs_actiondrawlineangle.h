@@ -38,25 +38,21 @@
 class RS_ActionDrawLineAngle : public RS_PreviewActionInterface {
 	Q_OBJECT
 public:
-    RS_ActionDrawLineAngle(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        double angle = 0.0,
-        bool fixedAngle = false,
-        RS2::ActionType actionType = RS2::ActionDrawLineAngle);
+    RS_ActionDrawLineAngle(LC_ActionContext *actionContext, bool fixedAngle = false, RS2::ActionType actionType = RS2::ActionDrawLineAngle);
     ~RS_ActionDrawLineAngle() override;
     void reset();
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     void preparePreview();
     QStringList getAvailableCommands() override;
     void setSnapPoint(int sp);
     int getSnapPoint() const;
-    void setAngle(double a);
-    double getAngle() const;
+    void setUcsAngleDegrees(double ucsRelAngle);
+    double getUcsAngleDegrees() const;
     void setLength(double l);
     double getLength() const;
     bool hasFixedAngle() const;
+    void setInAngleBasis(bool b);
+    bool isInAngleBasis(){return m_orthoToAnglesBasis;}
 protected:
     /**
  * Action States.
@@ -70,15 +66,18 @@ protected:
         SNAP_START, SNAP_MIDDLE, SNAP_END
     };
     struct Points;
-    std::unique_ptr<Points> pPoints;
-    bool persistRelativeZero = false;
+    std::unique_ptr<Points> m_ActionData;
+    bool m_persistRelativeZero = false;
+    bool m_orthoToAnglesBasis = false;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     bool doProcessCommand(int status, const QString &command) override;
     void updateMouseButtonHints() override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void doTrigger() override;
+    void initFromSettings() override;
 };
 #endif

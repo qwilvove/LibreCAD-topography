@@ -23,12 +23,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define LC_LINEANGLERELOPTIONS_H
 
 #include <memory>
-
-#include "lc_actiondrawlineanglerel.h"
 #include "lc_actionoptionswidget.h"
 
+class LC_ActionDrawLineAngleRel;
+
 namespace Ui {
-class LC_LineAngleRelOptions;
+    class LC_LineAngleRelOptions;
 }
 
 class LC_LineAngleRelOptions : public LC_ActionOptionsWidget{
@@ -55,9 +55,8 @@ protected:
     QString getSettingsOptionNamePrefix() override;
 private:
     std::unique_ptr<Ui::LC_LineAngleRelOptions> ui;
-    LC_ActionDrawLineAngleRel* action {nullptr};
-    bool fixedAngle {false};
-
+    LC_ActionDrawLineAngleRel* m_action {nullptr};
+    bool m_fixedAngle {false};
     void setAngleToActionAndView(const QString &expr);
     void setLengthToActionAndView(const QString& val);
     void setDistanceToActionAndView(const QString& val);

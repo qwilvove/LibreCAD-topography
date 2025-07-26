@@ -29,7 +29,6 @@
 #define RS_CONSTRUCTIONLINE_H
 
 #include "rs_atomicentity.h"
-#include "rs_vector.h"
 
 /**
  * Holds the data that defines a construction line (a line
@@ -57,8 +56,9 @@ struct RS_ConstructionLineData {
 class RS_ConstructionLine : public RS_AtomicEntity {
 public:
     RS_ConstructionLine() = default;
-    RS_ConstructionLine(RS_EntityContainer* parent,
-                        const RS_ConstructionLineData& d);
+    RS_ConstructionLine(RS_EntityContainer* parent, const RS_ConstructionLineData& d);
+
+    RS_ConstructionLine(const RS_Vector& point1, const RS_Vector& point2);
 
      RS_Entity* clone() const override;
 
@@ -113,14 +113,13 @@ m0 x + m1 y + m2 =0
                                       double solidDist = RS_MAXDOUBLE) const override;
 
     void move(const RS_Vector& offset) override;
-    void rotate(const RS_Vector& center, const double& angle) override;
+    void rotate(const RS_Vector& center, double angle) override;
     void rotate(const RS_Vector& center, const RS_Vector& angleVector) override;
     void scale(const RS_Vector& center, const RS_Vector& factor) override;
     void mirror(const RS_Vector& axisPoint1, const RS_Vector& axisPoint2) override;
     RS_Entity& shear(double k) override;
 
-    void draw(RS_Painter* painter, RS_GraphicView* view,
-                double& patternOffset) override;
+    void draw(RS_Painter* painter) override;
 
     friend std::ostream& operator << (std::ostream& os,
                                       const RS_ConstructionLine& l);
@@ -129,7 +128,7 @@ m0 x + m1 y + m2 =0
 
 
 
-protected:
+private:
     RS_ConstructionLineData data{};
 };
 

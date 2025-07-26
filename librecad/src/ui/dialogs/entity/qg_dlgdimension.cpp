@@ -24,7 +24,6 @@
 **
 **********************************************************************/
 #include "qg_dlgdimension.h"
-
 #include "rs_dimension.h"
 #include "rs_graphic.h"
 
@@ -35,9 +34,10 @@
  *  The dialog will by default be modeless, unless you set 'modal' to
  *  true to construct a modal dialog.
  */
-QG_DlgDimension::QG_DlgDimension(QWidget* parent)
-    : LC_Dialog(parent, "DimensionProperties"){
+QG_DlgDimension::QG_DlgDimension(QWidget *parent, LC_GraphicViewport *pViewport, RS_Dimension *dim)
+    :LC_EntityPropertiesDlg(parent, "DimensionProperties", pViewport){
     setupUi(this);
+    setEntity(dim);
 }
 
 /*
@@ -53,26 +53,28 @@ void QG_DlgDimension::languageChange(){
     retranslateUi(this);
 }
 
-void QG_DlgDimension::setDim(RS_Dimension& d) {
-    dim = &d;
+void QG_DlgDimension::setEntity(RS_Dimension* d) {
+    m_entity = d;
 
-    RS_Graphic* graphic = dim->getGraphic();
+    RS_Graphic* graphic = m_entity->getGraphic();
     if (graphic) {
         cbLayer->init(*(graphic->getLayerList()), false, false);
     }
-    RS_Layer* lay = dim->getLayer(false);
+    RS_Layer* lay = m_entity->getLayer(false);
     if (lay) {
         cbLayer->setLayer(*lay);
     }
 
-    wPen->setPen(dim, lay, "Pen");
+    wPen->setPen(m_entity, lay, tr("Pen"));
 
-    wLabel->setRadialType(d);
-    wLabel->setLabel(dim->getLabel(false));
+    wLabel->setRadialType(*d);
+    wLabel->setLabel(m_entity->getLabel(false));
 }
 
-void QG_DlgDimension::updateDim() {
-    dim->setLabel(wLabel->getLabel());
-    dim->setPen(wPen->getPen());
-    dim->setLayer(cbLayer->currentText());
+void QG_DlgDimension::updateEntity() {
+    m_entity->setLabel(wLabel->getLabel());
+    m_entity->setPen(wPen->getPen());
+    m_entity->setLayer(cbLayer->getLayer());
+
+    m_entity->updateDim(true);
 }

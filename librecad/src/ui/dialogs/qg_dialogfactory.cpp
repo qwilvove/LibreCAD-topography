@@ -33,18 +33,16 @@
 #include <QFileDialog>
 #include <QImageReader>
 #include <QMessageBox>
-#include <QString>
 #include <QRegularExpression>
-#include <QToolBar>
 
 #include "LC_DlgParabola.h"
+#include "lc_dimordinate.h"
+#include "lc_dlgdimordinate.h"
 #include "lc_dlgsplinepoints.h"
 #include "lc_parabola.h"
-#include "lc_splinepoints.h"
 #include "qc_applicationwindow.h"
 #include "qg_blockdialog.h"
 #include "qg_commandwidget.h"
-#include "qg_coordinatewidget.h"
 #include "qg_dlgarc.h"
 #include "qg_dlgattributes.h"
 #include "qg_dlgcircle.h"
@@ -60,7 +58,6 @@
 #include "qg_dlgmoverotate.h"
 #include "qg_dlgmtext.h"
 #include "qg_dlgoptionsdrawing.h"
-#include "qg_dlgoptionsgeneral.h"
 #include "qg_dlgoptionsmakercam.h"
 #include "qg_dlgpoint.h"
 #include "qg_dlgpolyline.h"
@@ -70,40 +67,41 @@
 #include "qg_dlgspline.h"
 #include "qg_dlgtext.h"
 #include "qg_layerdialog.h"
-#include "qg_layerwidget.h"
-#include "qg_mousewidget.h"
 #include "qg_selectionwidget.h"
-#include "qg_snapmiddleoptions.h"
-#include "rs_actioninterface.h"
+#include "rs_arc.h"
 #include "rs_blocklist.h"
+#include "rs_circle.h"
 #include "rs_debug.h"
+#include "rs_dimension.h"
 #include "rs_dimlinear.h"
+#include "rs_ellipse.h"
 #include "rs_hatch.h"
+#include "rs_image.h"
+#include "rs_insert.h"
+#include "rs_layer.h"
+#include "rs_layerlist.h"
+#include "rs_line.h"
 #include "rs_patternlist.h"
+#include "rs_point.h"
+#include "rs_polyline.h"
 #include "rs_settings.h"
+#include "rs_spline.h"
 #include "rs_system.h"
-#include "rs_vector.h"
-#include "lc_crossoptions.h"
-#include "lc_lineanglereloptions.h"
-#include "lc_rectangle1pointoptions.h"
-#include "lc_optionswidgetsholder.h"
-#include "lc_actionsshortcutsdialog.h"
+#include "rs_text.h"
+
 
 //QG_DialogFactory* QG_DialogFactory::uniqueInstance = nullptr;
 
+class LC_EntityPropertiesDlg;
 /**
  * Constructor.
  *
  * @param parent Pointer to parent widget which can host dialogs.
  * @param ow Pointer to widget that can host option widgets.
  */
-QG_DialogFactory::QG_DialogFactory(QWidget* parent, QToolBar* optionsToolbar, LC_SnapOptionsWidgetsHolder* snapOptionsHolder)
+QG_DialogFactory::QG_DialogFactory(QWidget* parent, [[maybe_unused]]QToolBar* optionsToolbar, [[maybe_unused]] LC_SnapOptionsWidgetsHolder* snapOptionsHolder)
     : parent(parent)
 {
-    RS_DEBUG->print("QG_DialogFactory::QG_DialogFactory");
-    snapOptionsWidgetHolderSnapToolbar  = snapOptionsHolder;
-    setOptionWidget(optionsToolbar);
-    RS_DEBUG->print("QG_DialogFactory::QG_DialogFactory: OK");
 }
 
 
@@ -115,60 +113,6 @@ QG_DialogFactory::~QG_DialogFactory() {
     RS_DEBUG->print("QG_DialogFactory::~QG_DialogFactory: OK");
 }
 
-void QG_DialogFactory::setOptionWidget(QToolBar* ow) {
-    RS_DEBUG->print("QG_DialogFactory::setOptionWidget");
-    optionWidget = ow;
-    optionWidgetHolder = new LC_OptionsWidgetsHolder(ow);
-    optionWidget->addWidget(optionWidgetHolder);
-    snapOptionsWidgetHolderOptionsToolbar = optionWidgetHolder->getSnapOptionsHolder();
-    RS_DEBUG->print("QG_DialogFactory::setOptionWidget: OK");
-}
-
-void QG_DialogFactory::addOptionsWidget(QWidget * options){
-    optionWidgetHolder->addOptionsWidget(options);
-    optionWidget->update();
-}
-
-void QG_DialogFactory::removeOptionsWidget(QWidget * options){
-    optionWidgetHolder->removeOptionsWidget(options);
-
-}
-void QG_DialogFactory::hideSnapOptions(){
-    getSnapOptionsHolder()->hideSnapOptions();
-}
-
-LC_SnapOptionsWidgetsHolder* QG_DialogFactory::getSnapOptionsHolder(){
-    LC_SnapOptionsWidgetsHolder* result = nullptr;
-    bool useSnapToolbar = LC_GET_ONE_BOOL("Appearance", "showSnapOptionsInSnapToolbar", false);
-    if (useSnapToolbar){
-        result = snapOptionsWidgetHolderSnapToolbar;
-        snapOptionsWidgetHolderOptionsToolbar->setVisible(false);
-    }
-    else{
-        result = snapOptionsWidgetHolderOptionsToolbar;
-        snapOptionsWidgetHolderOptionsToolbar->setVisible(true);
-    }
-    if (lastUsedSnapOptionsWidgetHolder != nullptr && lastUsedSnapOptionsWidgetHolder != result){
-        result->updateBy(lastUsedSnapOptionsWidgetHolder);
-    }
-    lastUsedSnapOptionsWidgetHolder = result;
-
-    return result;
-}
-
-/**
- * Shows a widget for 'snap to equidistant middle points ' options.
- */
-void QG_DialogFactory::requestSnapMiddleOptions(int* middlePoints, bool on) {
-    getSnapOptionsHolder()->showSnapMiddleOptions(middlePoints, on);
-}
-
-/**
- * Shows a widget for 'snap to a point with a given distance' options.
- */
-void QG_DialogFactory::requestSnapDistOptions(double* dist, bool on) {
-    getSnapOptionsHolder()->showSnapDistOptions(dist, on);
-}
 
 /**
  * Shows a message dialog.
@@ -204,7 +148,7 @@ RS_Layer* QG_DialogFactory::requestNewLayerDialog(RS_LayerList* layerList)
         int nlen {1};
         int i {0};
         QRegularExpression re("^(.*\\D+|)(\\d*)$");
-        QRegularExpressionMatch match( re.match(layer_name));
+        auto match( re.match(layer_name));
         if (match.hasMatch()) {
             sBaseLayerName = match.captured(1);
             if( 1 < match.lastCapturedIndex()) {
@@ -782,92 +726,50 @@ bool QG_DialogFactory::requestRotate2Dialog(RS_Rotate2Data& data) {
 /**
  * Shows a dialog to edit the given entity.
  */
-bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
+
+// fixme - sand - files - remove from there, move to action or so (introduces additional dependencies)
+bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity *entity, LC_GraphicViewport *viewport) {
     if (!entity) return false;
 
     bool ret = false;
+    LC_EntityPropertiesDlg* editDialog;
+    bool hasDialog = true;
 
     switch (entity->rtti()) {
     case RS2::EntityPoint: {
-        QG_DlgPoint dlg(parent);
-        dlg.setPoint(*((RS_Point*)entity));
-        if (dlg.exec()) {
-            dlg.updatePoint();
-            ret = true;
-        }
+        editDialog = new QG_DlgPoint(parent, viewport, dynamic_cast<RS_Point *>(entity));
         break;
     }
     case RS2::EntityLine: {
-        QG_DlgLine dlg(parent);
-        dlg.setLine(*((RS_Line*)entity));
-        if (dlg.exec()) {
-            dlg.updateLine();
-            ret = true;
-        }
+        editDialog = new QG_DlgLine(parent, viewport, dynamic_cast<RS_Line *>(entity));
         break;
     }
     case RS2::EntityArc: {
-        QG_DlgArc dlg(parent);
-        dlg.setArc(*((RS_Arc*)entity));
-        if (dlg.exec()) {
-            dlg.updateArc();
-            ret = true;
-        }
+        editDialog = new QG_DlgArc(parent, viewport, dynamic_cast<RS_Arc *>(entity));
         break;
     }
     case RS2::EntityCircle: {
-        QG_DlgCircle dlg(parent);
-        dlg.setCircle(*((RS_Circle*)entity));
-        if (dlg.exec()) {
-            dlg.updateCircle();
-            ret = true;
-        }
+        editDialog = new QG_DlgCircle(parent, viewport, dynamic_cast<RS_Circle *>(entity));
         break;
     }
     case RS2::EntityEllipse: {
-        QG_DlgEllipse dlg(parent);
-        dlg.setEllipse(*((RS_Ellipse*)entity));
-        if (dlg.exec()) {
-            dlg.updateEllipse();
-            ret = true;
-        }
+        editDialog = new QG_DlgEllipse(parent, viewport,dynamic_cast<RS_Ellipse *>(entity));
         break;
     }
     case RS2::EntityParabola: {
-        LC_DlgParabola dlg;
-        dlg.setParabola(*static_cast<LC_Parabola*>(entity));
-        if (dlg.exec()) {
-            dlg.updateParabola();
-            ret = true;
-        }
+        editDialog = new LC_DlgParabola(parent, viewport,dynamic_cast<LC_Parabola *>(entity));
         break;
     }
     case RS2::EntitySpline: {
-        QG_DlgSpline dlg;
-        dlg.setSpline(*((RS_Spline*)entity));
-        if (dlg.exec()) {
-            dlg.updateSpline();
-            ret = true;
-        }
+        editDialog = new QG_DlgSpline(parent, viewport,dynamic_cast<RS_Spline *>(entity));
         break;
     }
     case RS2::EntitySplinePoints: {
-        LC_DlgSplinePoints dlg;
-        dlg.setSpline(*static_cast<LC_SplinePoints*>(entity));
-        if (dlg.exec()) {
-            dlg.updateSpline();
-            ret = true;
-        }
+        editDialog = new LC_DlgSplinePoints(parent, viewport,dynamic_cast<LC_SplinePoints *>(entity));
         break;
     }
     case RS2::EntityInsert: {
-        QG_DlgInsert dlg;
-        dlg.setInsert(*((RS_Insert*)entity));
-        if (dlg.exec()) {
-            dlg.updateInsert();
-            ret = true;
-            entity->update();
-        }
+        editDialog = new QG_DlgInsert(parent, viewport,dynamic_cast<RS_Insert *>(entity));
         break;
     }
     case RS2::EntityDimAligned:
@@ -875,112 +777,62 @@ bool QG_DialogFactory::requestModifyEntityDialog(RS_Entity* entity) {
     case RS2::EntityDimDiametric:
     case RS2::EntityDimRadial:
     case RS2::EntityDimArc: {
-        QG_DlgDimension dlg(parent);
-        dlg.setDim(*((RS_Dimension*)entity));
-        if (dlg.exec()) {
-            dlg.updateDim();
-            ret = true;
-            ((RS_Dimension*)entity)->updateDim(true);
-        }
+        editDialog = new QG_DlgDimension(parent, viewport,dynamic_cast<RS_Dimension *>(entity));
         break;
     }
     case RS2::EntityDimLinear: {
-        QG_DlgDimLinear dlg(parent);
-        dlg.setDim(*((RS_DimLinear*)entity));
-        if (dlg.exec()) {
-            dlg.updateDim();
-            ret = true;
-            ((RS_DimLinear*)entity)->updateDim(true);
-        }
+        editDialog = new QG_DlgDimLinear(parent, viewport, dynamic_cast<RS_DimLinear *>(entity));
+        break;
+    }
+    case RS2::EntityDimOrdinate: {
+        editDialog = new LC_DlgDimOrdinate(parent, viewport, dynamic_cast<LC_DimOrdinate *>(entity));
         break;
     }
     case RS2::EntityMText: {
-        QG_DlgMText dlg(parent);
-        dlg.setText(*((RS_MText*)entity), false);
-        if (dlg.exec()) {
-            dlg.updateText();
-            ret = true;
-            ((RS_MText*)entity)->update();
-        }
+        editDialog = new QG_DlgMText(parent, viewport,dynamic_cast<RS_MText *>(entity), false);
         break;
     }
     case RS2::EntityText: {
-        QG_DlgText dlg(parent);
-        dlg.setText(*((RS_Text*)entity), false);
-        if (dlg.exec()) {
-            dlg.updateText();
-            ret = true;
-            ((RS_Text*)entity)->update();
-        }
+        editDialog = new QG_DlgText(parent, viewport,dynamic_cast<RS_Text *>(entity), false);
         break;
     }
     case RS2::EntityHatch: {
-        QG_DlgHatch dlg(parent);
-        dlg.setHatch(*((RS_Hatch*)entity), false);
-        if (dlg.exec()) {
-            dlg.updateHatch();
-            ret = true;
-            ((RS_Hatch*)entity)->update();
-        }
+        editDialog = new QG_DlgHatch(parent, viewport,dynamic_cast<RS_Hatch *>(entity), false);
         break;
     }
     case RS2::EntityPolyline: {
-        QG_DlgPolyline dlg(parent);
-        dlg.setPolyline(*((RS_Polyline*)entity));
-        if (dlg.exec()) {
-            dlg.updatePolyline();
-            ret = true;
-        }
+        editDialog = new QG_DlgPolyline(parent, viewport,dynamic_cast<RS_Polyline *>(entity));
         break;
     }
     case RS2::EntityImage: {
-        QG_DlgImage dlg(parent);
-        dlg.setImage(*((RS_Image*)entity));
-        if (dlg.exec()) {
-            dlg.updateImage();
-            ret = true;
-        }
+        editDialog = new QG_DlgImage(parent, viewport, dynamic_cast<RS_Image *>(entity));
         break;
     }
     default:
+        hasDialog = false;
         break;
+    }
+
+    if (hasDialog){
+        if (editDialog->exec()) {
+            editDialog->updateEntity();
+            ret = true;
+        }
+        delete editDialog;
     }
 
     return ret;
 }
 
 /**
- * Shows a dialog to edit the attributes of the given dimension entity.
- */
-/*
-bool QG_DialogFactory::requestDimAlignedDialog(RS_DimAligned* dim) {
-    if (dim==nullptr) {
-        return false;
-    }
-
-    QG_DlgDimAligned dlg(parent);
-    dlg.setDim(*dim, true);
-    if (dlg.exec()) {
-        dlg.updateDim();
-        return true;
-    }
-
-    return false;
-}
-*/
-
-
-
-/**
  * Shows a dialog to edit the attributes of the given multi-line text entity.
  */
-bool QG_DialogFactory::requestMTextDialog(RS_MText* text) {
+bool QG_DialogFactory::requestMTextDialog(RS_MText *text, LC_GraphicViewport *viewport) {
     if (!text) return false;
 
-    QG_DlgMText dlg(parent);
-    dlg.setText(*text, true);
+    QG_DlgMText dlg(parent, viewport, text, true);
     if (dlg.exec()) {
-        dlg.updateText();
+        dlg.updateEntity();
         return true;
     }
 
@@ -990,13 +842,12 @@ bool QG_DialogFactory::requestMTextDialog(RS_MText* text) {
 /**
  * Shows a dialog to edit the attributes of the given text entity.
  */
-bool QG_DialogFactory::requestTextDialog(RS_Text* text) {
+bool QG_DialogFactory::requestTextDialog(RS_Text *text, LC_GraphicViewport *viewport) {
     if (!text) return false;
 
-    QG_DlgText dlg(parent);
-    dlg.setText(*text, true);
+    QG_DlgText dlg(parent, viewport, text, true);
     if (dlg.exec()) {
-        dlg.updateText();
+        dlg.updateEntity();
         return true;
     }
 
@@ -1006,35 +857,20 @@ bool QG_DialogFactory::requestTextDialog(RS_Text* text) {
 /**
  * Shows a dialog to edit pattern / hatch attributes of the given entity.
  */
-bool QG_DialogFactory::requestHatchDialog(RS_Hatch* hatch) {
+bool QG_DialogFactory::requestHatchDialog(RS_Hatch *hatch, LC_GraphicViewport *viewport) {
     if (!hatch) return false;
 
     RS_PATTERNLIST->init();
 
-    QG_DlgHatch dlg(parent);
-    dlg.setHatch(*hatch, true);
+    QG_DlgHatch dlg(parent, viewport, hatch, true);
     if (dlg.exec()) {
-        dlg.updateHatch();
+        dlg.updateEntity();
         dlg.saveSettings();
         return true;
     }
     return false;
 }
 
-/**
- * Shows dialog for general application options.
- */
-int QG_DialogFactory::requestOptionsGeneralDialog() {
-    QG_DlgOptionsGeneral dlg(parent);
-    int result = dlg.exec();
-    getSnapOptionsHolder(); // as side effect, should update location of snap options
-    return result;
-}
-
-void QG_DialogFactory::requestKeyboardShortcutsDialog(LC_ActionGroupManager *pManager) {
-    LC_ActionsShortcutsDialog dlg(parent, pManager);
-    dlg.exec();
-}
 
 /**
  * Shows dialog for drawing options.
@@ -1048,9 +884,7 @@ int QG_DialogFactory::requestOptionsDrawingDialog(RS_Graphic& graphic, int tabIn
 }
 
 bool QG_DialogFactory::requestOptionsMakerCamDialog() {
-
     QG_DlgOptionsMakerCam dlg(parent);
-
     return (dlg.exec() == QDialog::Accepted);
 }
 
@@ -1063,68 +897,18 @@ QString QG_DialogFactory::requestFileSaveAsDialog(const QString& caption /* = QS
 }
 
 /**
- * Called whenever the mouse position changed.
- */
-void QG_DialogFactory::updateCoordinateWidget(const RS_Vector& abs,
-                                              const RS_Vector& rel, bool updateFormat) {
-    if (coordinateWidget != nullptr) {
-        coordinateWidget->setCoordinates(abs, rel, updateFormat);
-    }
-}
-
-void QG_DialogFactory::updateMouseWidget(const QString& left,
-                                         const QString& right,
-                                         const LC_ModifiersInfo& modifiers) {
-    if (mouseWidget != nullptr) {
-        mouseWidget->setHelp(left, right, modifiers);
-    }
-
-    if (commandWidget != nullptr) {
-       commandWidget->setCommand(left);
-    }
-
-    if (statusBarManager != nullptr){
-        statusBarManager->setActionHelp(left, right, modifiers);
-    }
-}
-
-void QG_DialogFactory::setCurrentQAction(QAction* q_action) {
-    if (mouseWidget != nullptr){
-        mouseWidget->setCurrentQAction(q_action);
-    }
-    if (statusBarManager != nullptr){
-        statusBarManager->setCurrentQAction(q_action);
-    }
-    if (optionWidgetHolder != nullptr){
-        optionWidgetHolder->setCurrentQAction(q_action);
-    }
-}
-
-void QG_DialogFactory::clearMouseWidgetIcon() {
-   if (mouseWidget != nullptr){
-       mouseWidget->clearActionIcon();
-   }
-   if (statusBarManager != nullptr){
-       statusBarManager->clearAction();
-   }
-   if (optionWidgetHolder != nullptr){
-       optionWidgetHolder->clearActionIcon();
-   }
-}
-
-/**
  * Called whenever the selection changed.
  */
 void QG_DialogFactory::updateSelectionWidget(int num, double length) {
-    if (selectionWidget != nullptr) {
-        selectionWidget->setNumber(num);
-        selectionWidget->setTotalLength(length);
+    if (m_selectionWidget != nullptr) {
+        m_selectionWidget->setNumber(num);
+        m_selectionWidget->setTotalLength(length);
     }
 }
 
 void QG_DialogFactory::displayBlockName(const QString& blockName, const bool& display){
-    if (selectionWidget != nullptr)    {
-        selectionWidget->flashAuxData( QString("Block Name"),
+    if (m_selectionWidget != nullptr)    {
+        m_selectionWidget->flashAuxData( QString("Block Name"),
                                        blockName,
                                        QC_ApplicationWindow::DEFAULT_STATUS_BAR_MESSAGE_TIMEOUT,
                                        display);
@@ -1136,19 +920,28 @@ void QG_DialogFactory::displayBlockName(const QString& blockName, const bool& di
  */
 void QG_DialogFactory::commandMessage(const QString& message) {
     RS_DEBUG->print("QG_DialogFactory::commandMessage");
-    if (commandWidget) {
-        commandWidget->appendHistory(message);
+    if (m_commandWidget) {
+        m_commandWidget->appendHistory(message);
     }
     RS_DEBUG->print("QG_DialogFactory::commandMessage: OK");
 
 }
 void QG_DialogFactory::command(const QString& message) {
     RS_DEBUG->print("QG_DialogFactory::command");
-    if (commandWidget) {
-        commandWidget->setInput(message);
+    if (m_commandWidget) {
+        m_commandWidget->setInput(message);
     }
     RS_DEBUG->print("QG_DialogFactory::command: OK");
 }
+
+void QG_DialogFactory::commandPrompt(const QString& message) {
+    RS_DEBUG->print("QG_DialogFactory::command");
+    if (m_commandWidget) {
+        m_commandWidget->setCommand(message);
+    }
+    RS_DEBUG->print("QG_DialogFactory::command: OK");
+}
+
 
 /**
  * Converts an extension to a format description.
@@ -1208,8 +1001,4 @@ QString QG_DialogFactory::extToFormat(const QString& ext) {
     else {
         return ext.toUpper();
     }
-}
-
-void QG_DialogFactory::setStatusBarManager(LC_QTStatusbarManager *statusBarManager) {
-    QG_DialogFactory::statusBarManager = statusBarManager;
 }

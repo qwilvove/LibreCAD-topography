@@ -26,7 +26,6 @@
 #ifndef QG_DLGOPTIONSGENERAL_H
 #define QG_DLGOPTIONSGENERAL_H
 
-#include <QDialog>
 #include "ui_qg_dlgoptionsgeneral.h"
 #include "lc_dialog.h"
 
@@ -39,9 +38,7 @@ class QG_DlgOptionsGeneral : public LC_Dialog, public Ui::QG_DlgOptionsGeneral{
 public:
     QG_DlgOptionsGeneral(QWidget* parent = nullptr);
     ~QG_DlgOptionsGeneral() override = default;
-    static int current_tab;
-
-
+    static int m_currentTab;
 protected slots:
     void ok();
     void languageChange();
@@ -84,25 +81,34 @@ protected slots:
     void setFontsFolder();
     void setTranslationsFolder();
     void setHatchPatternsFolder();
-    void setShortcutsMappingsFoler();
+    void setOtherSettingsFolder();
     bool checkRestartNeeded();
     void on_pbOverlayBoxLine_clicked();
     void on_pbOverlayBoxFill_clicked();
     void on_pbOverlayBoxLineInverted_clicked();
     void on_pbOverlayBoxFillInverted_clicked();
+    void on_pbAnglesMarkDirection_clicked();
+    void on_pbAnglesMarkAngleRay_clicked();
 
     void onInfoCursorPromptChanged();
     void onInfoCursorAbsolutePositionChanged();
     void onInfoCursorRelativeChanged();
     void onInfoCursorSnapChanged();
+    void on_pbDraftModeColor_clicked();
+    void onExpandToolsMenuToggled(bool checked);
 
     void set_color(QComboBox* combo, QColor custom);
-private:
-    bool restartNeeded=false;
 
-    QString originalLibraryPath;
-    bool originalUseClassicToolbar;
-    bool originalAllowsMenusTearOff;
+    void exportSettings();
+    void importSettings();
+private:
+    bool m_restartNeeded=false;
+
+    QString m_originalLibraryPath;
+    bool m_originalUseClassicToolbar;
+    bool m_originalAllowsMenusTearOff;
+    bool m_originalExpandedToolsMenu;
+    bool m_originalExpandedToolsMenuTillEntity;
 
     void init();
     void initComboBox(QComboBox* cb, const QString& text);
@@ -110,9 +116,7 @@ private:
     void initReferencePoints();
     void updateLPtSzUnits();
     void saveReferencePoints();
-    QString selectFolder(const char* title);
-
-
+    QString selectFolder(const QString& title);
 };
 
 #endif // QG_DLGOPTIONSGENERAL_H

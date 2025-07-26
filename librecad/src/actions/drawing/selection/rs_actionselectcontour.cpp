@@ -24,25 +24,19 @@
 **
 **********************************************************************/
 
-#include <QMouseEvent>
-
 #include "rs_actionselectcontour.h"
+
 #include "rs_debug.h"
-#include "rs_dialogfactory.h"
-#include "rs_graphicview.h"
+#include "rs_entity.h"
 #include "rs_selection.h"
 
-RS_ActionSelectContour::RS_ActionSelectContour(RS_EntityContainer& container,
-        RS_GraphicView& graphicView)
-		:RS_PreviewActionInterface("Select Contours", container, graphicView)
-		,en(nullptr){
-	actionType=RS2::ActionSelectContour;
+RS_ActionSelectContour::RS_ActionSelectContour(LC_ActionContext *actionContext)
+    :RS_PreviewActionInterface("Select Contours", actionContext, RS2::ActionSelectContour)
+	,m_entity(nullptr){
 }
 
-void RS_ActionSelectContour::mouseMoveEvent(QMouseEvent *event){
-    snapPoint(event);
-    deleteHighlights();
-    auto ent = catchEntityOnPreview(event);
+void RS_ActionSelectContour::onMouseMoveEvent([[maybe_unused]]int status, LC_MouseEvent *event) {
+    auto ent = catchAndDescribe(event);
     if (ent != nullptr){
         // fixme - proper highlighting of planned selection - yet after fixing underlying logic!
 //        RS_Selection s(*container, graphicView);
@@ -50,26 +44,25 @@ void RS_ActionSelectContour::mouseMoveEvent(QMouseEvent *event){
         // fixme - temporarily highlight only caught entity only
         highlightHover(ent);
     }
-    drawHighlights();
 }
 
 void RS_ActionSelectContour::doTrigger() {
-    if (en){
-        if (en->isAtomic()){ // fixme - why it is so??? why it's not suitable to select, say, polyline here too?
-            RS_Selection s(*container, graphicView);
-            s.selectContour(en);
+    if (m_entity){
+        if (m_entity->isAtomic()){ // fixme - why it is so??? why it's not suitable to select, say, polyline here too?
+            RS_Selection s(*m_container, m_viewport);
+            s.selectContour(m_entity);
         } else
            commandMessage(tr("Entity must be an Atomic Entity."));
     } else
         RS_DEBUG->print("RS_ActionSelectContour::trigger: Entity is NULL\n");
 }
 
-void RS_ActionSelectContour::onMouseLeftButtonRelease([[maybe_unused]] int status, QMouseEvent *e) {
-    en = catchEntity(e);
+void RS_ActionSelectContour::onMouseLeftButtonRelease([[maybe_unused]] int status, LC_MouseEvent *e) {
+    m_entity = catchEntityByEvent(e);
     trigger();
 }
 
-void RS_ActionSelectContour::onMouseRightButtonRelease(int status, [[maybe_unused]] QMouseEvent *e) {
+void RS_ActionSelectContour::onMouseRightButtonRelease(int status, [[maybe_unused]] LC_MouseEvent *e) {
     initPrevious(status);
 }
 

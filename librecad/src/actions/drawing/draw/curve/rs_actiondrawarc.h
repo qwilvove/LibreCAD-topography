@@ -23,7 +23,7 @@
 #ifndef RS_ACTIONDRAWARC_H
 #define RS_ACTIONDRAWARC_H
 
-#include "rs_previewactioninterface.h"
+
 #include "lc_actiondrawcirclebase.h"
 
 struct RS_ArcData;
@@ -37,14 +37,10 @@ struct RS_ArcData;
 class RS_ActionDrawArc:public LC_ActionDrawCircleBase {
     Q_OBJECT
 public:
-    RS_ActionDrawArc(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        RS2::ActionType actionType);
+    RS_ActionDrawArc(LC_ActionContext *actionContext,RS2::ActionType actionType);
     ~RS_ActionDrawArc() override;
     void reset() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     QStringList getAvailableCommands() override;
     bool isReversed() const override;
     void setReversed(bool r) const override;
@@ -64,13 +60,14 @@ protected:
     /**
      * Arc data defined so far.
      */
-    std::unique_ptr<RS_ArcData> data;
-    bool alternateArcDirection = false;
+    std::unique_ptr<RS_ArcData> m_arcData;
+    bool m_alternateArcDirection = false;
     void snapMouseToDiameter(RS_Vector &mouse, RS_Vector &arcStart, RS_Vector &halfCircleArcEnd) const;
     LC_ActionOptionsWidget* createOptionsWidget() override;
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     bool doProcessCommand(int status, const QString &command) override;
     void onCoordinateEvent(int status, bool isZero, const RS_Vector &pos) override;
     void updateMouseButtonHints() override;

@@ -27,29 +27,21 @@
 #ifndef RS_ACTIONSELECTWINDOW_H
 #define RS_ACTIONSELECTWINDOW_H
 
-#include "rs_previewactioninterface.h"
-
+#include "lc_overlayboxaction.h"
 
 /**
  * This action class can handle user events to select all entities.
  *
  * @author Andrew Mustun
  */
-class RS_ActionSelectWindow:public RS_PreviewActionInterface {
+class RS_ActionSelectWindow:public LC_OverlayBoxAction {
     Q_OBJECT
 
 public:
-    RS_ActionSelectWindow(
-        RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        bool select);
-    RS_ActionSelectWindow(
-        enum RS2::EntityType typeToSelect, RS_EntityContainer &container,
-        RS_GraphicView &graphicView,
-        bool select);
+    RS_ActionSelectWindow(LC_ActionContext *actionContext,bool select);
+    RS_ActionSelectWindow(RS2::EntityType typeToSelect, LC_ActionContext *actionContext,bool select);
     ~RS_ActionSelectWindow() override;
     void init(int status) override;
-    void mouseMoveEvent(QMouseEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
     bool isSelectAllEntityTypes();
     void setSelectAllEntityTypes(bool val);
@@ -65,18 +57,19 @@ protected:
     };
 
     struct Points;
-    std::unique_ptr<Points> pPoints;
-    bool select = false;
-    bool selectIntersecting = false;
-    bool invertSelectionOperation = false;
-    bool selectAllEntityTypes = true;
-    QList<RS2::EntityType> entityTypesToSelect;
+    std::unique_ptr<Points> m_actionData;
+    bool m_select = false;
+    bool m_selectIntersecting = false;
+    bool m_invertSelectionOperation = false;
+    bool m_selectAllEntityTypes = true;
+    QList<RS2::EntityType> m_entityTypesToSelect;
 
     RS2::CursorType doGetMouseCursor(int status) override;
-    void onMouseLeftButtonRelease(int status, QMouseEvent *e) override;
-    void onMouseRightButtonRelease(int status, QMouseEvent *e) override;
+    void onMouseLeftButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseRightButtonRelease(int status, LC_MouseEvent *e) override;
+    void onMouseMoveEvent(int status, LC_MouseEvent *event) override;
     void updateMouseButtonHints() override;
-    LC_ActionOptionsWidget *createOptionsWidget() override;
     void doTrigger() override;
+    LC_ActionOptionsWidget *createOptionsWidget() override;
 };
 #endif

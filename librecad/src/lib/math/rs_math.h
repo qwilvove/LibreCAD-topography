@@ -27,14 +27,15 @@
 #ifndef RS_MATH_H
 #define RS_MATH_H
 
+#include <algorithm>
 #include <cmath>
-#include <limits>
 #include <vector>
+
+class QString;
+class QRegularExpressionMatch;
 
 class RS_Vector;
 class RS_VectorSolutions;
-class QString;
-class QRegularExpressionMatch;
 
 /**
  * Math functions.
@@ -43,7 +44,7 @@ namespace RS_Math {
 int round(double v);
 double round(double v, double precision);
 double pow(double x, double y);
-RS_Vector pow(const RS_Vector &x, double y);
+RS_Vector pow(const RS_Vector &x, int y);
 /**
  * @brief equal test whether two floating points are equal
  * @param d1 number 1
@@ -57,6 +58,7 @@ double rad2deg(double a);
 double deg2rad(double a);
 double rad2gra(double a);
 double gra2rad(double a);
+double gra2deg(double a);
 unsigned findGCD(unsigned a, unsigned b);
 
 /**
@@ -126,7 +128,7 @@ bool linearSolver(const std::vector<std::vector<double> > &m, std::vector<double
 
 /** solver quadratic simultaneous equations of a set of two **/
 /* solve the following quadratic simultaneous equations,
-      *  ma000 x^2 + ma011 y^2 - 1 =0
+      * ma000 x^2 + ma011 y^2 - 1 =0
       * ma100 x^2 + 2 ma101 xy + ma111 y^2 + mb10 x + mb11 y +mc1 =0
       *
       *@m, a vector of size 8 contains coefficients in the strict order of:
@@ -165,6 +167,12 @@ bool simultaneousQuadraticVerify(const std::vector<std::vector<double> > &m, RS_
 double ellipticIntegral_2(const double &k, const double &phi);
 
 // The ULP (Unit at Last Place) for a floating point
+/**
+ * @brief ulp - the ULP (Unit at Last Place) for a floating point
+ * @param x - a floating point
+ * @return - the ULP of the given floating point
+ * @author: Dongxu Li
+ */
 template<typename FT>
 std::enable_if_t<std::is_floating_point_v<FT>, FT> ulp(FT x)
 {
@@ -174,12 +182,40 @@ std::enable_if_t<std::is_floating_point_v<FT>, FT> ulp(FT x)
         return std::nexttoward(x, std::numeric_limits<FT>::infinity()) - x;
 }
 
+/**
+ * @brief less - compare two floating points using ULP as tolerance
+ * @param a - a floating point
+ * @param b - a floating point
+ * @return bool - true, if a is less or equal within twice of the ULP of b
+ * @author: Dongxu Li
+ */
+template<typename FT>
+std::enable_if_t<std::is_floating_point_v<FT>, bool> less(FT a, FT b)
+{
+    return a <= b + 2 * RS_Math::ulp<FT>(b);
+}
+
+/**
+ * @brief inBetween - whether a floating point is between two given floating points
+ * @param x - a floating to determine whether in range
+ * @param a - one bound of the range
+ * @param b - one bound of the range
+ * @return bool - true, if the floating point x is within the range defined by
+ *          a and b, with floating point ULP used as tolerance in comparison
+ * @author: Dongxu Li
+ */
+template<typename FT>
+std::enable_if_t<std::is_floating_point_v<FT>, bool> inBetween(FT x, FT a, FT b)
+{
+    return RS_Math::less<FT>(x, std::max<FT>(a, b)) && RS_Math::less<FT>(std::min<FT>(a, b), x);
+}
+
 QString doubleToString(double value, double prec);
 QString doubleToString(double value, int prec);
 
 void test();
 
-    int getPeriodsCount(double a1, double a2, bool reversed);
-}; // namespace
+int getPeriodsCount(double a1, double a2, bool reversed);
+}; // namespace RS_Math
 
 #endif

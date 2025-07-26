@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **********************************************************************/
 
 #include "lc_actionoptionswidget.h"
+
+#include "lc_convert.h"
 #include "lc_linemath.h"
 #include "rs_actioninterface.h"
 #include "rs_debug.h"
@@ -110,15 +112,8 @@ bool LC_ActionOptionsWidget::toDouble(const QString& strValue, double &res, doub
  * @param positiveOnly if true, positive value (via std::abs()) will be always returned, false - otherwise.
  * @return true if string was converted without errors
  */
-bool LC_ActionOptionsWidget::toDoubleAngle(const QString& strValue, double &res, double notMeaningful, bool positiveOnly){
-    bool ok = false;
-    double x = RS_Math::eval(strValue, &ok);
-    if(ok){
-        res = LC_LineMath::getMeaningfulAngle(x, notMeaningful);
-        if (positiveOnly){
-            res = std::abs(res);
-        }
-    }
+bool LC_ActionOptionsWidget::toDoubleAngleDegrees(const QString& strValue, double &res, double notMeaningful, bool positiveOnly){
+    bool ok = LC_Convert::parseToToDoubleAngleDegrees(strValue, res, notMeaningful, positiveOnly);
     return ok;
 }
 
@@ -128,6 +123,10 @@ bool LC_ActionOptionsWidget::toDoubleAngle(const QString& strValue, double &res,
  * @return corresponding string
  */
 QString LC_ActionOptionsWidget::fromDouble(double value){
+    // here we'll convert to decimal degrees always...regardless of original input format.
+    if (LC_LineMath::isNotMeaningful(value)){
+        value = 0.0;
+    }
     return QString::number(value, 'g', 6);
 }
 

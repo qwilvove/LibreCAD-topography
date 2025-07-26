@@ -37,6 +37,8 @@
 #include "qg_dialogfactory.h"
 
 #include "lc_actionfileexportmakercam.h"
+#include "lc_documentsstorage.h"
+#include "lc_graphicviewport.h"
 #include "rs.h"
 #include "rs_debug.h"
 #include "rs_document.h"
@@ -46,8 +48,8 @@
 #include "rs_painter.h"
 #include "rs_patternlist.h"
 #include "rs_settings.h"
-#include "rs_staticgraphicview.h"
 #include "rs_system.h"
+#include "lc_printviewportrenderer.h"
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -220,11 +222,11 @@ int console_dxf2png(int argc, char* argv[])
 }
 
 
-static std::unique_ptr<RS_Document> openDocAndSetGraphic(QString dxfFile)
-{
+static std::unique_ptr<RS_Document> openDocAndSetGraphic(QString dxfFile){
     auto doc = std::make_unique<RS_Graphic>();
-
-    if (!doc->open(dxfFile, RS2::FormatUnknown)) {
+    LC_DocumentsStorage storage;
+    if (!storage.loadDocument(doc.get(), dxfFile, RS2::FormatUnknown)) {
+    // if (!doc->open(dxfFile, RS2::FormatUnknown)) {
         qDebug() << "ERROR: Failed to open document" << dxfFile;
         qDebug() << "Check if file exists";
         return {};
@@ -309,17 +311,25 @@ bool slotFileExport(RS_Graphic* graphic, const QString& name,
 
     painter.eraseRect(0,0, size.width(), size.height());
 
-    RS_StaticGraphicView gv(size.width(), size.height(), &painter, &borders);
-    gv.updateSettings(graphic);
+    LC_GraphicViewport viewport;
+    viewport.setSize(size.width(), size.height());
+    viewport.setBorders(borders.width(), borders.height(), borders.width(), borders.height());
+
+    viewport.setContainer(graphic);
+    viewport.loadSettings();
+    viewport.zoomAuto(false);
+
+
+    LC_PrintViewportRenderer renderer(&viewport, &painter);
+    renderer.loadSettings();
 
     if (black) {
-        gv.setBackground(Qt::black);
+        renderer.setBackground(Qt::black);
     } else {
-        gv.setBackground(Qt::white);
+        renderer.setBackground(Qt::white);
     }
-    gv.setContainer(graphic);
-    gv.zoomAuto(false);
-    gv.drawEntity(&painter, gv.getContainer());
+
+    renderer.render();
 
     // end the picture output
     if(format.toLower() != "svg")
