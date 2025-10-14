@@ -161,8 +161,7 @@ const QColor qcolorWhite = colorWhite.toQColor();
 // RVT_PORT changed from RS_PainterQt::RS_PainterQt( const QPaintDevice* pd)
 RS_Painter::RS_Painter( QPaintDevice* pd)
     : QPainter{pd}
-    , cachedDpmm{getDpmm()}
-{
+    , cachedDpmm{getDpmm()}{
 }
 
 /**
@@ -245,23 +244,62 @@ void RS_Painter::drawPointEntityUI(const RS_Vector& uiPos, int pdmode, int pdsiz
     }
 }
 
-void RS_Painter::drawSolidWCS(const RS_VectorSolutions& wcsVertices)
-{
+void RS_Painter::drawSolidWCS(const RS_VectorSolutions& wcsVertices) {
     QPolygonF uiPolygon;
-    for(const RS_Vector& wcsVertex: wcsVertices) {
+    for (const RS_Vector& wcsVertex : wcsVertices) {
         if (wcsVertex.valid) {
             uiPolygon.push_back(toGuiPointF(wcsVertex));
         }
     }
 
     // For quadrilaterals from RS_Solid, the point order is switched for corner3 and corner4.
-    if (uiPolygon.size() == 4)
+    if (uiPolygon.size() == 4) {
         std::swap(uiPolygon[2], uiPolygon.back());
+    }
     fillPolygonUI(uiPolygon);
 }
 
-void RS_Painter::drawSolidWCS(const RS_Vector &wcsP0, const RS_Vector &wcsP1, const RS_Vector &wcsP2, const RS_Vector &wcsP3)
-{
+void RS_Painter::drawFilledPolygonWCS(const RS_Vector& wcsV1, const RS_Vector& wcsV2, const RS_Vector& wcsV3,
+                                     const RS_Vector& wcsV4, const RS_Vector& wcsV5) {
+    QPolygonF uiPolygon;
+    uiPolygon.push_back(toGuiPointF(wcsV1));
+    uiPolygon.push_back(toGuiPointF(wcsV2));
+    uiPolygon.push_back(toGuiPointF(wcsV3));
+    uiPolygon.push_back(toGuiPointF(wcsV4));
+    if (wcsV5.valid) {
+        uiPolygon.push_back(toGuiPointF(wcsV5));
+    }
+    fillPolygonUI(uiPolygon);
+}
+
+void RS_Painter::drawFilledCircleWCS(const RS_Vector& wcsCenter, double radius) {
+    fillEllipseUI(toGuiPointF(wcsCenter), toGuiDX(radius), toGuiDY(radius));
+}
+
+
+void RS_Painter::drawPolygonWCS(const RS_Vector& wcsV1, const RS_Vector& wcsV2, const RS_Vector& wcsV3,
+                                const RS_Vector& wcsV4, const RS_Vector& wcsV5) {
+    QPolygonF uiPolygon;
+    uiPolygon.push_back(toGuiPointF(wcsV1));
+    uiPolygon.push_back(toGuiPointF(wcsV2));
+    uiPolygon.push_back(toGuiPointF(wcsV3));
+    uiPolygon.push_back(toGuiPointF(wcsV4));
+    if (wcsV5.valid) {
+        uiPolygon.push_back(toGuiPointF(wcsV5));
+    }
+    drawPolyline(uiPolygon);
+}
+
+void RS_Painter::drawPolygonWCS(const std::vector<RS_Vector> &wcsPoints) {
+    QPolygonF uiPolygon;
+    for (auto& wcsPoint : wcsPoints) {
+        uiPolygon.push_back(toGuiPointF(wcsPoint));
+    }
+    drawPolyline(uiPolygon);
+}
+
+void RS_Painter::drawSolidWCS(const RS_Vector& wcsP0, const RS_Vector& wcsP1, const RS_Vector& wcsP2,
+                              const RS_Vector& wcsP3) {
     drawSolidWCS({wcsP0, wcsP1, wcsP2});
     if (wcsP3.valid) {
         drawSolidWCS({wcsP1, wcsP3, wcsP2});
@@ -271,6 +309,20 @@ void RS_Painter::drawSolidWCS(const RS_Vector &wcsP0, const RS_Vector &wcsP1, co
 
 void RS_Painter::drawLineWCS(const RS_Vector& wcsP1, const RS_Vector& wcsP2){
     drawLineUI(toGuiPointF(wcsP1), toGuiPointF(wcsP2));
+}
+
+void RS_Painter::drawLineWCSScaled(const RS_Vector& wcsP1, const RS_Vector& wcsP2, double lineWidthFactor){
+    drawLineUIScaled(toGuiPointF(wcsP1), toGuiPointF(wcsP2), lineWidthFactor);
+}
+
+void RS_Painter::drawLineUIScaled(QPointF from, QPointF to, double lineWidthFactor) {
+    const auto savedPen = pen();
+    auto width = savedPen.widthF();
+    auto newPen = savedPen;
+    newPen.setWidthF(width*lineWidthFactor);
+    QPainter::setPen(newPen);
+    QPainter::drawLine(from,to);
+    QPainter::setPen(savedPen);
 }
 
 /**
@@ -709,9 +761,9 @@ void RS_Painter::drawEllipseArcWCS(const RS_Vector& wcsCenter, double wcsMajorRa
 }
 
 void RS_Painter::drawEllipseArcUI(const RS_Vector& uiCenter, const RS_Vector& uiRadii, double uiMajorAngleDegrees,
-                                   double angle1Degrees, double angle2Degrees, double angularLength, bool reversed) {
+                                   double angle1Degrees,[[maybe_unused]] double angle2Degrees, double angularLength,[[maybe_unused]] bool reversed) {
     // TODO - it also should be refactored to be consistent with drawEllipseUI()
-    if (uiRadii.x < minEllipseMajorRadius){
+    if (std::max(uiRadii.x, uiRadii.y) < minEllipseMajorRadius){
         QPainter::drawPoint(QPointF(uiCenter.x, uiCenter.y));
         return;
     }
@@ -726,16 +778,104 @@ void RS_Painter::drawEllipseArcUI(const RS_Vector& uiCenter, const RS_Vector& ui
         QPainter::drawLine(QPointF(- uiRadii.x, 0.), QPointF(uiRadii.x, 0.));
     }
     else {
-        RS_Vector minPosition = - uiRadii;
-        RS_Vector uiSize = uiRadii + uiRadii;
-        if (reversed){
-            angle1Degrees = angle2Degrees - 360.;
-            angularLength = -angularLength;
-        }
+
+        const bool useSpline = std::max(uiRadii.x, uiRadii.y) > getMaximumArcNonErrorRadius();
+
         QPainterPath path;
-        path.arcMoveTo(minPosition.x, minPosition.y, uiSize.x, uiSize.y, angle1Degrees);
-        path.arcTo(minPosition.x, minPosition.y, uiSize.x, uiSize.y, angle1Degrees, angularLength);
+        addEllipseArcToPath(path, uiRadii, angle1Degrees, angularLength, useSpline);
         QPainter::drawPath(path);
+    }
+}
+
+void RS_Painter::addEllipseArcToPath(QPainterPath& localPath, const RS_Vector& uiRadii, double startAngleDeg, double angularLengthDeg, bool useSpline) {
+    if (useSpline) {
+        double startRad = RS_Math::deg2rad(toUCSAngleDegrees(startAngleDeg));
+        double lenRad = RS_Math::deg2rad(toUCSAngleDegrees(angularLengthDeg));
+        drawEllipseSegmentBySplinePointsUI(uiRadii, startRad, lenRad, localPath, false);
+    } else {
+        QRectF rect(-uiRadii.x, -uiRadii.y, 2 * uiRadii.x, 2 * uiRadii.y);
+        localPath.arcMoveTo(rect, startAngleDeg);
+        localPath.arcTo(rect, startAngleDeg, angularLengthDeg);
+    }
+}
+
+void RS_Painter::drawEllipseSegmentBySplinePointsUI(const RS_Vector& uiRadii, double startRad, double lenRad, QPainterPath &path, bool closed)
+{
+    double r = std::max(uiRadii.x, uiRadii.y);
+    // maximum angular step size: using this angular step size keeps the maximum
+    // deviation of an arc from its parabola fitting
+    const double dParam = std::pow(1./32. / r, 1. / 4.);
+    int numSegments = std::max(1, int(std::ceil(std::abs(lenRad) / dParam)));
+    // Don't duplicate first point for closed
+    int numPoints = closed ? numSegments : numSegments + 1;
+    if (closed) {
+        numPoints = numSegments;
+    }
+    double delta = lenRad / numSegments;
+
+    LC_SplinePointsData data;
+    data.closed = closed;
+
+    double param = startRad;
+
+    const RS_Vector scaleXY{uiRadii.x, - uiRadii.y};
+    for (int i = 0; i < numPoints; ++i) {
+        data.splinePoints.push_back(RS_Vector{param}.scale(scaleXY));
+        param += delta;
+    }
+
+    LC_SplinePoints spline(nullptr, data);
+    addSplinePointsToPath(spline.getData().controlPoints, closed, path);
+}
+
+void RS_Painter::addSplinePointsToPath(const std::vector<RS_Vector> &uiControlPoints, bool closed, QPainterPath &path) const
+{
+    size_t n = uiControlPoints.size();
+    if (n < 2)
+        return;
+
+    RS_Vector vStart = uiControlPoints.front();
+    RS_Vector vEnd(false);
+
+    if (closed) {
+        if (n < 3)
+            return;
+        const RS_Vector &cp0 = uiControlPoints[0];
+        const RS_Vector &cpNMinus1 = uiControlPoints[n - 1];
+        vStart = (cpNMinus1 + cp0) / 2.0;
+        path.moveTo(QPointF(vStart.x, vStart.y));
+
+        vEnd = (cp0 + uiControlPoints[1]) / 2.0;
+        path.quadTo(QPointF(cp0.x, cp0.y), QPointF(vEnd.x, vEnd.y));
+
+        for (size_t i = 1; i < n - 1; i++) {
+            const RS_Vector &cpi = uiControlPoints[i];
+            vEnd = (cpi + uiControlPoints[i + 1]) / 2.0;
+            path.quadTo(QPointF(cpi.x, cpi.y), QPointF(vEnd.x, vEnd.y));
+        }
+        path.quadTo(QPointF(cpNMinus1.x, cpNMinus1.y), QPointF(vStart.x, vStart.y));
+    } else {
+        path.moveTo(QPointF(vStart.x, vStart.y));
+        const RS_Vector &cp1 = uiControlPoints[1];
+        if (n < 3) {
+            path.lineTo(QPointF(cp1.x, cp1.y));
+        } else {
+            const RS_Vector &cp2 = uiControlPoints[2];
+            if (n < 4) {
+                path.quadTo(QPointF(cp1.x, cp1.y), QPointF(cp2.x, cp2.y));
+            } else {
+                vEnd = (cp1 + cp2) / 2.0;
+                path.quadTo(QPointF(cp1.x, cp1.y), QPointF(vEnd.x, vEnd.y));
+
+                for (size_t i = 2; i < n - 2; i++) {
+                    const RS_Vector &cpi = uiControlPoints[i];
+                    vEnd = (cpi + uiControlPoints[i + 1]) / 2.0;
+                    path.quadTo(QPointF(cpi.x, cpi.y), QPointF(vEnd.x, vEnd.y));
+                }
+
+                path.quadTo(QPointF(uiControlPoints[n - 2].x, uiControlPoints[n - 2].y), QPointF(uiControlPoints[n - 1].x, uiControlPoints[n - 1].y));
+            }
+        }
     }
 }
 
@@ -1068,6 +1208,14 @@ void RS_Painter::fillPolygonUI( const QPolygonF& uiPolygon)
     QPainter::setBrush(brushSaved);
 }
 
+void RS_Painter::fillEllipseUI(QPointF uiCenter, double radiusX, double radiusY) {
+    const QBrush brushSaved = brush();
+    setBrushColor(RS_Color(pen().color()));
+    QPainter::drawEllipse(uiCenter, radiusX, radiusY);
+    QPainter::setBrush(brushSaved);
+}
+
+
 void RS_Painter::fillTriangleUI(
     const RS_Vector &uiP1,
     const RS_Vector &uiP2,
@@ -1106,10 +1254,12 @@ int RS_Painter::getWidth() const{
   *@return density per millimeter in pixel/mm
   */
 double RS_Painter::getDpmm() const{
-    int mm(device()->widthMM());
-    if (mm <= 0)
+    auto paintDevice = device();
+    int mm(paintDevice->widthMM());
+    if (mm <= 0) {
         mm=400;
-    return double(device()->width())/mm;
+    }
+    return double(paintDevice->width())/mm;
 }
 
 int RS_Painter::getHeight() const{
@@ -1430,13 +1580,11 @@ void RS_Painter::drawInfiniteWCS(RS_Vector startpoint, RS_Vector endpoint) {
     }
 }
 
-void RS_Painter::drawEntity(RS_Entity* entity)
-{
+void RS_Painter::drawEntity(RS_Entity* entity) {
     renderer->renderEntity(this, entity);
 }
 
-void RS_Painter::drawAsChild(RS_Entity* entity)
-{
+void RS_Painter::drawAsChild(RS_Entity* entity) {
     renderer->renderEntityAsChild(this, entity);
 }
 
@@ -1528,6 +1676,20 @@ RS_Vector RS_Painter::toGui(const RS_Vector& worldCoordinates) const
 
    return uiPosition;
 }
+
+QTransform RS_Painter::getToGuiTransform() const
+{
+    QPolygonF wcs{ {0., 0.}, {1., 0.}, {0., 1.}, {1., 1.}};
+    QPolygonF gui;
+    std::transform(wcs.begin(), wcs.end(), std::back_inserter(gui), [this](const QPointF& wcsPoint) {
+        RS_Vector guiV = toGui({wcsPoint.x(), wcsPoint.y()});
+        return QPointF{guiV.x, guiV.y};
+    });
+    QTransform transform;
+    QTransform::quadToQuad(wcs, gui, transform);
+    return transform;
+}
+
 
 QPointF RS_Painter::toGuiPointF(const RS_Vector& worldCoordinates) const{
     RS_Vector uiPos = toGui(worldCoordinates);

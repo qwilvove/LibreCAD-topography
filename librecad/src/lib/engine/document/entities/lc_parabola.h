@@ -52,6 +52,7 @@ struct LC_ParabolaData
     RS_LineData GetDirectrix() const;
     RS_Vector GetFocus() const;
 
+
     /** \brief return the equation of the entity
     a quadratic contains coefficients for quadratic:
     m0 x^2 + m1 xy + m2 y^2 + m3 x + m4 y + m5 =0
@@ -163,6 +164,16 @@ public:
 
     void moveRef(const RS_Vector& ref, const RS_Vector& offset) override;
     void revertDirection() override;
+    double getLength() const override;
+
+    /**
+ * @brief areaLineIntegral, line integral for contour area calculation by Green's Theorem
+ * Contour Area = \oint x dy
+ * @return line integral \oint x dy along the parabola entity
+ * @author Dongxu Li
+ */
+    double areaLineIntegral() const override;
+
 
     /**
      * @brief approximateOffset - approximate offset by a parabola

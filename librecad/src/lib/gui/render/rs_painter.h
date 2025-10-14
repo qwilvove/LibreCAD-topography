@@ -85,6 +85,7 @@ public:
     void toGui(const RS_Vector& pos, double &x, double &y) const;
     double toGuiDX(double d) const;
     double toGuiDY(double d) const;
+    QTransform getToGuiTransform() const;
 
     bool isPrinting() const
     {
@@ -124,10 +125,18 @@ public:
     void drawRefPointEntityWCS(const RS_Vector &wcsPos, int pdMode, double pdSize);
     void drawSolidWCS(const RS_Vector &wcsP1, const RS_Vector &wcsP2, const RS_Vector &wcsP3, const RS_Vector &wcsP4);
     void drawSolidWCS(const RS_VectorSolutions& wcsVertices);
+    void drawFilledPolygonWCS(const RS_Vector& wcsV1, const RS_Vector& wcsV2, const RS_Vector& wcsV3,
+                             const RS_Vector& wcsV4,const RS_Vector& wcsV5);
+    void drawFilledCircleWCS(const RS_Vector& wcsCenter, double radius);
+    void drawPolygonWCS(const RS_Vector& wcsV1, const RS_Vector& wcsV2, const RS_Vector& wcsV3,
+                        const RS_Vector& wcsV4, const RS_Vector& wcsV5);
+    void drawPolygonWCS(const std::vector<RS_Vector>& wcsPoints);
 
     void drawArcWCS(const RS_Vector &wcsCenter, double wcsRadius, double wcsStartAngleDegrees, double angularLength);
     void drawSplineWCS(const RS_Spline &spline);
     void drawLineWCS(const RS_Vector &wcsP1, const RS_Vector &wcP2);
+    void drawLineUIScaled(QPointF from, QPointF to, double lineWidthFactor);
+    void drawLineWCSScaled(const RS_Vector& wcsP1, const RS_Vector& wcsP2, double lineWidthFactor);
     void drawPolylineWCS(const RS_Polyline *polyline);
     void drawHandleWCS(const RS_Vector &wcsPosition, const RS_Color &c, int size = -1);
     void drawImgWCS(QImage &img, const RS_Vector &wcsInsertionPoint, const RS_Vector &uVector, const RS_Vector &vVector);
@@ -176,6 +185,7 @@ public:
     void fillPolygonUI(const QPolygonF& polygon);
     void fillTriangleUI(const RS_Vector& uiP1,const RS_Vector& uiP2,const RS_Vector& uiP3);
     void fillTriangleUI(double uiX1, double uiY1, double uiX2, double uiY2, double uiX3, double uiY3);
+    void fillEllipseUI(QPointF point_f, double radiusX, double radiusY);
 
     void drawPath ( const QPainterPath & path);
     void fillPath ( const QPainterPath & path, const QBrush& brush);
@@ -344,6 +354,11 @@ protected:
 
     void drawArcSegmentBySplinePointsUI(const RS_Vector& center, double uiRadiusX, double uiStartAngleDegrees,
                                         double angularLength, QPainterPath &path);
+private:
+    void addEllipseArcToPath(QPainterPath& localPath, const RS_Vector& uiRadii, double startAngleDeg, double angularLengthDeg, bool useSpline);
+    // helper method: approximate a centered ellipse with lc_splinepoints
+    void drawEllipseSegmentBySplinePointsUI(const RS_Vector& uiRadii, double startRad, double lenRad, QPainterPath &path, bool closed);
+    void addSplinePointsToPath(const std::vector<RS_Vector> &uiControlPoints, bool closed, QPainterPath &path) const;
 };
 
 #endif
