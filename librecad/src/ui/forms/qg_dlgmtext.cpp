@@ -125,7 +125,7 @@ void QG_DlgMText::updateUniCharComboBox(int) {
 
     cbUniChar->clear();
     for (int c=min; c<=max; c++) {
-        char buf[5];
+        char buf[5] = {};
         snprintf(buf,5, "%04X", c);
         cbUniChar->addItem(QString("[%1] %2").arg(buf).arg(QChar(c)));
     }
@@ -185,19 +185,15 @@ void QG_DlgMText::setText(RS_MText& t, bool isNew) {
         RS_SETTINGS->beginGroup("/Draw");
         //default font depending on locale
         //default font depending on locale (RLZ-> check this: QLocale::system().name() returns "fr_FR")
-        QByteArray iso = RS_System::localeToISO( QLocale::system().name().toLocal8Bit() );
-//        QByteArray iso = RS_System::localeToISO( QTextCodec::locale() );
-        if (iso=="ISO8859-1") {
-             fon = RS_SETTINGS->readEntry("/TextFont", "normallatin1");
-        } else if (iso=="ISO8859-2") {
-             fon = RS_SETTINGS->readEntry("/TextFont", "normallatin2");
-        } else if (iso=="ISO8859-7") {
-             fon = RS_SETTINGS->readEntry("/TextFont", "greekc");
+        QByteArray iso = RS_System::localeToISO( QLocale::system().name().toLocal8Bit());
+        if (iso=="ISO8859-7") {
+            fon = RS_SETTINGS->readEntry("/TextFont", "greekc");
         } else if (iso=="KOI8-U" || iso=="KOI8-R") {
-             fon = RS_SETTINGS->readEntry("/TextFont", "cyrillic_ii");
-        } else {
-             fon = RS_SETTINGS->readEntry("/TextFont", "standard");
-                }
+            fon = RS_SETTINGS->readEntry("/TextFont", "cyrillic_ii");
+        }
+        if (fon.isEmpty()) {
+            fon = RS_SETTINGS->readEntry("/TextFont", "standard");
+        }
         height = RS_SETTINGS->readEntry("/TextHeight", "1.0");
         def = RS_SETTINGS->readEntry("/TextDefault", "1");
         alignment = RS_SETTINGS->readEntry("/TextAlignment", "1");
@@ -369,7 +365,12 @@ int QG_DlgMText::getAlignment() {
 }
 
 void QG_DlgMText::setFont(const QString& f) {
-    cbFont->setCurrentIndex( cbFont->findText(f) );
+    int index = cbFont->findText(f);
+    // Issue #2069: default to the last font, likely unicode.lff
+    if (index < 0)
+        index = cbFont->count() - 1;
+    if (index >= 0)
+        cbFont->setCurrentIndex(index);
     font = cbFont->getFont();
     defaultChanged(false);
 }
@@ -460,4 +461,3 @@ bool QG_DlgMText::eventFilter(QObject *obj, QEvent *event) {
     }
     return false;
 }
-

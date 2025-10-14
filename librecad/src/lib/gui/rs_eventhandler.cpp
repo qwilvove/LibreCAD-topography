@@ -113,7 +113,8 @@ RS_EventHandler::~RS_EventHandler() {
     defaultAction.reset();
 
     RS_DEBUG->print("RS_EventHandler::~RS_EventHandler: Deleting all actions..");
-    currentActions.clear();
+    for(const auto& [actionName, qAction]: m_toQAction)
+        qAction->setChecked(false);
     RS_DEBUG->print("RS_EventHandler::~RS_EventHandler: Deleting all actions..: OK");
     RS_DEBUG->print("RS_EventHandler::~RS_EventHandler: OK");
 }
@@ -126,11 +127,6 @@ void RS_EventHandler::back() {
     QMouseEvent e(QEvent::MouseButtonRelease, QPoint(0,0),
                   Qt::RightButton, Qt::RightButton,Qt::NoModifier);
     mouseReleaseEvent(&e);
-    if (!hasAction() && q_action)
-    {
-        q_action->setChecked(false);
-        q_action = nullptr;
-    }
 }
 
 
@@ -168,21 +164,21 @@ void RS_EventHandler::mousePressEvent(QMouseEvent* e) {
  * Called by QG_GraphicView
  */
 void RS_EventHandler::mouseReleaseEvent(QMouseEvent* e) {
-    if(hasAction()){
-        //    if (actionIndex>=0 && currentActions[actionIndex] &&
-        //            !currentActions[actionIndex]->isFinished()) {
-        RS_DEBUG->print("call action %s",
-                        currentActions.last()->getName().toLatin1().data());
+    if (hasAction()) {
+        std::shared_ptr<RS_ActionInterface> current = currentActions.last();
+        LC_LOG<< "call action "<< current->getName();
 
-        currentActions.last()->mouseReleaseEvent(e);
+        current->mouseReleaseEvent(e);
 
         // action may be completed by click. Check this and if it so, uncheck the action
-        if (currentActions.last()->getStatus() < 0){
-            if (!hasAction() && q_action){
-                q_action->setChecked(false);
-                q_action = nullptr;
-            }
-        }
+        if (current->getStatus() < 0){
+            if (m_toQAction.count(current->getName()) == 1) {
+                m_toQAction[current->getName()]->setChecked(false);
+                m_toQAction.erase(current->getName());
+	    }
+	}
+
+
         // Clean up actions - one might be finished now
         cleanUp();
         e->accept();
@@ -194,8 +190,6 @@ void RS_EventHandler::mouseReleaseEvent(QMouseEvent* e) {
         }
     }
 }
-
-
 
 /**
  * Called by QG_GraphicView
@@ -234,8 +228,11 @@ void RS_EventHandler::mouseEnterEvent() {
     if(hasAction()){
         cleanUp();
         debugActions();
-        LC_ERR<<__func__<<"(): resume: "<<currentActions.last()->getName();
+        LC_LOG<<__func__<<"(): resume: "<<currentActions.last()->getName();
         currentActions.last()->resume();
+        if (m_toQAction.count(currentActions.last()->getName()) == 1) {
+            m_toQAction[currentActions.last()->getName()]->setChecked(true);
+        }
     } else {
         if (defaultAction) {
             defaultAction->resume();
@@ -294,7 +291,13 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
     if (coordinateInputEnabled) {
         if (!e->isAccepted()) {
 
-            if(hasAction()){
+                // send command event directly to current action:
+                if (hasAction()) {
+                    LC_LOG<<"RS_EventHandler::commandEvent(RS_CommandEvent* e): sending cmd("<<qPrintable(e->getCommand()) <<") to action: "<<currentActions.last()->rtti();
+                    currentActions.last()->commandEvent(e);
+                }
+
+            if(hasAction() && !e->isAccepted()){
                 // handle quick shortcuts for absolute/current origins:
                 if (cmd.length() == 1) {
                     RS_Vector at = relative_zero;
@@ -319,7 +322,7 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
                 if (!e->isAccepted() && cmd.contains(',') && cmd.at(0)!='@') {
                     int commaPos = cmd.indexOf(',');
                     RS_DEBUG->print("RS_EventHandler::commandEvent: 001");
-                    bool ok1, ok2;
+                    bool ok1 = false, ok2 = false;
                     RS_DEBUG->print("RS_EventHandler::commandEvent: 002");
                     double x = RS_Math::eval(updateForFraction(cmd.left(commaPos)), &ok1);
                     RS_DEBUG->print("RS_EventHandler::commandEvent: 003a");
@@ -341,7 +344,7 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
                 if (!e->isAccepted()) {
                     if (cmd.contains(',') && cmd.at(0)=='@') {
                         int commaPos = cmd.indexOf(',');
-                        bool ok1, ok2;
+                        bool ok1 = false, ok2 = false;
                         double x = RS_Math::eval(updateForFraction(cmd.mid(1, commaPos-1)), &ok1);
                         double y = RS_Math::eval(updateForFraction(cmd.mid(commaPos+1)), &ok2);
 
@@ -361,7 +364,7 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
                 if (!e->isAccepted()) {
                     if (cmd.contains('<') && cmd.at(0)!='@') {
                         int commaPos = cmd.indexOf('<');
-                        bool ok1, ok2;
+                        bool ok1 = false, ok2 = false;
                         double r = RS_Math::eval(updateForFraction(cmd.left(commaPos)), &ok1);
                         double a = RS_Math::eval(cmd.mid(commaPos+1), &ok2);
 
@@ -381,7 +384,7 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
                 if (!e->isAccepted()) {
                     if (cmd.contains('<') && cmd.at(0)=='@') {
                         int commaPos = cmd.indexOf('<');
-                        bool ok1, ok2;
+                        bool ok1 = false, ok2 = false;
                         double r = RS_Math::eval(updateForFraction(cmd.mid(1, commaPos-1)), &ok1);
                         double a = RS_Math::eval(cmd.mid(commaPos+1), &ok2);
 
@@ -396,19 +399,12 @@ void RS_EventHandler::commandEvent(RS_CommandEvent* e) {
                     }
                 }
 
-                // send command event directly to current action:
-                if (!e->isAccepted()) {
-//                    std::cout<<"RS_EventHandler::commandEvent(RS_CommandEvent* e): sending cmd("<<qPrintable(e->getCommand()) <<") to action: "<<currentActions.last()->rtti()<<std::endl;
-                    currentActions.last()->commandEvent(e);
-                }
             }else{
             //send the command to default action
                 if (defaultAction) {
                     defaultAction->commandEvent(e);
                 }
             }
-            // do not accept command here. Actions themselves should be responsible to accept commands
-//            e->accept();
         }
     }
 
@@ -529,10 +525,7 @@ void RS_EventHandler::setCurrentAction(RS_ActionInterface* action) {
     RS_DEBUG->print("RS_GraphicView::setCurrentAction: OK");
     // For some actions: action->init() may call finish() within init()
     // If so, the q_action shouldn't be checked
-    if (q_action){
-        bool hasActionToCheck = hasAction();
-        q_action->setChecked(hasActionToCheck);
-    }
+
 }
 
 
@@ -566,13 +559,7 @@ void RS_EventHandler::killSelectActions() {
  */
 void RS_EventHandler::killAllActions()
 {
-	RS_DEBUG->print(__FILE__ ": %s: line %d: begin\n", __func__, __LINE__);
-
-    if (q_action)
-    {
-        q_action->setChecked(false);
-        q_action = nullptr;
-    }
+    RS_DEBUG->print(__FILE__ ": %s: line %d: begin\n", __func__, __LINE__);
 
     for(auto& p: currentActions)
     {
@@ -582,6 +569,10 @@ void RS_EventHandler::killAllActions()
 		}
 	}
     currentActions.clear();
+    for (const auto& [actionName, qAction] : m_toQAction)
+        qAction->setChecked(false);
+
+    m_toQAction.clear();
 
     if (!defaultAction->isFinished())
     {
@@ -609,6 +600,13 @@ bool RS_EventHandler::isValid(RS_ActionInterface* action) const{
 bool RS_EventHandler::hasAction()
 {
     auto it = std::remove_if(currentActions.begin(), currentActions.end(), isInactive);
+    for (auto it1 = it; it1 != currentActions.end(); ++it1) {
+	QString actionName = (*it1)->getName();
+        if (m_toQAction.count(actionName) == 1) {
+            m_toQAction[actionName]->setChecked(false);
+            m_toQAction.erase(actionName);
+        }
+    }
     currentActions.erase(it, currentActions.end());
     return !currentActions.empty();
 }
@@ -623,6 +621,9 @@ void RS_EventHandler::cleanUp() {
     if(hasAction()){
         currentActions.last()->resume();
         currentActions.last()->showOptions();
+        if (m_toQAction.count(currentActions.last()->getName()) == 1) {
+            m_toQAction[currentActions.last()->getName()]->setChecked(true);
+        }
     } else {
 		if (defaultAction) {
             defaultAction->resume();
@@ -682,14 +683,17 @@ void RS_EventHandler::debugActions() const{
 
 void RS_EventHandler::setQAction(QAction* action)
 {
-    LC_ERR<<__func__<<"()";
-    debugActions();
-    if (q_action)
-    {
-        q_action->setChecked(false);
-        killAllActions();
+    if (action==nullptr)
+        return;
+
+    LC_ERR<<__func__<<"()"<<action->text() <<" : "<<action->icon().name();
+    for (auto it = currentActions.rbegin(); it != currentActions.rend(); ++it) {
+        if (*it != nullptr && isActive(*it)) {
+    LC_ERR<<__func__<<"(): linked "<< (*it)->getName()<<" to "<<action->text() <<" : "<<action->icon().name();
+            m_toQAction.emplace((*it)->getName(), action);
+            break;
+        }
     }
-    q_action = action;
 }
 
 void RS_EventHandler::setRelativeZero(const RS_Vector& point)
