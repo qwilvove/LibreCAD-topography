@@ -92,7 +92,7 @@ int TT_DialogMain::loadPoints()
     }
 
     QDataStream stream(&file);
-    if (stream.version() != QDataStream::Qt_6_8)
+    if (stream.version() != QDataStream::Qt_5_0)
     {
         QMessageBox::critical(this, tr("Error!"), tr("Wrong data stream version!"));
         file.close();
@@ -148,7 +148,7 @@ int TT_DialogMain::savePoints()
     }
 
     QDataStream stream(&file);
-    stream.setVersion(QDataStream::Qt_6_8);
+    stream.setVersion(QDataStream::Qt_5_0);
 
     int len = points.size();
     stream << len;
