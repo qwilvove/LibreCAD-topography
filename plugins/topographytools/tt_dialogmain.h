@@ -62,6 +62,8 @@ private:
     void displayPoints();
     void displayPoint(TT::Point *point);
 
+    void enableAllTools();
+
     void addPoint();
     void removePoints(QList<int> &indexesToRemove);
     void editPoint(TT::Point *point);

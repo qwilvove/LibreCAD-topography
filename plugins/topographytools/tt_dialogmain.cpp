@@ -29,26 +29,10 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 
     readSettings();
 
-    if (!fileName.isEmpty())
+    if ( loadPoints() > -1 )
     {
-        ui->label->setText(tr("Active file : %1").arg(fileName));
-
-        ui->pbSave->setEnabled(true);
-        ui->pbImport->setEnabled(true);
-        ui->pbAdd->setEnabled(true);
-        ui->pbRemove->setEnabled(true);
-        ui->pbEdit->setEnabled(true);
-        ui->pbUp->setEnabled(true);
-        ui->pbDown->setEnabled(true);
-        ui->pbV0->setEnabled(true);
-        ui->pbPolygo->setEnabled(true);
-        ui->pbPoints->setEnabled(true);
-        ui->pbDraw->setEnabled(true);
-        ui->pbDrawBlocks->setEnabled(true);
-        ui->pbGrid->setEnabled(true);
-
-        loadPoints();
         displayPoints();
+        enableAllTools();
     }
 }
 
@@ -90,10 +74,15 @@ int TT_DialogMain::loadPoints()
 
     points.clear();
 
+    if (fileName.isEmpty())
+    {
+        return -1;
+    }
+
     QFile file(fileName);
     if (!file.exists())
     {
-        QMessageBox::critical(this, tr("Error!"), tr("File does not exist!"));
+        ui->label->setText(tr("Active file : none | %1 does not exist!").arg(fileName));
         return -1;
     }
     if (!file.open(QIODevice::ReadOnly))
@@ -122,6 +111,8 @@ int TT_DialogMain::loadPoints()
     }
 
     file.close();
+
+    ui->label->setText(tr("Active file : %1").arg(fileName));
 
     return nbPoints;
 }
@@ -223,6 +214,7 @@ int TT_DialogMain::importPoints()
             points.append(point);
             nbPoints++;
         }
+        delete point;
     }
 
     file.close();
@@ -420,6 +412,24 @@ void TT_DialogMain::displayPoint(TT::Point *point)
     }
 }
 
+// Enable all tools in the top toolbar
+void TT_DialogMain::enableAllTools()
+{
+    ui->pbSave->setEnabled(true);
+    ui->pbImport->setEnabled(true);
+    ui->pbAdd->setEnabled(true);
+    ui->pbRemove->setEnabled(true);
+    ui->pbEdit->setEnabled(true);
+    ui->pbUp->setEnabled(true);
+    ui->pbDown->setEnabled(true);
+    ui->pbV0->setEnabled(true);
+    ui->pbPolygo->setEnabled(true);
+    ui->pbPoints->setEnabled(true);
+    ui->pbDraw->setEnabled(true);
+    ui->pbDrawBlocks->setEnabled(true);
+    ui->pbGrid->setEnabled(true);
+}
+
 // Add a point to points
 void TT_DialogMain::addPoint()
 {
@@ -561,19 +571,7 @@ void TT_DialogMain::on_pbNew_clicked()
 
     ui->label->setText(tr("Active file : %1").arg(fileName));
 
-    ui->pbSave->setEnabled(true);
-    ui->pbImport->setEnabled(true);
-    ui->pbAdd->setEnabled(true);
-    ui->pbRemove->setEnabled(true);
-    ui->pbEdit->setEnabled(true);
-    ui->pbUp->setEnabled(true);
-    ui->pbDown->setEnabled(true);
-    ui->pbV0->setEnabled(true);
-    ui->pbPolygo->setEnabled(true);
-    ui->pbPoints->setEnabled(true);
-    ui->pbDraw->setEnabled(true);
-    ui->pbDrawBlocks->setEnabled(true);
-    ui->pbGrid->setEnabled(true);
+    enableAllTools();
 
     points.clear();
     displayPoints();
@@ -597,24 +595,11 @@ void TT_DialogMain::on_pbOpen_clicked()
 
     writeSettings();
 
-    ui->label->setText(tr("Active file : %1").arg(fileName));
-
-    ui->pbSave->setEnabled(true);
-    ui->pbImport->setEnabled(true);
-    ui->pbAdd->setEnabled(true);
-    ui->pbRemove->setEnabled(true);
-    ui->pbEdit->setEnabled(true);
-    ui->pbUp->setEnabled(true);
-    ui->pbDown->setEnabled(true);
-    ui->pbV0->setEnabled(true);
-    ui->pbPolygo->setEnabled(true);
-    ui->pbPoints->setEnabled(true);
-    ui->pbDraw->setEnabled(true);
-    ui->pbDrawBlocks->setEnabled(true);
-    ui->pbGrid->setEnabled(true);
-
-    loadPoints();
-    displayPoints();
+    if ( loadPoints() > -1 )
+    {
+        displayPoints();
+        enableAllTools();
+    }
 }
 
 void TT_DialogMain::on_pbSave_clicked()
