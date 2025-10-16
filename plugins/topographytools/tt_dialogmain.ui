@@ -24,6 +24,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>New .tt file</string>
        </property>
@@ -53,6 +59,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Open .tt file</string>
        </property>
@@ -77,6 +89,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>
@@ -118,6 +136,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Import .csv data</string>
        </property>
@@ -154,6 +178,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Add a line</string>
        </property>
@@ -178,6 +208,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>
@@ -212,6 +248,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Edit attributes</string>
        </property>
@@ -241,6 +283,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Move line up</string>
        </property>
@@ -265,6 +313,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>
@@ -306,6 +360,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Calculate V0</string>
        </property>
@@ -327,6 +387,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>
@@ -356,6 +422,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>
@@ -397,6 +469,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Draw points</string>
        </property>
@@ -423,6 +501,12 @@
          <height>36</height>
         </size>
        </property>
+       <property name="maximumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Draw a block</string>
        </property>
@@ -444,6 +528,12 @@
         <bool>false</bool>
        </property>
        <property name="minimumSize">
+        <size>
+         <width>36</width>
+         <height>36</height>
+        </size>
+       </property>
+       <property name="maximumSize">
         <size>
          <width>36</width>
          <height>36</height>

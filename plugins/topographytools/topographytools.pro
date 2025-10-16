@@ -26,8 +26,7 @@ SOURCES += \
     tt_dialogmain.cpp \
     tt_dialogpoints.cpp \
     tt_dialogpolygo.cpp \
-    tt_dialogv0.cpp \
-    tt_mainwindow.cpp
+    tt_dialogv0.cpp
 
 HEADERS += \
     topographytools.h \
@@ -39,8 +38,7 @@ HEADERS += \
     tt_dialogmain.h \
     tt_dialogpoints.h \
     tt_dialogpolygo.h \
-    tt_dialogv0.h \
-    tt_mainwindow.h
+    tt_dialogv0.h
 
 # Installation Directory
 win32 {
@@ -63,8 +61,7 @@ FORMS += \
     tt_dialogmain.ui \
     tt_dialogpoints.ui \
     tt_dialogpolygo.ui \
-    tt_dialogv0.ui \
-    tt_mainwindow.ui
+    tt_dialogv0.ui
 
 RESOURCES += \
     blocks/blocks.qrc \
