@@ -92,13 +92,6 @@ int TT_DialogMain::loadPoints()
     }
 
     QDataStream stream(&file);
-    if (stream.version() != QDataStream::Qt_5_0)
-    {
-        QMessageBox::critical(this, tr("Error!"), tr("Wrong data stream version!"));
-        file.close();
-        return -1;
-    }
-
     int max;
     stream >> max;
 
