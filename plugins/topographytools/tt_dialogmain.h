@@ -56,14 +56,13 @@ private:
     void loadPoint(QDataStream &stream, TT::Point *point);
     int savePoints();
     void savePoint(QDataStream &stream, TT::Point *point);
-    int importPoints();
-    bool importPoint(QString &line, TT::Point *point);
 
     void displayPoints();
     void displayPoint(TT::Point *point);
 
     void enableAllTools();
 
+    void importPoints();
     void addPoint();
     void removePoints(QList<int> &indexesToRemove);
     void editPoint(TT::Point *point);
