@@ -336,7 +336,7 @@ first base, second base, first target, second target.</source>
     <name>LC_Topographytools</name>
     <message>
         <source>Topography tools</source>
-        <translation>Topography tools - outils topographiques</translation>
+        <translation type="unfinished">Topography tools - outils topographiques</translation>
     </message>
 </context>
 <context>
@@ -390,19 +390,19 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>POINT</source>
-        <translation type="unfinished">POINT</translation>
+        <translation>POINT</translation>
     </message>
     <message>
         <source>STATION</source>
-        <translation type="unfinished">STATION</translation>
+        <translation>STATION</translation>
     </message>
     <message>
         <source>REFERENCE</source>
-        <translation type="unfinished">RÉFÉRENCE</translation>
+        <translation>RÉFÉRENCE</translation>
     </message>
     <message>
         <source>MEASURE</source>
-        <translation type="unfinished">MESURE</translation>
+        <translation>MESURE</translation>
     </message>
 </context>
 <context>
@@ -413,7 +413,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Type</source>
-        <translation></translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Name</source>
@@ -433,7 +433,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Z</source>
-        <translation></translation>
+        <translation>Z</translation>
     </message>
     <message>
         <source>Instrument height</source>
@@ -465,7 +465,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>STATION</source>
-        <translation></translation>
+        <translation>STATION</translation>
     </message>
     <message>
         <source>REFERENCE</source>
@@ -480,27 +480,27 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogDrawBlocks</name>
     <message>
         <source>Insert a block</source>
-        <translation type="unfinished"></translation>
+        <translation>Insérer un bloc</translation>
     </message>
     <message>
         <source>Insertion type :</source>
-        <translation type="unfinished"></translation>
+        <translation>Type d&apos;insertion :</translation>
     </message>
     <message>
         <source>1 point</source>
-        <translation type="unfinished"></translation>
+        <translation>1 point</translation>
     </message>
     <message>
         <source>2 points</source>
-        <translation type="unfinished"></translation>
+        <translation>2 points</translation>
     </message>
     <message>
         <source>3 points</source>
-        <translation type="unfinished"></translation>
+        <translation>3 points</translation>
     </message>
     <message>
         <source>2 points + value</source>
-        <translation type="unfinished"></translation>
+        <translation>2 points + valeur</translation>
     </message>
 </context>
 <context>
@@ -531,7 +531,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Z</source>
-        <translation></translation>
+        <translation>Z</translation>
     </message>
     <message>
         <source>Instrument height</source>
@@ -578,130 +578,130 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogGrid</name>
     <message>
         <source>Manage grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Gestion du carroyage</translation>
     </message>
     <message>
         <source>Insert grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Insérer un carroyage</translation>
     </message>
     <message>
         <source>Move grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Déplacer un carroyage</translation>
     </message>
     <message>
         <source>Rotate grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Tourner un carroyage</translation>
     </message>
     <message>
         <source>Prepare print</source>
-        <translation type="unfinished"></translation>
+        <translation>Préparer l&apos;impression</translation>
     </message>
     <message>
         <source>Restore drawing</source>
-        <translation type="unfinished"></translation>
+        <translation>Rétablir le dessin</translation>
     </message>
 </context>
 <context>
     <name>TT_DialogImport</name>
     <message>
         <source>Import points from a file</source>
-        <translation type="unfinished"></translation>
+        <translation>Importer des points depuis un fichier</translation>
     </message>
     <message>
         <source>Type of file</source>
-        <translation type="unfinished"></translation>
+        <translation>Type de fichier</translation>
     </message>
     <message>
         <source>CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>CSV</translation>
     </message>
     <message>
         <source>Geobase</source>
-        <translation type="unfinished"></translation>
+        <translation>Géobase</translation>
     </message>
     <message>
         <source>Select a CSV file</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélectionner un fichier CSV</translation>
     </message>
     <message>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <source>Delimiter</source>
-        <translation type="unfinished"></translation>
+        <translation>Délimiteur</translation>
     </message>
     <message>
         <source>, ; : .</source>
-        <translation type="unfinished"></translation>
+        <translation>, ; : .</translation>
     </message>
     <message>
         <source>Decimal separator</source>
-        <translation type="unfinished"></translation>
+        <translation>Séparateur décimal</translation>
     </message>
     <message>
         <source>. ,</source>
-        <translation type="unfinished"></translation>
+        <translation>. ,</translation>
     </message>
     <message>
         <source>Line format</source>
-        <translation type="unfinished"></translation>
+        <translation>Format de ligne</translation>
     </message>
     <message>
         <source>x;y(;z) (Only import POINT)</source>
-        <translation type="unfinished"></translation>
+        <translation>x;y(;z) (Importer seulement des POINT)</translation>
     </message>
     <message>
         <source>name;x;y(;z) (Only import POINT)</source>
-        <translation type="unfinished"></translation>
+        <translation>nom;x;y(;z) (Importer seulement des POINT)</translation>
     </message>
     <message>
         <source>type;name;parameters (Import POINT, STATION, REFERENCE &amp; MEASURE)</source>
-        <translation type="unfinished"></translation>
+        <translation>type;nom;paramètres (Importer POINT, STATION, RÉFÉRENCE &amp; MESURE)</translation>
     </message>
     <message>
         <source>Type</source>
-        <translation type="unfinished">Type</translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Name</source>
-        <translation type="unfinished">Nom</translation>
+        <translation>Nom</translation>
     </message>
     <message>
         <source>Parameters</source>
-        <translation type="unfinished">Paramètres</translation>
+        <translation>Paramètres</translation>
     </message>
     <message>
         <source>Those 0 points will be added</source>
-        <translation type="unfinished"></translation>
+        <translation>Ces 0 points seront importés</translation>
     </message>
     <message>
         <source>Select a Geobase file</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélectionner un fichier Géobase</translation>
     </message>
     <message>
         <source>Those %1 points will be added</source>
-        <translation type="unfinished"></translation>
+        <translation>Ces %1 points seront importés</translation>
     </message>
     <message>
         <source>CSV (*.csv)</source>
-        <translation type="unfinished"></translation>
+        <translation>CSV (*.csv)</translation>
     </message>
     <message>
         <source>Error!</source>
-        <translation type="unfinished">Erreur !</translation>
+        <translation>Erreur !</translation>
     </message>
     <message>
         <source>File not found!</source>
-        <translation type="unfinished">Fichier non trouvé !</translation>
+        <translation>Fichier non trouvé !</translation>
     </message>
     <message>
         <source>Could not open file!</source>
-        <translation type="unfinished">Impossible d&apos;ouvrir le fichier !</translation>
+        <translation>Impossible d&apos;ouvrir le fichier !</translation>
     </message>
     <message>
         <source>Geobase (*.geo)</source>
-        <translation type="unfinished"></translation>
+        <translation>Géobase (*.geo)</translation>
     </message>
 </context>
 <context>
@@ -716,7 +716,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Ctrl+N</source>
-        <translation></translation>
+        <translation>Ctrl+N</translation>
     </message>
     <message>
         <source>Open .tt file</source>
@@ -724,7 +724,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Ctrl+O</source>
-        <translation></translation>
+        <translation>Ctrl+O</translation>
     </message>
     <message>
         <source>Save .tt file</source>
@@ -732,15 +732,15 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Ctrl+S</source>
-        <translation></translation>
+        <translation>Ctrl+S</translation>
     </message>
     <message>
-        <source>Import .csv data</source>
-        <translation>Importer des données .csv</translation>
+        <source>Import data</source>
+        <translation>Importer des données</translation>
     </message>
     <message>
         <source>Ctrl+I</source>
-        <translation></translation>
+        <translation>Ctrl+I</translation>
     </message>
     <message>
         <source>Add a line</source>
@@ -748,7 +748,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>+</source>
-        <translation></translation>
+        <translation>+</translation>
     </message>
     <message>
         <source>Remove line(s)</source>
@@ -764,7 +764,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Ctrl+E</source>
-        <translation></translation>
+        <translation>Ctrl+E</translation>
     </message>
     <message>
         <source>Move line up</source>
@@ -772,7 +772,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>PgUp</source>
-        <translation></translation>
+        <translation>PgUp</translation>
     </message>
     <message>
         <source>Move line down</source>
@@ -780,7 +780,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>PgDown</source>
-        <translation></translation>
+        <translation>PgDown</translation>
     </message>
     <message>
         <source>Calculate V0</source>
@@ -792,7 +792,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Calculate points</source>
-        <translation type="unfinished"></translation>
+        <translation>Calculer des points rayonnés</translation>
     </message>
     <message>
         <source>Draw points</source>
@@ -800,11 +800,11 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Draw a block</source>
-        <translation type="unfinished"></translation>
+        <translation>Dessiner des blocs</translation>
     </message>
     <message>
         <source>Manage grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Gestion du carroyage</translation>
     </message>
     <message>
         <source>Line</source>
@@ -812,7 +812,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Type</source>
-        <translation></translation>
+        <translation>Type</translation>
     </message>
     <message>
         <source>Name</source>
@@ -827,92 +827,28 @@ first base, second base, first target, second target.</source>
         <translation>Fichier actif : aucun</translation>
     </message>
     <message>
-        <source>Active file : %1</source>
-        <translation>Fichier actif : %1</translation>
+        <source>Active file : none | %1 does not exist!</source>
+        <translation>Fichier actif : aucun | %1 n&apos;existe pas !</translation>
     </message>
     <message>
         <source>Error!</source>
         <translation>Erreur !</translation>
     </message>
     <message>
-        <source>File does not exist!</source>
-        <translation type="vanished">Le fichier n&apos;existe pas !</translation>
-    </message>
-    <message>
         <source>Could not open file!</source>
         <translation>Impossible d&apos;ouvrir le fichier !</translation>
     </message>
     <message>
-        <source>Wrong data stream version!</source>
-        <translation type="vanished">Mauvaise version de flux de données !</translation>
+        <source>Active file : %1</source>
+        <translation>Fichier actif : %1</translation>
     </message>
     <message>
         <source>Could not save file!</source>
         <translation>Impossible de sauvegarder le fichier !</translation>
     </message>
     <message>
-        <source>Select a field notebook</source>
-        <translation type="vanished">Selectionner un carnet de terrain</translation>
-    </message>
-    <message>
-        <source>File not found!</source>
-        <translation type="vanished">Fichier non trouvé !</translation>
-    </message>
-    <message>
-        <source>POINT</source>
-        <translation type="vanished">POINT</translation>
-    </message>
-    <message>
-        <source>X = %1 , Y = %2</source>
-        <translation type="vanished">X = %1, Y = %2</translation>
-    </message>
-    <message>
-        <source> , Z = %1</source>
-        <translation type="vanished"> , Z = %1</translation>
-    </message>
-    <message>
-        <source>IH = %1</source>
-        <translation type="vanished">HI = %1</translation>
-    </message>
-    <message>
-        <source> , V0 = %1</source>
-        <translation type="vanished"> , V0 = %1</translation>
-    </message>
-    <message>
-        <source>PH = %1 , HA = %2 , VA = %3 , ID = %4</source>
-        <translation type="vanished">HP = %1 , AH = %2 , AV = %3 , DI = %4</translation>
-    </message>
-    <message>
-        <source>Active file : %1 | No points drawn.</source>
-        <translation>Fichier actif : %1 | Aucun point dessiné.</translation>
-    </message>
-    <message>
-        <source>X=%1 , Y=%2</source>
-        <translation type="vanished">X=%1, Y=%2</translation>
-    </message>
-    <message>
-        <source> , Z=%1</source>
-        <translation type="vanished"> , Z=%1</translation>
-    </message>
-    <message>
-        <source>IH=%1</source>
-        <translation type="vanished">HI=%1</translation>
-    </message>
-    <message>
-        <source> , V0=%1</source>
-        <translation type="vanished"> , V0=%1</translation>
-    </message>
-    <message>
-        <source>REFERENCE</source>
-        <translation type="vanished">RÉFÉRENCE</translation>
-    </message>
-    <message>
-        <source>PH=%1 , HA=%2 , VA=%3 , ID=%4</source>
-        <translation type="vanished">HP=%1 , AH=%2 , AV=%3 , DI=%4</translation>
-    </message>
-    <message>
-        <source>MEASURE</source>
-        <translation type="vanished">MESURE</translation>
+        <source>Active file : %1 | %2 points imported.</source>
+        <translation>Fichier actif : %1 | %2 points importés.</translation>
     </message>
     <message>
         <source>Create a TT file</source>
@@ -931,59 +867,55 @@ first base, second base, first target, second target.</source>
         <translation>Fichier actif : %1 | %2 points sauvegardés.</translation>
     </message>
     <message>
-        <source>Active file : %1 | %2 points imported.</source>
-        <translation>Fichier actif : %1 | %2 points importés.</translation>
-    </message>
-    <message>
-        <source>Active file : none | %1 does not exist!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Active file : %1 | %2 points drawn.</source>
         <translation>Fichier actif : %1 | %2 points dessinés.</translation>
+    </message>
+    <message>
+        <source>Active file : %1 | No points drawn.</source>
+        <translation>Fichier actif : %1 | Aucun point dessiné.</translation>
     </message>
 </context>
 <context>
     <name>TT_DialogPoints</name>
     <message>
         <source>Calculate points</source>
-        <translation type="unfinished"></translation>
+        <translation>Calculer des points rayonnés</translation>
     </message>
     <message>
         <source>Stations to calculate points for :</source>
-        <translation type="unfinished"></translation>
+        <translation>Stations pour lesquelles les points seront calculés :</translation>
     </message>
     <message>
         <source>Select all</source>
-        <translation type="unfinished"></translation>
+        <translation>Tout sélectionner</translation>
     </message>
     <message>
         <source>Unselect all</source>
-        <translation type="unfinished"></translation>
+        <translation>Tout désélectionner</translation>
     </message>
     <message>
         <source>Error!</source>
-        <translation type="unfinished">Erreur !</translation>
+        <translation>Erreur !</translation>
     </message>
     <message>
         <source>At least one station must be selected!</source>
-        <translation type="unfinished"></translation>
+        <translation>Au moins une station doit être sélectionnée !</translation>
     </message>
     <message>
         <source>Station %1 has no coordinates!</source>
-        <translation type="unfinished"></translation>
+        <translation>La station %1 n&apos;a pas de coordonnées !</translation>
     </message>
     <message>
         <source>Station %1 has no v0!</source>
-        <translation type="unfinished"></translation>
+        <translation>La station %1 n&apos;a pas de V0 !</translation>
     </message>
     <message>
         <source>Success!</source>
-        <translation type="unfinished">Succès !</translation>
+        <translation>Succès !</translation>
     </message>
     <message>
         <source>%1 points calculated!</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 points calculés !</translation>
     </message>
 </context>
 <context>
@@ -1006,7 +938,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>PgUp</source>
-        <translation></translation>
+        <translation>PgUp</translation>
     </message>
     <message>
         <source>Move line down</source>
@@ -1014,7 +946,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>PgDown</source>
-        <translation></translation>
+        <translation>PgDown</translation>
     </message>
     <message>
         <source>Antenna path</source>
@@ -1077,7 +1009,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>Station :</source>
-        <translation></translation>
+        <translation>Station :</translation>
     </message>
     <message>
         <source>References to use :</source>
@@ -1085,7 +1017,7 @@ first base, second base, first target, second target.</source>
     </message>
     <message>
         <source>V0 :</source>
-        <translation></translation>
+        <translation>V0 :</translation>
     </message>
     <message>
         <source>Error!</source>
@@ -1474,7 +1406,7 @@ anti-clockwise.</source>
     </message>
     <message>
         <source>CSV (*.csv)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">CSV (*.csv)</translation>
     </message>
     <message>
         <source>Unable to open file</source>

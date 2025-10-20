@@ -739,7 +739,7 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Import .csv data</source>
+        <source>Import data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -831,7 +831,7 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Active file : %1</source>
+        <source>Active file : none | %1 does not exist!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -843,15 +843,15 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Active file : %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Could not save file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>POINT</source>
-        <translation type="obsolete">ΣΗΜΕΙΟ</translation>
-    </message>
-    <message>
-        <source>Active file : %1 | No points drawn.</source>
+        <source>Active file : %1 | %2 points imported.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -871,15 +871,11 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Active file : %1 | %2 points imported.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Active file : none | %1 does not exist!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Active file : %1 | %2 points drawn.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Active file : %1 | No points drawn.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
