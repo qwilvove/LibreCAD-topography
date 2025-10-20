@@ -424,8 +424,8 @@ first base, second base, first target, second target.</source>
 <context>
     <name>LC_Topographytools</name>
     <message>
-        <location filename="../topographytools/topographytools.cpp" line="20"/>
-        <location filename="../topographytools/topographytools.cpp" line="26"/>
+        <location filename="../topographytools/topographytools.cpp" line="19"/>
+        <location filename="../topographytools/topographytools.cpp" line="25"/>
         <source>Topography tools</source>
         <translation type="unfinished"></translation>
     </message>
@@ -441,6 +441,74 @@ first base, second base, first target, second target.</source>
         <location filename="../picfile/picfile.cpp" line="42"/>
         <source>import PIC file</source>
         <translation>Importa file PIC</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../topographytools/tt.h" line="36"/>
+        <source>TT_POINTS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="37"/>
+        <source>TT_NAME</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="38"/>
+        <source>TT_ALTI</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="40"/>
+        <source>TT_VEGETATION</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="41"/>
+        <source>TT_ELECTRICITY</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="42"/>
+        <source>TT_ROAD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="53"/>
+        <source>Vegetation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="54"/>
+        <source>Electricity</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt.h" line="55"/>
+        <source>Road</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_classpoint.cpp" line="12"/>
+        <source>POINT</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_classpoint.cpp" line="13"/>
+        <source>STATION</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_classpoint.cpp" line="14"/>
+        <source>REFERENCE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_classpoint.cpp" line="15"/>
+        <source>MEASURE</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -528,6 +596,39 @@ first base, second base, first target, second target.</source>
     <message>
         <location filename="../topographytools/tt_dialogadd.cpp" line="16"/>
         <source>MEASURE</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TT_DialogDrawBlocks</name>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="14"/>
+        <source>Insert a block</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="20"/>
+        <source>Insertion type :</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="29"/>
+        <source>1 point</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="42"/>
+        <source>2 points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="52"/>
+        <source>3 points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogdrawblocks.ui" line="62"/>
+        <source>2 points + value</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -620,6 +721,180 @@ first base, second base, first target, second target.</source>
     </message>
 </context>
 <context>
+    <name>TT_DialogGrid</name>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="14"/>
+        <source>Manage grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="20"/>
+        <source>Insert grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="27"/>
+        <source>Move grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="34"/>
+        <source>Rotate grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="41"/>
+        <source>Prepare print</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialoggrid.ui" line="48"/>
+        <source>Restore drawing</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TT_DialogImport</name>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="14"/>
+        <source>Import points from a file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="26"/>
+        <source>Type of file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="34"/>
+        <source>CSV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="39"/>
+        <source>Geobase</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="74"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="116"/>
+        <source>Select a CSV file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="81"/>
+        <location filename="../topographytools/tt_dialogimport.ui" line="305"/>
+        <source>...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="130"/>
+        <source>Delimiter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="140"/>
+        <source>, ; : .</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="151"/>
+        <source>Decimal separator</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="161"/>
+        <source>. ,</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="173"/>
+        <source>Line format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="187"/>
+        <source>x;y(;z) (Only import POINT)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="192"/>
+        <source>name;x;y(;z) (Only import POINT)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="197"/>
+        <source>type;name;parameters (Import POINT, STATION, REFERENCE &amp; MEASURE)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="230"/>
+        <location filename="../topographytools/tt_dialogimport.ui" line="362"/>
+        <source>Type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="241"/>
+        <location filename="../topographytools/tt_dialogimport.ui" line="373"/>
+        <source>Name</source>
+        <translation type="unfinished">Nome</translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="251"/>
+        <location filename="../topographytools/tt_dialogimport.ui" line="383"/>
+        <source>Parameters</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="264"/>
+        <location filename="../topographytools/tt_dialogimport.ui" line="396"/>
+        <source>Those 0 points will be added</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.ui" line="298"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="271"/>
+        <source>Select a Geobase file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="50"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="172"/>
+        <source>Those %1 points will be added</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="116"/>
+        <source>CSV (*.csv)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="125"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="130"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="280"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="285"/>
+        <source>Error!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="125"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="280"/>
+        <source>File not found!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="130"/>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="285"/>
+        <source>Could not open file!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogimport.cpp" line="271"/>
+        <source>Geobase (*.geo)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>TT_DialogMain</name>
     <message>
         <location filename="../topographytools/tt_dialogmain.ui" line="14"/>
@@ -627,268 +902,267 @@ first base, second base, first target, second target.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="28"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="34"/>
         <source>New .tt file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="41"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="47"/>
         <source>Ctrl+N</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="57"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="69"/>
         <source>Open .tt file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="70"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="82"/>
         <source>Ctrl+O</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="86"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="104"/>
         <source>Save .tt file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="99"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="117"/>
         <source>Ctrl+S</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="122"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="146"/>
         <source>Import .csv data</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="135"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="159"/>
         <source>Ctrl+I</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="158"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="188"/>
         <source>Add a line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="171"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="201"/>
         <source>+</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="187"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="223"/>
         <source>Remove line(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="200"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="236"/>
         <source>Del</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="216"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="258"/>
         <source>Edit attributes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="229"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="271"/>
         <source>Ctrl+E</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="245"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="293"/>
         <source>Move line up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="258"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="306"/>
         <source>PgUp</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="274"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="328"/>
         <source>Move line down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="287"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="341"/>
         <source>PgDown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="310"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="370"/>
         <source>Calculate V0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="336"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="402"/>
         <source>Calculate polygonation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="365"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="437"/>
+        <source>Calculate points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.ui" line="479"/>
         <source>Draw points</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="422"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="511"/>
+        <source>Draw a block</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.ui" line="543"/>
+        <source>Manage grid</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.ui" line="600"/>
         <source>Line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="427"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="605"/>
         <source>Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="432"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="610"/>
         <source>Name</source>
         <translation type="unfinished">Nome</translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="437"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="615"/>
         <source>Parameters</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.ui" line="445"/>
+        <location filename="../topographytools/tt_dialogmain.ui" line="623"/>
         <source>Active file : none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="27"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="556"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="591"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="109"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="373"/>
         <source>Active file : %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="80"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="85"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="92"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="139"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="191"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="196"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="91"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="140"/>
         <source>Error!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="80"/>
-        <source>File does not exist!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="85"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="196"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="91"/>
         <source>Could not open file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="92"/>
-        <source>Wrong data stream version!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="139"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="140"/>
         <source>Could not save file!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="182"/>
-        <source>Select a field notebook</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="182"/>
-        <source>CSV (*.csv)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="191"/>
-        <source>File not found!</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="294"/>
-        <source>POINT</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="306"/>
-        <source>X = %1 , Y = %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="309"/>
-        <source> , Z = %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="336"/>
-        <source>IH = %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="339"/>
-        <source> , V0 = %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="366"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="396"/>
-        <source>PH = %1 , HA = %2 , VA = %3 , ID = %4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="700"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="502"/>
         <source>Active file : %1 | No points drawn.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="324"/>
-        <source>STATION</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="354"/>
-        <source>REFERENCE</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="384"/>
-        <source>MEASURE</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="546"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="363"/>
         <source>Create a TT file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="546"/>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="575"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="363"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="383"/>
         <source>TT files (*.tt)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="575"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="383"/>
         <source>Open a TT file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="613"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="411"/>
         <source>Active file : %1 | %2 points saved.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="622"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="229"/>
         <source>Active file : %1 | %2 points imported.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogmain.cpp" line="696"/>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="86"/>
+        <source>Active file : none | %1 does not exist!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogmain.cpp" line="498"/>
         <source>Active file : %1 | %2 points drawn.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TT_DialogPoints</name>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.ui" line="14"/>
+        <location filename="../topographytools/tt_dialogpoints.ui" line="63"/>
+        <source>Calculate points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.ui" line="20"/>
+        <source>Stations to calculate points for :</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.ui" line="29"/>
+        <source>Select all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.ui" line="36"/>
+        <source>Unselect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="93"/>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="115"/>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="125"/>
+        <source>Error!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="93"/>
+        <source>At least one station must be selected!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="115"/>
+        <source>Station %1 has no coordinates!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="125"/>
+        <source>Station %1 has no v0!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="170"/>
+        <source>Success!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../topographytools/tt_dialogpoints.cpp" line="170"/>
+        <source>%1 points calculated!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -896,52 +1170,52 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogPolygo</name>
     <message>
         <location filename="../topographytools/tt_dialogpolygo.ui" line="14"/>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="194"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="212"/>
         <source>Calculate polygonation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="46"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="52"/>
         <source>Add station</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="69"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="75"/>
         <source>Remove station</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="111"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="123"/>
         <source>Move line up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="124"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="136"/>
         <source>PgUp</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="137"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="155"/>
         <source>Move line down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="150"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="168"/>
         <source>PgDown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="176"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="194"/>
         <source>Antenna path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="181"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="199"/>
         <source>Bounded path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogpolygo.ui" line="186"/>
+        <location filename="../topographytools/tt_dialogpolygo.ui" line="204"/>
         <source>Closed path</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1008,22 +1282,22 @@ first base, second base, first target, second target.</source>
     <name>TT_DialogV0</name>
     <message>
         <location filename="../topographytools/tt_dialogv0.ui" line="14"/>
-        <location filename="../topographytools/tt_dialogv0.ui" line="62"/>
+        <location filename="../topographytools/tt_dialogv0.ui" line="60"/>
         <source>Calculate V0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.ui" line="22"/>
+        <location filename="../topographytools/tt_dialogv0.ui" line="28"/>
         <source>Station :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.ui" line="34"/>
+        <location filename="../topographytools/tt_dialogv0.ui" line="40"/>
         <source>References to use :</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../topographytools/tt_dialogv0.ui" line="71"/>
+        <location filename="../topographytools/tt_dialogv0.ui" line="69"/>
         <source>V0 :</source>
         <translation type="unfinished"></translation>
     </message>
