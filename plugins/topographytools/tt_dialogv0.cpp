@@ -4,6 +4,24 @@
 #include <QMessageBox>
 #include <QCheckBox>
 
+#include <QDebug>
+
+double mod(double value, int angle)
+{
+    double mod = std::fmod(value, angle);
+
+    if (mod < 0)
+    {
+        mod += angle;
+    }
+    else if (mod >= angle)
+    {
+        mod -= angle;
+    }
+
+    return mod;
+}
+
 TT_DialogV0::TT_DialogV0(QWidget *parent, QList<TT::Point *> &points) :
     QDialog(parent),
     ui(new Ui::TT_DialogV0),
@@ -174,33 +192,34 @@ void TT_DialogV0::on_pbCalculate_clicked()
         }
     }
 
-    // For each check reference
+    // For each checked reference
     QList<double> v0s = {};
     QList<double> distances = {};
+    double sumOfDistances = 0.0;
     for (int i = 0; i < checkedReferencesCoordinates.size(); i++)
     {
         // Calculate V0
         TT::Point *b = checkedReferencesCoordinates.at(i);
         double gAB = 2.0 * std::atan( ( b->x - a->x ) / ( std::sqrt( std::pow( b->x - a->x, 2.0 ) + std::pow( b->y - a->y, 2.0 ) ) + ( b->y - a->y ) ) ) * 200.0 / M_PI;
         double distance = std::sqrt( std::pow(b->x - a->x, 2.0) + std::pow(b->y - a->y, 2.0) );
-        double v0 = std::fmod(gAB - checkedReferences.at(i)->ha, 400.0);
-        if (v0 < 0.0)
-        {
-            v0 += 400.0;
-        }
+        double v0 = mod(gAB - checkedReferences.at(i)->ha, 400);
         v0s.append(v0);
         distances.append(distance);
+        sumOfDistances += distance;
     }
 
     // Calculate the average V0 weighted by distances
-    double totalV0 = 0.0;
-    double totalDistance = 0.0;
-    for (int i = 0; i < v0s.size(); i++)
-    {
-        totalV0 += v0s.at(i) * distances.at(i);
-        totalDistance += distances.at(i);
+    double sumSin = 0.0;
+    double sumCos = 0.0;
+
+    for (auto i = 0; i < v0s.size(); ++i) {
+        double dist = distances.at(i);
+        double a = v0s.at(i) * M_PI / 200.0;
+        sumSin += dist * std::sin(a);
+        sumCos += dist * std::cos(a);
     }
-    double averageV0 = totalV0 / totalDistance;
+
+    double averageV0 = mod(std::atan2(sumSin / sumOfDistances, sumCos / sumOfDistances) * 200.0 / M_PI, 400);
 
     ui->leV0->setText(QString("%1").arg(averageV0, 0, 'f', 5));
     ui->buttonBox->setEnabled(true);
