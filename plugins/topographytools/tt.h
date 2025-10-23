@@ -13,7 +13,7 @@ namespace TT
 using ::PTYPE;
 using ::Point;
 
-enum LAYER
+enum class LAYER
 {
     POINTS,
     NAME,
@@ -33,29 +33,29 @@ struct LayerProperties
 };
 
 inline const QMap<LAYER, LayerProperties> LAYERS = {
-    { POINTS,      { QObject::tr("TT_POINTS"),      0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
-    { NAME,        { QObject::tr("TT_NAME"),        0x00FFFF, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
-    { ALTI,        { QObject::tr("TT_ALTI"),        0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { LAYER::POINTS,      { QObject::tr("TT_POINTS"),      0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { LAYER::NAME,        { QObject::tr("TT_NAME"),        0x00FFFF, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { LAYER::ALTI,        { QObject::tr("TT_ALTI"),        0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
 
-    { VEGETATION,  { QObject::tr("TT_VEGETATION"),  0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
-    { ELECTRICITY, { QObject::tr("TT_ELECTRICITY"), 0xFF0000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
-    { ROAD,        { QObject::tr("TT_ROAD"),        0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } }
+    { LAYER::VEGETATION,  { QObject::tr("TT_VEGETATION"),  0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { LAYER::ELECTRICITY, { QObject::tr("TT_ELECTRICITY"), 0xFF0000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+    { LAYER::ROAD,        { QObject::tr("TT_ROAD"),        0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } }
 };
 
-enum TAB
+enum class TAB
 {
-    TAB_VEGETATION,
-    TAB_ELECTRICITY,
-    TAB_ROAD
+    VEGETATION,
+    ELECTRICITY,
+    ROAD
 };
 
 inline const QMap<TAB, QString> TABS = {
-    { TAB_VEGETATION,  QObject::tr("Vegetation")  },
-    { TAB_ELECTRICITY, QObject::tr("Electricity") },
-    { TAB_ROAD,        QObject::tr("Road")        }
+    { TAB::VEGETATION,  QObject::tr("Vegetation")  },
+    { TAB::ELECTRICITY, QObject::tr("Electricity") },
+    { TAB::ROAD,        QObject::tr("Road")        }
 };
 
-enum BLOCK_INSERTION_TYPE
+enum class BLOCK_INSERTION_TYPE
 {
     ALL,
     MULTI,
@@ -86,11 +86,11 @@ struct BlockProperties
 };
 
 inline const QMap<BLOCK, BlockProperties> BLOCKS = {
-    { TREE,                 { "tree",                 TAB::TAB_VEGETATION,  LAYER::VEGETATION,  BLOCK_INSERTION_TYPE::P1    } },
-    { ELECTRICAL_BOX,       { "electrical_box",       TAB::TAB_ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::P1    } },
-    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", TAB::TAB_ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } },
-    { SIGN_TURN_LEFT,       { "tt_sign_turn_left",    TAB::TAB_ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } },
-    { SIGN_TURN_RIGHT,      { "tt_sign_turn_right",   TAB::TAB_ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } }
+    { TREE,                 { "tree",                 TAB::VEGETATION,  LAYER::VEGETATION,  BLOCK_INSERTION_TYPE::P1    } },
+    { ELECTRICAL_BOX,       { "electrical_box",       TAB::ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::P1    } },
+    { ELECTRICAL_BOX_MULTI, { "electrical_box_multi", TAB::ELECTRICITY, LAYER::ELECTRICITY, BLOCK_INSERTION_TYPE::MULTI } },
+    { SIGN_TURN_LEFT,       { "tt_sign_turn_left",    TAB::ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } },
+    { SIGN_TURN_RIGHT,      { "tt_sign_turn_right",   TAB::ROAD,        LAYER::ROAD,        BLOCK_INSERTION_TYPE::P1    } }
 };
 
 }
