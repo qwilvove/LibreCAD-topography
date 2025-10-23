@@ -13,9 +13,11 @@
 #include "tt_dialoggrid.h"
 
 #include <QFileDialog>
-#include <QSettings>
+#include <QMenuBar>
 #include <QMessageBox>
+#include <QSettings>
 #include <QTimer>
+#include <QToolBar>
 
 // Constructor
 TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
@@ -27,6 +29,7 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     connect(this, &QDialog::rejected, this, [this]{this->isRunning = false;});
 
     ui->setupUi(this);
+    initMenuBarAndToolbar();
 
     readSettings();
 
@@ -49,6 +52,43 @@ void TT_DialogMain::showEvent(QShowEvent *event)
     QTimer::singleShot(0, this, SLOT(loadPreviousState()));
 }
 
+void TT_DialogMain::initMenuBarAndToolbar()
+{
+    QToolBar* tb = new QToolBar();
+    QMenuBar* mb = new QMenuBar();
+    QMenu *menu = new QMenu("Menu");
+
+    for (auto it = ACTION_GROUPS.begin(); it != ACTION_GROUPS.end(); ++it) {
+        foreach (ACTION action_id, it.value())
+        {
+            Action action = ACTIONS[action_id];
+            QAction *a = new QAction(action.name);
+            a->setEnabled(false);
+            if (action_id == ACTION::NEW or action_id == ACTION::OPEN)
+            {
+                a->setEnabled(true);
+            }
+            a->setToolTip(action.tooltip);
+            a->setIcon(QIcon(QString(":/icons/%1.svg").arg(action.iconName)));
+            a->setShortcut(QKeySequence(action.shortcut));
+            connect(a, &QAction::triggered, this, [this,action_id]{executeAction(action_id);});
+            menu->addAction(a);
+            tb->addAction(a);
+        }
+
+        if ( it.key() != ACTION_GROUP::DRAW )
+        {
+            menu->addSeparator();
+            tb->addSeparator();
+        }
+    }
+
+    mb->addMenu(menu);
+
+    ui->vlToolBar->addWidget(mb);
+    ui->vlToolBar->addWidget(tb);
+}
+
 // Read setting to find current .tt file
 void TT_DialogMain::readSettings()
  {
@@ -61,6 +101,34 @@ void TT_DialogMain::writeSettings()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
     settings.setValue("lastfilename", fileName);
+}
+
+void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
+{
+    this->previousState.dialog = dialog;
+    this->previousState.tabIndex = tabIndex;
+    this->previousState.insertTypeIndex = insertTypeIndex;
+    this->previousState.insertType = insertType;
+}
+
+void TT_DialogMain::loadPreviousState()
+{
+    switch (this->previousState.dialog)
+    {
+    case DIALOG::NONE:
+        break;
+    case DIALOG::DRAW_BLOCKS:
+    {
+        TT_DialogDrawBlocks drawBlocksDialog(this, doc);
+        drawBlocksDialog.loadPreviousState(this->previousState.tabIndex, this->previousState.insertTypeIndex, this->previousState.insertType);
+        drawBlocksDialog.exec();
+        break;
+    }
+    case DIALOG::DRAW_GRID:
+        break;
+    default:
+        break;
+    }
 }
 
 // Fill points list reading .tt file
@@ -204,19 +272,10 @@ void TT_DialogMain::displayPoint(TT::Point *point)
 // Enable all tools in the top toolbar
 void TT_DialogMain::enableAllTools()
 {
-    ui->pbSave->setEnabled(true);
-    ui->pbImport->setEnabled(true);
-    ui->pbAdd->setEnabled(true);
-    ui->pbRemove->setEnabled(true);
-    ui->pbEdit->setEnabled(true);
-    ui->pbUp->setEnabled(true);
-    ui->pbDown->setEnabled(true);
-    ui->pbV0->setEnabled(true);
-    ui->pbPolygo->setEnabled(true);
-    ui->pbPoints->setEnabled(true);
-    ui->pbDraw->setEnabled(true);
-    ui->pbDrawBlocks->setEnabled(true);
-    ui->pbGrid->setEnabled(true);
+    foreach (QAction *action, ui->vlToolBar->itemAt(1)->widget()->actions())
+    {
+        action->setEnabled(true);
+    }
 }
 
 // Import points from file and add them to the project
@@ -358,7 +417,60 @@ void TT_DialogMain::drawPoint(TT::Point *point)
     }
 }
 
-void TT_DialogMain::on_pbNew_clicked()
+void TT_DialogMain::executeAction(ACTION action)
+{
+    switch (action) {
+    case ACTION::NEW:
+        actionNew();
+        break;
+    case ACTION::OPEN:
+        actionOpen();
+        break;
+    case ACTION::SAVE:
+        actionSave();
+        break;
+    case ACTION::IMPORT:
+        actionImport();
+        break;
+    case ACTION::ADD:
+        actionAdd();
+        break;
+    case ACTION::REMOVE:
+        actionRemove();
+        break;
+    case ACTION::EDIT:
+        actionEdit();
+        break;
+    case ACTION::UP:
+        actionUp();
+        break;
+    case ACTION::DOWN:
+        actionDown();
+        break;
+    case ACTION::CALC_V0:
+        actionV0();
+        break;
+    case ACTION::CALC_POLYGO:
+        actionPolygo();
+        break;
+    case ACTION::CALC_POINTS:
+        actionPoints();
+        break;
+    case ACTION::DRAW_POINTS:
+        actionDraw();
+        break;
+    case ACTION::DRAW_BLOCKS:
+        actionDrawBlocks();
+        break;
+    case ACTION::DRAW_GRID:
+        actionGrid();
+        break;
+    default:
+        break;
+    }
+}
+
+void TT_DialogMain::actionNew()
 {
     QString fileNameLocal = QFileDialog::getSaveFileName(this, tr("Create a TT file"), "", tr("TT files (*.tt)"));
     if (fileNameLocal.isEmpty())
@@ -378,7 +490,7 @@ void TT_DialogMain::on_pbNew_clicked()
     displayPoints();
 }
 
-void TT_DialogMain::on_pbOpen_clicked()
+void TT_DialogMain::actionOpen()
 {
     QString fileNameLocal = QFileDialog::getOpenFileName(this, tr("Open a TT file"), "", tr("TT files (*.tt)"));
     if (fileNameLocal.isEmpty())
@@ -403,7 +515,7 @@ void TT_DialogMain::on_pbOpen_clicked()
     }
 }
 
-void TT_DialogMain::on_pbSave_clicked()
+void TT_DialogMain::actionSave()
 {
     int nbPointsSaved = TT_DialogMain::savePoints();
     if (nbPointsSaved > -1)
@@ -412,17 +524,17 @@ void TT_DialogMain::on_pbSave_clicked()
     }
 }
 
-void TT_DialogMain::on_pbImport_clicked()
+void TT_DialogMain::actionImport()
 {
     importPoints();
 }
 
-void TT_DialogMain::on_pbAdd_clicked()
+void TT_DialogMain::actionAdd()
 {
     addPoint();
 }
 
-void TT_DialogMain::on_pbRemove_clicked()
+void TT_DialogMain::actionRemove()
 {
     // Only proceed if there are selected items
     if (!ui->tableWidget->selectedItems().isEmpty())
@@ -439,7 +551,7 @@ void TT_DialogMain::on_pbRemove_clicked()
     }
 }
 
-void TT_DialogMain::on_pbEdit_clicked()
+void TT_DialogMain::actionEdit()
 {
     if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size())
     {
@@ -447,7 +559,7 @@ void TT_DialogMain::on_pbEdit_clicked()
     }
 }
 
-void TT_DialogMain::on_pbUp_clicked()
+void TT_DialogMain::actionUp()
 {
     if (ui->tableWidget->currentRow() >= 1 && ui->tableWidget->currentRow() < points.size())
     {
@@ -455,7 +567,7 @@ void TT_DialogMain::on_pbUp_clicked()
     }
 }
 
-void TT_DialogMain::on_pbDown_clicked()
+void TT_DialogMain::actionDown()
 {
     if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size() - 1)
     {
@@ -463,7 +575,7 @@ void TT_DialogMain::on_pbDown_clicked()
     }
 }
 
-void TT_DialogMain::on_pbV0_clicked()
+void TT_DialogMain::actionV0()
 {
     TT_DialogV0 v0Dialog(this, points);
     if (v0Dialog.exec() == QDialog::Accepted)
@@ -472,7 +584,7 @@ void TT_DialogMain::on_pbV0_clicked()
     }
 }
 
-void TT_DialogMain::on_pbPolygo_clicked()
+void TT_DialogMain::actionPolygo()
 {
     TT_DialogPolygo polygoDialog(this, points);
     if (polygoDialog.exec() == QDialog::Accepted)
@@ -481,7 +593,7 @@ void TT_DialogMain::on_pbPolygo_clicked()
     }
 }
 
-void TT_DialogMain::on_pbPoints_clicked()
+void TT_DialogMain::actionPoints()
 {
     TT_DialogPoints pointsDialog(this, points);
     if (pointsDialog.exec() == QDialog::Accepted)
@@ -490,7 +602,7 @@ void TT_DialogMain::on_pbPoints_clicked()
     }
 }
 
-void TT_DialogMain::on_pbDraw_clicked()
+void TT_DialogMain::actionDraw()
 {
     int nbPointsDrawn = TT_DialogMain::drawPoints();
     if (nbPointsDrawn > -1)
@@ -503,13 +615,13 @@ void TT_DialogMain::on_pbDraw_clicked()
     }
 }
 
-void TT_DialogMain::on_pbDrawBlocks_clicked()
+void TT_DialogMain::actionDrawBlocks()
 {
     TT_DialogDrawBlocks drawBlocksDialog(this, doc);
     drawBlocksDialog.exec();
 }
 
-void TT_DialogMain::on_pbGrid_clicked()
+void TT_DialogMain::actionGrid()
 {
     TT_DialogGrid gridDialog(this, doc);
     gridDialog.exec();
@@ -520,32 +632,4 @@ void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
     Q_UNUSED(column);
 
     editPoint(points.at(row));
-}
-
-void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
-{
-    this->previousState.dialog = dialog;
-    this->previousState.tabIndex = tabIndex;
-    this->previousState.insertTypeIndex = insertTypeIndex;
-    this->previousState.insertType = insertType;
-}
-
-void TT_DialogMain::loadPreviousState()
-{
-    switch (this->previousState.dialog)
-    {
-    case DIALOG::NONE:
-        break;
-    case DIALOG::DRAW_BLOCKS:
-    {
-        TT_DialogDrawBlocks drawBlocksDialog(this, doc);
-        drawBlocksDialog.loadPreviousState(this->previousState.tabIndex, this->previousState.insertTypeIndex, this->previousState.insertType);
-        drawBlocksDialog.exec();
-        break;
-    }
-    case DIALOG::DRAW_GRID:
-        break;
-    default:
-        break;
-    }
 }

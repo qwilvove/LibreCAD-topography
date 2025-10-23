@@ -10,7 +10,47 @@ namespace Ui {
 class TT_DialogMain;
 }
 
-enum DIALOG
+enum class ACTION_GROUP
+{
+    FILE,
+    IMPORT,
+    EDIT,
+    CALC,
+    DRAW
+};
+
+enum class ACTION
+{
+    NEW,
+    OPEN,
+    SAVE,
+
+    IMPORT,
+
+    ADD,
+    REMOVE,
+    EDIT,
+    UP,
+    DOWN,
+
+    CALC_V0,
+    CALC_POLYGO,
+    CALC_POINTS,
+
+    DRAW_POINTS,
+    DRAW_BLOCKS,
+    DRAW_GRID
+};
+
+struct Action
+{
+    QString name;
+    QString tooltip;
+    QString iconName;
+    QString shortcut;
+};
+
+enum class DIALOG
 {
     NONE,
     DRAW_BLOCKS,
@@ -46,11 +86,42 @@ private:
     Document_Interface *doc;
     QString fileName;
     QList<TT::Point*> points;
-
     State previousState;
+    const QMap<ACTION, Action> ACTIONS = {
+        { ACTION::NEW,         { tr("New"),         tr("New .tt file (Ctrl+N)"),            "new",                            "Ctrl+N" } },
+        { ACTION::OPEN,        { tr("Open"),        tr("Open a .tt file (Ctrl+O)"),         "open",                           "Ctrl+O" } },
+        { ACTION::SAVE,        { tr("Save"),        tr("Save the .tt file (Ctrl+S)"),       "save",                           "Ctrl+S" } },
+
+        { ACTION::IMPORT,      { tr("Import"),      tr("Import data from a file (Ctrl+I)"), "import",                         "Ctrl+I" } },
+
+        { ACTION::ADD,         { tr("Add"),         tr("Add a line (Ctrl++)"),              "add",                            "Ctrl++" } },
+        { ACTION::REMOVE,      { tr("Remove"),      tr("Remove a line (Ctrl+-)"),           "remove",                         "Del"    } },
+        { ACTION::EDIT,        { tr("Edit"),        tr("Edit attributes (Ctrl+E)"),         "attributes",                     "Ctrl+E" } },
+        { ACTION::UP,          { tr("Up"),          tr("Move a line up (PgUp)"),            "up",                             "PgUp"   } },
+        { ACTION::DOWN,        { tr("Down"),        tr("Move a line down (PgDown)"),        "down",                           "PgDown" } },
+
+        { ACTION::CALC_V0,     { tr("V0"),          tr("Calculate V0"),                     "angle_line_to_line",             ""       } },
+        { ACTION::CALC_POLYGO, { tr("Polygo"),      tr("Calculate polygonation"),           "total_length_selected_entities", ""       } },
+        { ACTION::CALC_POINTS, { tr("Points"),      tr("Calculate points"),                 "points",                         ""       } },
+
+        { ACTION::DRAW_POINTS, { tr("Draw points"), tr("Draw points"),                      "draw_points",                    ""       } },
+        { ACTION::DRAW_BLOCKS, { tr("Draw blocks"), tr("Draw blocks"),                      "draw_blocks",                    ""       } },
+        { ACTION::DRAW_GRID,   { tr("Draw grid"),   tr("Draw grid"),                        "grid",                           ""       } }
+    };
+    const QMap<ACTION_GROUP, QList<ACTION>> ACTION_GROUPS = {
+        { ACTION_GROUP::FILE,   { ACTION::NEW, ACTION::OPEN, ACTION::SAVE                             } },
+        { ACTION_GROUP::IMPORT, { ACTION::IMPORT                                                      } },
+        { ACTION_GROUP::EDIT,   { ACTION::ADD, ACTION::REMOVE, ACTION::EDIT, ACTION::UP, ACTION::DOWN } },
+        { ACTION_GROUP::CALC,   { ACTION::CALC_V0, ACTION::CALC_POLYGO, ACTION::CALC_POINTS           } },
+        { ACTION_GROUP::DRAW,   { ACTION::DRAW_POINTS, ACTION::DRAW_BLOCKS, ACTION::DRAW_GRID         } }
+    };
+
+    void initMenuBarAndToolbar();
 
     void readSettings();
     void writeSettings();
+
+    void loadPreviousState();
 
     int loadPoints();
     void loadPoint(QDataStream &stream, TT::Point *point);
@@ -72,30 +143,25 @@ private:
     int drawPoints();
     void drawPoint(TT::Point *point);
 
+    void executeAction(ACTION action);
+    void actionNew();
+    void actionOpen();
+    void actionSave();
+    void actionImport();
+    void actionAdd();
+    void actionRemove();
+    void actionEdit();
+    void actionUp();
+    void actionDown();
+    void actionV0();
+    void actionPolygo();
+    void actionPoints();
+    void actionDraw();
+    void actionDrawBlocks();
+    void actionGrid();
+
 private slots:
-    void on_pbNew_clicked();
-    void on_pbOpen_clicked();
-    void on_pbSave_clicked();
-
-    void on_pbImport_clicked();
-
-    void on_pbAdd_clicked();
-    void on_pbRemove_clicked();
-    void on_pbEdit_clicked();
-    void on_pbUp_clicked();
-    void on_pbDown_clicked();
-
-    void on_pbV0_clicked();
-    void on_pbPolygo_clicked();
-    void on_pbPoints_clicked();
-
-    void on_pbDraw_clicked();
-    void on_pbDrawBlocks_clicked();
-    void on_pbGrid_clicked();
-
     void on_tableWidget_cellDoubleClicked(int row, int column);
-
-    void loadPreviousState();
 };
 
 #endif // TT_DIALOGMAIN_H
