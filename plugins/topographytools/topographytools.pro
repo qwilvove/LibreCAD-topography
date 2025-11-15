@@ -18,31 +18,31 @@ include(../../common.pri)
 INCLUDEPATH    += ../../librecad/src/plugins
 
 SOURCES += \
-    topographytools.cpp \
-    tt_classpoint.cpp \
-    tt_dialogadd.cpp \
-    tt_dialogdrawblocks.cpp \
-    tt_dialogedit.cpp \
-    tt_dialoggrid.cpp \
-    tt_dialogimport.cpp \
-    tt_dialogmain.cpp \
-    tt_dialogpoints.cpp \
-    tt_dialogpolygo.cpp \
-    tt_dialogv0.cpp
+    src/topographytools.cpp \
+    src/class/tt_classpoint.cpp \
+    src/ui/tt_dialogadd.cpp \
+    src/ui/tt_dialogdrawblocks.cpp \
+    src/ui/tt_dialogedit.cpp \
+    src/ui/tt_dialoggrid.cpp \
+    src/ui/tt_dialogimport.cpp \
+    src/ui/tt_dialogmain.cpp \
+    src/ui/tt_dialogpoints.cpp \
+    src/ui/tt_dialogpolygo.cpp \
+    src/ui/tt_dialogv0.cpp
 
 HEADERS += \
-    topographytools.h \
-    tt.h \
-    tt_classpoint.h \
-    tt_dialogadd.h \
-    tt_dialogdrawblocks.h \
-    tt_dialogedit.h \
-    tt_dialoggrid.h \
-    tt_dialogimport.h \
-    tt_dialogmain.h \
-    tt_dialogpoints.h \
-    tt_dialogpolygo.h \
-    tt_dialogv0.h
+    src/topographytools.h \
+    src/tt.h \
+    src/class/tt_classpoint.h \
+    src/ui/tt_dialogadd.h \
+    src/ui/tt_dialogdrawblocks.h \
+    src/ui/tt_dialogedit.h \
+    src/ui/tt_dialoggrid.h \
+    src/ui/tt_dialogimport.h \
+    src/ui/tt_dialogmain.h \
+    src/ui/tt_dialogpoints.h \
+    src/ui/tt_dialogpolygo.h \
+    src/ui/tt_dialogv0.h
 
 # Installation Directory
 win32 {
@@ -58,17 +58,17 @@ unix {
 }
 
 FORMS += \
-    tt_dialogadd.ui \
-    tt_dialogdrawblocks.ui \
-    tt_dialogedit.ui \
-    tt_dialoggrid.ui \
-    tt_dialogimport.ui \
-    tt_dialogmain.ui \
-    tt_dialogpoints.ui \
-    tt_dialogpolygo.ui \
-    tt_dialogv0.ui
+    src/ui/tt_dialogadd.ui \
+    src/ui/tt_dialogdrawblocks.ui \
+    src/ui/tt_dialogedit.ui \
+    src/ui/tt_dialoggrid.ui \
+    src/ui/tt_dialogimport.ui \
+    src/ui/tt_dialogmain.ui \
+    src/ui/tt_dialogpoints.ui \
+    src/ui/tt_dialogpolygo.ui \
+    src/ui/tt_dialogv0.ui
 
 RESOURCES += \
-    blocks/blocks.qrc \
-    icons/icons.qrc \
-    thumbnails/thumbnails.qrc
+    res/blocks/blocks.qrc \
+    res/icons/icons.qrc \
+    res/thumbnails/thumbnails.qrc

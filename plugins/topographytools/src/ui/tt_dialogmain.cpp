@@ -2,7 +2,7 @@
 #include "ui_tt_dialogmain.h"
 
 #include "document_interface.h"
-#include "topographytools.h"
+#include "src/topographytools.h"
 #include "tt_dialogedit.h"
 #include "tt_dialogimport.h"
 #include "tt_dialogadd.h"

@@ -1,23 +1,24 @@
-#ifndef TT_DIALOGADD_H
-#define TT_DIALOGADD_H
+#ifndef TT_DIALOGEDIT_H
+#define TT_DIALOGEDIT_H
 
 #include <QDialog>
 
-#include "tt.h"
+#include "src/tt.h"
 
 namespace Ui {
-class TT_DialogAdd;
+class TT_DialogEdit;
 }
 
-class TT_DialogAdd : public QDialog
+class TT_DialogEdit : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit TT_DialogAdd(QWidget *parent = nullptr, TT::Point *point = nullptr);
-    ~TT_DialogAdd();
+    explicit TT_DialogEdit(QWidget *parent = nullptr, TT::Point *point = nullptr);
+    ~TT_DialogEdit();
 
 private slots:
+    void loadData();
     void saveData();
     void on_cbType_currentIndexChanged(int index);
     void on_leName_textChanged(const QString &arg1);
@@ -25,9 +26,9 @@ private slots:
     void on_buttonBox_accepted();
 
 private:
-    Ui::TT_DialogAdd *ui;
+    Ui::TT_DialogEdit *ui;
     TT::Point *point;
     TT::Point tempPoint;
 };
 
-#endif // TT_DIALOGADD_H
+#endif // TT_DIALOGEDIT_H
