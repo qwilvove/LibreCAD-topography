@@ -25,7 +25,7 @@ void TT_DialogPoints::identifyStationsAndMeasures()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i)->type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::Point::TYPE::STATION)
         {
             TT::Point *currentStation = points.at(i);
             QList<TT::Point*> currentMeasures = {};
@@ -33,12 +33,12 @@ void TT_DialogPoints::identifyStationsAndMeasures()
             do
             {
                 i++;
-                if (i < points.size() && points.at(i)->type == TT::PTYPE::MEASURE)
+                if (i < points.size() && points.at(i)->type == TT::Point::TYPE::MEASURE)
                 {
                     currentMeasures.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::Point::TYPE::STATION);
 
             stations.append(currentStation);
             measures.append(currentMeasures);
@@ -103,7 +103,7 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
         bool found = false;
         for (int j = 0; j < points.size(); j++)
         {
-            if (points.at(j)->type == TT::PTYPE::POINT && points.at(j)->name == selectedStations.at(i)->name)
+            if (points.at(j)->type == TT::Point::TYPE::POINT && points.at(j)->name == selectedStations.at(i)->name)
             {
                 stationsCoordinates.append(points.at(j));
                 calculateWithZ.append(points.at(j)->hasZ);
@@ -147,7 +147,7 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
             double y = stationsCoordinates.at(i)->y + horizontalDistance * std::cos(( selectedStations.at(i)->v0 + selectedMeasures.at(i).at(j)->ha ) * M_PI / 200.0);
 
             TT::Point* newPoint = new TT::Point();
-            newPoint->type = TT::PTYPE::POINT;
+            newPoint->type = TT::Point::TYPE::POINT;
             newPoint->name = selectedMeasures.at(i).at(j)->name;
             newPoint->x = x;
             newPoint->y = y;

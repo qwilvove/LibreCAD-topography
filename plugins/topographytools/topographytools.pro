@@ -18,8 +18,8 @@ include(../../common.pri)
 INCLUDEPATH    += ../../librecad/src/plugins
 
 SOURCES += \
+    src/class/point.cpp \
     src/topographytools.cpp \
-    src/class/tt_classpoint.cpp \
     src/ui/tt_dialogadd.cpp \
     src/ui/tt_dialogdrawblocks.cpp \
     src/ui/tt_dialogedit.cpp \
@@ -31,9 +31,9 @@ SOURCES += \
     src/ui/tt_dialogv0.cpp
 
 HEADERS += \
+    src/class/point.h \
     src/topographytools.h \
     src/tt.h \
-    src/class/tt_classpoint.h \
     src/ui/tt_dialogadd.h \
     src/ui/tt_dialogdrawblocks.h \
     src/ui/tt_dialogedit.h \

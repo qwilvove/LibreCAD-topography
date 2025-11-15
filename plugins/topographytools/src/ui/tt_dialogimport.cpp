@@ -87,7 +87,7 @@ bool TT_DialogImport::loadCsvPointPreview(QString &line)
     // Create point (Only import points for now)
     TT::Point *point = new TT::Point();
 
-    point->type = TT::PTYPE::POINT;
+    point->type = TT::Point::TYPE::POINT;
     point->name = "?";
     point->x = x;
     point->y = y;
@@ -197,7 +197,7 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
     }
     else if (subStringType == "Point")
     {
-        point->type = TT::PTYPE::POINT;
+        point->type = TT::Point::TYPE::POINT;
         point->name = subStringName;
         point->x = line.mid(44, 14).trimmed().toDouble(&ok);
         if (!ok) { return false; }
@@ -213,7 +213,7 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
     }
     else if (subStringType == "Station")
     {
-        point->type = TT::PTYPE::STATION;
+        point->type = TT::Point::TYPE::STATION;
         point->name = subStringName;
         point->ih = line.mid(43,  8).trimmed().toDouble(&ok);
         if (!ok) { return false; }
@@ -222,7 +222,7 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
     }
     else if (subStringType == "Reference")
     {
-        point->type = TT::PTYPE::REFERENCE;
+        point->type = TT::Point::TYPE::REFERENCE;
         point->name = subStringName;
         point->ph = line.mid(43,  8).trimmed().toDouble(&ok);
         if (!ok) { return false; }
@@ -235,7 +235,7 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
     }
     else if (subStringType == "Mesure")
     {
-        point->type = TT::PTYPE::MEASURE;
+        point->type = TT::Point::TYPE::MEASURE;
         point->name = subStringName;
         point->ph = line.mid(43,  8).trimmed().toDouble(&ok);
         if (!ok) { return false; }
