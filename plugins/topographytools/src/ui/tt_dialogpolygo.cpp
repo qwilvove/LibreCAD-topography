@@ -24,7 +24,7 @@ void TT_DialogPolygo::fillStationsAndReferences()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i)->type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::Point::TYPE::STATION)
         {
             TT::Point *currentStation = points.at(i);
             QList<TT::Point*> currentReferences = {};
@@ -32,12 +32,12 @@ void TT_DialogPolygo::fillStationsAndReferences()
             do
             {
                 i++;
-                if (i < points.size() && points.at(i)->type == TT::PTYPE::REFERENCE)
+                if (i < points.size() && points.at(i)->type == TT::Point::TYPE::REFERENCE)
                 {
                     currentReferences.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::Point::TYPE::STATION);
 
             stations.append(currentStation);
             references.append(currentReferences);
@@ -101,7 +101,7 @@ void TT_DialogPolygo::calculateAntennaPath()
     bool found = false;
     for (int i = 0; i < points.size(); i++)
     {
-        if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == itemsPolygo.at(0)->name)
+        if (points.at(i)->type == TT::Point::TYPE::POINT && points.at(i)->name == itemsPolygo.at(0)->name)
         {
             firstStationCoordinates = points.at(i);
             calculateWithZ = points.at(i)->hasZ;
@@ -256,7 +256,7 @@ void TT_DialogPolygo::writeDataAfterCalculateAntennaPath()
             if (points.at(j)->name == itemsPolygo.at(i)->name && points.at(j)->type == itemsPolygo.at(i)->type)
             {
                 TT::Point *newPoint = new TT::Point();
-                newPoint->type = TT::PTYPE::POINT;
+                newPoint->type = TT::Point::TYPE::POINT;
                 newPoint->name = itemsPolygo.at(i)->name;
                 newPoint->x = xs.at(i);
                 newPoint->y = ys.at(i);

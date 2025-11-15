@@ -1,7 +1,7 @@
 #ifndef TT_H
 #define TT_H
 
-#include "class/tt_classpoint.h"
+#include "class/point.h"
 
 #include "document_interface.h"
 
@@ -9,8 +9,7 @@
 
 namespace TT
 {
-// Add everything from tt_classpoint to namespace TT
-using ::PTYPE;
+// Add everything from class/point to namespace TT
 using ::Point;
 
 enum class LAYER

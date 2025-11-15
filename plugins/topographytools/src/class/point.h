@@ -1,16 +1,8 @@
-#ifndef TT_CLASSPOINT_H
-#define TT_CLASSPOINT_H
+#ifndef TT_CLASS_POINT_H
+#define TT_CLASS_POINT_H
 
 #include <QString>
 #include <QTableWidgetItem>
-
-enum PTYPE
-{
-    POINT,
-    STATION,
-    REFERENCE,
-    MEASURE
-};
 
 class Point
 {
@@ -18,7 +10,15 @@ public:
     Point();
     ~Point();
 
-    PTYPE type;
+    enum TYPE
+    {
+        POINT,
+        STATION,
+        REFERENCE,
+        MEASURE
+    };
+
+    TYPE type;
     QString name;
     double x;  //                      - for POINT
     double y;  //                      - for POINT
@@ -37,13 +37,13 @@ public:
     QTableWidgetItem* getQTableWidgetItemParameters();
 
 private:
-    struct PTypeProperties
+    struct TypeProperties
     {
         QString name;
         QColor colour;
     };
 
-    static const QMap<PTYPE, PTypeProperties> PTYPES;
+    static const QMap<TYPE, TypeProperties> TYPES;
 };
 
-#endif // TT_CLASSPOINT_H
+#endif // TT_CLASS_POINT_H

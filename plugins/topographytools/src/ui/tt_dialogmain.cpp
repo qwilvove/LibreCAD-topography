@@ -382,7 +382,7 @@ int TT_DialogMain::drawPoints()
     for (auto i = 0; i < points.size(); i++)
     {
         TT::Point *currentPoint = points.at(i);
-        if (currentPoint->type == TT::PTYPE::POINT)
+        if (currentPoint->type == TT::Point::TYPE::POINT)
         {
             drawPoint(currentPoint);
             nbPoints++;

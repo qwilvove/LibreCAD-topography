@@ -42,7 +42,7 @@ void TT_DialogV0::identifyStationsAndReferences()
 {
     for (int i = 0; i < points.size(); )
     {
-        if (points.at(i)->type == TT::PTYPE::STATION)
+        if (points.at(i)->type == TT::Point::TYPE::STATION)
         {
             currentStation = points.at(i);
             currentReferences = {};
@@ -50,12 +50,12 @@ void TT_DialogV0::identifyStationsAndReferences()
             do
             {
                 i++;
-                if (i < points.size() && points.at(i)->type == TT::PTYPE::REFERENCE)
+                if (i < points.size() && points.at(i)->type == TT::Point::TYPE::REFERENCE)
                 {
                     currentReferences.append(points.at(i));
                 }
             }
-            while (i < points.size() && points.at(i)->type != TT::PTYPE::STATION);
+            while (i < points.size() && points.at(i)->type != TT::Point::TYPE::STATION);
 
             stations.append(currentStation);
             references.append(currentReferences);
@@ -123,7 +123,7 @@ void TT_DialogV0::on_pbCalculate_clicked()
     bool found = false;
     for (int i = 0; i < points.size(); i++)
     {
-        if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == currentStation->name)
+        if (points.at(i)->type == TT::Point::TYPE::POINT && points.at(i)->name == currentStation->name)
         {
             currentStationCoordinates = points.at(i);
             found = true;
@@ -165,7 +165,7 @@ void TT_DialogV0::on_pbCalculate_clicked()
     {
         for (int j = 0; j < checkedReferences.size(); j++)
         {
-            if (points.at(i)->type == TT::PTYPE::POINT && points.at(i)->name == checkedReferences[j]->name)
+            if (points.at(i)->type == TT::Point::TYPE::POINT && points.at(i)->name == checkedReferences[j]->name)
             {
                 checkedReferencesCoordinates.append(points.at(i));
                 break;

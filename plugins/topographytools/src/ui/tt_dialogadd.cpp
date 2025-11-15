@@ -24,9 +24,9 @@ TT_DialogAdd::~TT_DialogAdd()
 
 void TT_DialogAdd::saveData()
 {
-    if (ui->cbType->currentIndex() == TT::PTYPE::POINT)
+    if (ui->cbType->currentIndex() == TT::Point::TYPE::POINT)
     {
-        tempPoint.type = TT::PTYPE::POINT;
+        tempPoint.type = TT::Point::TYPE::POINT;
         tempPoint.name = ui->leName->text().trimmed();
         tempPoint.x    = ui->leX->text().toDouble();
         tempPoint.y    = ui->leY->text().toDouble();
@@ -36,10 +36,10 @@ void TT_DialogAdd::saveData()
             tempPoint.z = ui->leZ->text().toDouble();
         }
     }
-    else if (ui->cbType->currentIndex() == TT::PTYPE::STATION)
+    else if (ui->cbType->currentIndex() == TT::Point::TYPE::STATION)
     {
         bool ok = true;
-        tempPoint.type = TT::PTYPE::STATION;
+        tempPoint.type = TT::Point::TYPE::STATION;
         tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ih   = ui->leIh->text().toDouble();
         tempPoint.v0   = ui->leV0->text().toDouble(&ok);
@@ -48,18 +48,18 @@ void TT_DialogAdd::saveData()
             tempPoint.v0 = -1;
         }
     }
-    else if (ui->cbType->currentIndex() == TT::PTYPE::REFERENCE)
+    else if (ui->cbType->currentIndex() == TT::Point::TYPE::REFERENCE)
     {
-        tempPoint.type = TT::PTYPE::REFERENCE;
+        tempPoint.type = TT::Point::TYPE::REFERENCE;
         tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
         tempPoint.va   = ui->leVa->text().toDouble();
         tempPoint.id   = ui->leId->text().toDouble();
     }
-    else // ui->cbType->currentIndex() == TT::PTYPE::MEASURE
+    else // ui->cbType->currentIndex() == TT::Point::TYPE::MEASURE
     {
-        tempPoint.type = TT::PTYPE::MEASURE;
+        tempPoint.type = TT::Point::TYPE::MEASURE;
         tempPoint.name = ui->leName->text().trimmed();
         tempPoint.ph   = ui->lePh->text().toDouble();
         tempPoint.ha   = ui->leHa->text().toDouble();
@@ -86,7 +86,7 @@ void TT_DialogAdd::on_cbType_currentIndexChanged(int index)
     ui->leId->setEnabled(false);
     ui->buttonBox->setEnabled(false);
 
-    if (index == TT::PTYPE::POINT)
+    if (index == TT::Point::TYPE::POINT)
     {
         ui->leName->setEnabled(true);
         ui->leX->setEnabled(true);
@@ -94,14 +94,14 @@ void TT_DialogAdd::on_cbType_currentIndexChanged(int index)
         ui->cbHasZ->setEnabled(true);
         //ui->buttonBox->setEnabled(true);
     }
-    else if (index == TT::PTYPE::STATION)
+    else if (index == TT::Point::TYPE::STATION)
     {
         ui->leName->setEnabled(true);
         ui->leIh->setEnabled(true);
         ui->leV0->setEnabled(true);
         //ui->buttonBox->setEnabled(true);
     }
-    else if (index == TT::PTYPE::REFERENCE || index == TT::PTYPE::MEASURE)
+    else if (index == TT::Point::TYPE::REFERENCE || index == TT::Point::TYPE::MEASURE)
     {
         ui->leName->setEnabled(true);
         ui->lePh->setEnabled(true);
