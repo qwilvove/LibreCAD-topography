@@ -1,7 +1,7 @@
 #ifndef TT_H
 #define TT_H
 
-#include "tt_classpoint.h"
+#include "class/tt_classpoint.h"
 
 #include "document_interface.h"
 

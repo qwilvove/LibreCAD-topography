@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QToolButton>
 
-#include "tt.h"
+#include "src/tt.h"
 
 namespace Ui {
 class TT_DialogDrawBlocks;
