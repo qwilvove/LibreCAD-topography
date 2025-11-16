@@ -1,5 +1,5 @@
-#include "tt_dialogpoints.h"
-#include "ui_tt_dialogpoints.h"
+#include "points.h"
+#include "ui_points.h"
 
 #include <QCheckBox>
 #include <QMessageBox>

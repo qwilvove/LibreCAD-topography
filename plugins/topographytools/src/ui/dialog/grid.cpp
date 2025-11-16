@@ -1,5 +1,5 @@
-#include "tt_dialoggrid.h"
-#include "ui_tt_dialoggrid.h"
+#include "grid.h"
+#include "ui_grid.h"
 
 #include <QTemporaryDir>
 

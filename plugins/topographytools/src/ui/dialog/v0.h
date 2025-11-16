@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGV0_H
-#define TT_DIALOGV0_H
+#ifndef TT_UI_DIALOG_V0_H
+#define TT_UI_DIALOG_V0_H
 
 #include <QDialog>
 #include <QCheckBox>
@@ -41,4 +41,4 @@ private:
     QList<QCheckBox*> checkBoxes; // Checkboxes currently displayed to the user
 };
 
-#endif // TT_DIALOGV0_H
+#endif // TT_UI_DIALOG_V0_H

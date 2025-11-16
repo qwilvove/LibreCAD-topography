@@ -1,5 +1,5 @@
-#include "tt_dialogv0.h"
-#include "ui_tt_dialogv0.h"
+#include "v0.h"
+#include "ui_v0.h"
 
 #include <QMessageBox>
 #include <QCheckBox>

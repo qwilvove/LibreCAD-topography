@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGPOINTS_H
-#define TT_DIALOGPOINTS_H
+#ifndef TT_UI_DIALOG_POINTS_H
+#define TT_UI_DIALOG_POINTS_H
 
 #include <QDialog>
 
@@ -38,4 +38,4 @@ private:
     QList<QList<TT::Point*>> newPoints;
 };
 
-#endif // TT_DIALOGPOINTS_H
+#endif // TT_UI_DIALOG_POINTS_H

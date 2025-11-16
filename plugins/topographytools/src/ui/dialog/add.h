@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGADD_H
-#define TT_DIALOGADD_H
+#ifndef TT_UI_DIALOG_ADD_H
+#define TT_UI_DIALOG_ADD_H
 
 #include <QDialog>
 
@@ -30,4 +30,4 @@ private:
     TT::Point tempPoint;
 };
 
-#endif // TT_DIALOGADD_H
+#endif // TT_UI_DIALOG_ADD_H

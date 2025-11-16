@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGIMPORT_H
-#define TT_DIALOGIMPORT_H
+#ifndef TT_UI_DIALOG_IMPORT_H
+#define TT_UI_DIALOG_IMPORT_H
 
 #include <QDialog>
 #include <QTextStream>
@@ -47,4 +47,4 @@ private:
     int &nbPointsImported;
 };
 
-#endif // TT_DIALOGIMPORT_H
+#endif // TT_UI_DIALOG_IMPORT_H

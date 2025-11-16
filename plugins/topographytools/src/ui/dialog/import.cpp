@@ -1,5 +1,5 @@
-#include "tt_dialogimport.h"
-#include "ui_tt_dialogimport.h"
+#include "import.h"
+#include "ui_import.h"
 
 #include <QFileDialog>
 #include <QMessageBox>

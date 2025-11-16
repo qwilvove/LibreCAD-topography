@@ -1,16 +1,17 @@
-#include "tt_dialogmain.h"
-#include "ui_tt_dialogmain.h"
+#include "main.h"
+#include "ui_main.h"
 
 #include "document_interface.h"
+
 #include "src/topographytools.h"
-#include "tt_dialogedit.h"
-#include "tt_dialogimport.h"
-#include "tt_dialogadd.h"
-#include "tt_dialogv0.h"
-#include "tt_dialogpolygo.h"
-#include "tt_dialogpoints.h"
-#include "tt_dialogdrawblocks.h"
-#include "tt_dialoggrid.h"
+#include "src/ui/dialog/add.h"
+#include "src/ui/dialog/draw_blocks.h"
+#include "src/ui/dialog/edit.h"
+#include "src/ui/dialog/grid.h"
+#include "src/ui/dialog/import.h"
+#include "src/ui/dialog/points.h"
+#include "src/ui/dialog/polygo.h"
+#include "src/ui/dialog/v0.h"
 
 #include <QFileDialog>
 #include <QMenuBar>

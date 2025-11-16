@@ -12,7 +12,7 @@
 
 #include "topographytools.h"
 
-#include "ui/tt_dialogmain.h"
+#include "ui/dialog/main.h"
 
 QString LC_Topographytools::name() const
 {

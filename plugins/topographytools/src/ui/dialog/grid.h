@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGGRID_H
-#define TT_DIALOGGRID_H
+#ifndef TT_UI_DIALOG_GRID_H
+#define TT_UI_DIALOG_GRID_H
 
 #include <QDialog>
 
@@ -29,4 +29,4 @@ private slots:
     void on_pbRestoreDrawing_clicked();
 };
 
-#endif // TT_DIALOGGRID_H
+#endif // TT_UI_DIALOG_GRID_H
