@@ -55,38 +55,50 @@ void TT_DialogMain::showEvent(QShowEvent *event)
 
 void TT_DialogMain::initMenuBarAndToolbar()
 {
-    QToolBar* tb = new QToolBar();
     QMenuBar* mb = new QMenuBar();
     QMenu *menu = new QMenu("Menu");
-
-    for (auto it = ACTION_GROUPS.begin(); it != ACTION_GROUPS.end(); ++it) {
-        foreach (ACTION action_id, it.value())
-        {
-            Action action = ACTIONS[action_id];
-            QAction *a = new QAction(action.name);
-            a->setEnabled(false);
-            if (action_id == ACTION::NEW or action_id == ACTION::OPEN)
-            {
-                a->setEnabled(true);
-            }
-            a->setToolTip(action.tooltip);
-            a->setIcon(QIcon(QString(":/icons/%1.svg").arg(action.iconName)));
-            a->setShortcut(QKeySequence(action.shortcut));
-            connect(a, &QAction::triggered, this, [this,action_id]{executeAction(action_id);});
-            menu->addAction(a);
-            tb->addAction(a);
-        }
-
-        if ( it.key() != ACTION_GROUP::DRAW )
-        {
-            menu->addSeparator();
-            tb->addSeparator();
-        }
-    }
-
+    menu->addAction(ui->actionNew);
+    menu->addAction(ui->actionOpen);
+    menu->addAction(ui->actionSave);
+    menu->addSeparator();
+    menu->addAction(ui->actionImport);
+    menu->addSeparator();
+    menu->addAction(ui->actionAdd);
+    menu->addAction(ui->actionRemove);
+    menu->addAction(ui->actionEdit);
+    menu->addAction(ui->actionUp);
+    menu->addAction(ui->actionDown);
+    menu->addSeparator();
+    menu->addAction(ui->actionCalculateV0);
+    menu->addAction(ui->actionCalculatePolygonation);
+    menu->addAction(ui->actionCalculatePoints);
+    menu->addSeparator();
+    menu->addAction(ui->actionDrawPoints);
+    menu->addAction(ui->actionDrawBlocks);
+    menu->addAction(ui->actionDrawGrid);
     mb->addMenu(menu);
-
     ui->vlToolBar->addWidget(mb);
+
+    QToolBar* tb = new QToolBar();
+    tb->addAction(ui->actionNew);
+    tb->addAction(ui->actionOpen);
+    tb->addAction(ui->actionSave);
+    tb->addSeparator();
+    tb->addAction(ui->actionImport);
+    tb->addSeparator();
+    tb->addAction(ui->actionAdd);
+    tb->addAction(ui->actionRemove);
+    tb->addAction(ui->actionEdit);
+    tb->addAction(ui->actionUp);
+    tb->addAction(ui->actionDown);
+    tb->addSeparator();
+    tb->addAction(ui->actionCalculateV0);
+    tb->addAction(ui->actionCalculatePolygonation);
+    tb->addAction(ui->actionCalculatePoints);
+    tb->addSeparator();
+    tb->addAction(ui->actionDrawPoints);
+    tb->addAction(ui->actionDrawBlocks);
+    tb->addAction(ui->actionDrawGrid);
     ui->vlToolBar->addWidget(tb);
 }
 
@@ -418,59 +430,6 @@ void TT_DialogMain::drawPoint(TT::Point *point)
     }
 }
 
-void TT_DialogMain::executeAction(ACTION action)
-{
-    switch (action) {
-    case ACTION::NEW:
-        actionNew();
-        break;
-    case ACTION::OPEN:
-        actionOpen();
-        break;
-    case ACTION::SAVE:
-        actionSave();
-        break;
-    case ACTION::IMPORT:
-        actionImport();
-        break;
-    case ACTION::ADD:
-        actionAdd();
-        break;
-    case ACTION::REMOVE:
-        actionRemove();
-        break;
-    case ACTION::EDIT:
-        actionEdit();
-        break;
-    case ACTION::UP:
-        actionUp();
-        break;
-    case ACTION::DOWN:
-        actionDown();
-        break;
-    case ACTION::CALC_V0:
-        actionV0();
-        break;
-    case ACTION::CALC_POLYGO:
-        actionPolygo();
-        break;
-    case ACTION::CALC_POINTS:
-        actionPoints();
-        break;
-    case ACTION::DRAW_POINTS:
-        actionDraw();
-        break;
-    case ACTION::DRAW_BLOCKS:
-        actionDrawBlocks();
-        break;
-    case ACTION::DRAW_GRID:
-        actionGrid();
-        break;
-    default:
-        break;
-    }
-}
-
 void TT_DialogMain::actionNew()
 {
     QString fileNameLocal = QFileDialog::getSaveFileName(this, tr("Create a TT file"), "", tr("TT files (*.tt)"));
@@ -576,7 +535,7 @@ void TT_DialogMain::actionDown()
     }
 }
 
-void TT_DialogMain::actionV0()
+void TT_DialogMain::actionCalculateV0()
 {
     TT_DialogV0 v0Dialog(this, points);
     if (v0Dialog.exec() == QDialog::Accepted)
@@ -585,7 +544,7 @@ void TT_DialogMain::actionV0()
     }
 }
 
-void TT_DialogMain::actionPolygo()
+void TT_DialogMain::actionCalculatePolygonation()
 {
     TT_DialogPolygo polygoDialog(this, points);
     if (polygoDialog.exec() == QDialog::Accepted)
@@ -594,7 +553,7 @@ void TT_DialogMain::actionPolygo()
     }
 }
 
-void TT_DialogMain::actionPoints()
+void TT_DialogMain::actionCalculatePoints()
 {
     TT_DialogPoints pointsDialog(this, points);
     if (pointsDialog.exec() == QDialog::Accepted)
@@ -603,7 +562,7 @@ void TT_DialogMain::actionPoints()
     }
 }
 
-void TT_DialogMain::actionDraw()
+void TT_DialogMain::actionDrawPoints()
 {
     int nbPointsDrawn = TT_DialogMain::drawPoints();
     if (nbPointsDrawn > -1)
@@ -622,13 +581,13 @@ void TT_DialogMain::actionDrawBlocks()
     drawBlocksDialog.exec();
 }
 
-void TT_DialogMain::actionGrid()
+void TT_DialogMain::actionDrawGrid()
 {
     TT_DialogGrid gridDialog(this, doc);
     gridDialog.exec();
 }
 
-void TT_DialogMain::on_tableWidget_cellDoubleClicked(int row, int column)
+void TT_DialogMain::tableWidgetCellDoubleClicked(int row, int column)
 {
     Q_UNUSED(column);
 

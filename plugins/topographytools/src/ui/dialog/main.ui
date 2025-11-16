@@ -135,7 +135,536 @@
     </layout>
    </item>
   </layout>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/new.svg</normaloff>:/icons/new.svg</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="toolTip">
+    <string>New .tt file (Ctrl+N)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/open.svg</normaloff>:/icons/open.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="toolTip">
+    <string>Open a .tt file (Ctrl+O)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/save.svg</normaloff>:/icons/save.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="toolTip">
+    <string>Save the current .tt file (Ctrl+S)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionImport">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/import.svg</normaloff>:/icons/import.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Import</string>
+   </property>
+   <property name="toolTip">
+    <string>Import data from a file (Ctrl+I)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionAdd">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/add.svg</normaloff>:/icons/add.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Add</string>
+   </property>
+   <property name="toolTip">
+    <string>Add a line (Ctrl++)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl++</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/remove.svg</normaloff>:/icons/remove.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove a line (Ctrl+-)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+-</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionEdit">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/attributes.svg</normaloff>:/icons/attributes.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Edit</string>
+   </property>
+   <property name="toolTip">
+    <string>Edit line attributes (Ctrl+E)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionUp">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/up.svg</normaloff>:/icons/up.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Up</string>
+   </property>
+   <property name="toolTip">
+    <string>Move a line up (PgUp)</string>
+   </property>
+   <property name="shortcut">
+    <string>PgUp</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDown">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/down.svg</normaloff>:/icons/down.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Down</string>
+   </property>
+   <property name="toolTip">
+    <string>Move a line down (PgDown)</string>
+   </property>
+   <property name="shortcut">
+    <string>PgDown</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionCalculateV0">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/angle_line_to_line.svg</normaloff>:/icons/angle_line_to_line.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Calculate V0</string>
+   </property>
+   <property name="toolTip">
+    <string>Calculate a V0</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionCalculatePolygonation">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/total_length_selected_entities.svg</normaloff>:/icons/total_length_selected_entities.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Calculate polygonation</string>
+   </property>
+   <property name="toolTip">
+    <string>Calculate a polygonation</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionCalculatePoints">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/points.svg</normaloff>:/icons/points.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Calculate points</string>
+   </property>
+   <property name="toolTip">
+    <string>Calculate points</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDrawPoints">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/draw_points.svg</normaloff>:/icons/draw_points.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Draw points</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw points</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDrawBlocks">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/draw_blocks.svg</normaloff>:/icons/draw_blocks.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Draw blocks</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw blocks</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionDrawGrid">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/grid.svg</normaloff>:/icons/grid.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Draw grid</string>
+   </property>
+   <property name="toolTip">
+    <string>Draw a grid</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
  </widget>
- <resources/>
- <connections/>
+ <resources>
+  <include location="../../../res/icons/icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>actionAdd</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionAdd()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionNew</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionNew()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCalculatePoints</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionCalculatePoints()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCalculatePolygonation</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionCalculatePolygonation()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionCalculateV0</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionCalculateV0()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDown</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionDown()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDrawBlocks</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionDrawBlocks()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionOpen()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionEdit</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionEdit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionImport</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionImport()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionRemove</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionRemove()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDrawGrid</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionDrawGrid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionDrawPoints</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionDrawPoints()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSave</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionSave()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionUp</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionUp()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tableWidget</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>tableWidgetCellDoubleClicked(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>430</x>
+     <y>264</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>actionAdd()</slot>
+  <slot>actionNew()</slot>
+  <slot>actionCalculatePoints()</slot>
+  <slot>actionCalculatePolygonation()</slot>
+  <slot>actionCalculateV0()</slot>
+  <slot>actionDown()</slot>
+  <slot>actionDrawBlocks()</slot>
+  <slot>actionOpen()</slot>
+  <slot>actionEdit()</slot>
+  <slot>actionImport()</slot>
+  <slot>actionRemove()</slot>
+  <slot>actionDrawGrid()</slot>
+  <slot>actionDrawPoints()</slot>
+  <slot>actionSave()</slot>
+  <slot>actionUp()</slot>
+  <slot>tableWidgetCellDoubleClicked(int,int)</slot>
+ </slots>
 </ui>
