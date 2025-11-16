@@ -20,29 +20,29 @@ INCLUDEPATH    += ../../librecad/src/plugins
 SOURCES += \
     src/class/point.cpp \
     src/topographytools.cpp \
-    src/ui/tt_dialogadd.cpp \
-    src/ui/tt_dialogdrawblocks.cpp \
-    src/ui/tt_dialogedit.cpp \
-    src/ui/tt_dialoggrid.cpp \
-    src/ui/tt_dialogimport.cpp \
-    src/ui/tt_dialogmain.cpp \
-    src/ui/tt_dialogpoints.cpp \
-    src/ui/tt_dialogpolygo.cpp \
-    src/ui/tt_dialogv0.cpp
+    src/ui/dialog/add.cpp \
+    src/ui/dialog/draw_blocks.cpp \
+    src/ui/dialog/edit.cpp \
+    src/ui/dialog/grid.cpp \
+    src/ui/dialog/import.cpp \
+    src/ui/dialog/main.cpp \
+    src/ui/dialog/points.cpp \
+    src/ui/dialog/polygo.cpp \
+    src/ui/dialog/v0.cpp
 
 HEADERS += \
     src/class/point.h \
     src/topographytools.h \
     src/tt.h \
-    src/ui/tt_dialogadd.h \
-    src/ui/tt_dialogdrawblocks.h \
-    src/ui/tt_dialogedit.h \
-    src/ui/tt_dialoggrid.h \
-    src/ui/tt_dialogimport.h \
-    src/ui/tt_dialogmain.h \
-    src/ui/tt_dialogpoints.h \
-    src/ui/tt_dialogpolygo.h \
-    src/ui/tt_dialogv0.h
+    src/ui/dialog/add.h \
+    src/ui/dialog/draw_blocks.h \
+    src/ui/dialog/edit.h \
+    src/ui/dialog/grid.h \
+    src/ui/dialog/import.h \
+    src/ui/dialog/main.h \
+    src/ui/dialog/points.h \
+    src/ui/dialog/polygo.h \
+    src/ui/dialog/v0.h
 
 # Installation Directory
 win32 {
@@ -58,15 +58,15 @@ unix {
 }
 
 FORMS += \
-    src/ui/tt_dialogadd.ui \
-    src/ui/tt_dialogdrawblocks.ui \
-    src/ui/tt_dialogedit.ui \
-    src/ui/tt_dialoggrid.ui \
-    src/ui/tt_dialogimport.ui \
-    src/ui/tt_dialogmain.ui \
-    src/ui/tt_dialogpoints.ui \
-    src/ui/tt_dialogpolygo.ui \
-    src/ui/tt_dialogv0.ui
+    src/ui/dialog/add.ui \
+    src/ui/dialog/draw_blocks.ui \
+    src/ui/dialog/edit.ui \
+    src/ui/dialog/grid.ui \
+    src/ui/dialog/import.ui \
+    src/ui/dialog/main.ui \
+    src/ui/dialog/points.ui \
+    src/ui/dialog/polygo.ui \
+    src/ui/dialog/v0.ui
 
 RESOURCES += \
     res/blocks/blocks.qrc \

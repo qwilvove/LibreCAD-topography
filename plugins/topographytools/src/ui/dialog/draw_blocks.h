@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGDRAWBLOCKS_H
-#define TT_DIALOGDRAWBLOCKS_H
+#ifndef TT_UI_DIALOG_DRAW_BLOCKS_H
+#define TT_UI_DIALOG_DRAW_BLOCKS_H
 
 #include <QDialog>
 #include <QToolButton>
@@ -45,4 +45,4 @@ private slots:
     void on_rb2pv_clicked();
 };
 
-#endif // TT_DIALOGDRAWBLOCKS_H
+#endif // TT_UI_DIALOG_DRAW_BLOCKS_H

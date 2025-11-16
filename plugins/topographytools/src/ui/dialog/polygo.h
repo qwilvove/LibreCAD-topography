@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGPOLYGO_H
-#define TT_DIALOGPOLYGO_H
+#ifndef TT_UI_DIALOG_POLYGO_H
+#define TT_UI_DIALOG_POLYGO_H
 
 #include <QDialog>
 #include <QListWidgetItem>
@@ -64,4 +64,4 @@ struct OrderedReference
     TT::Point* backReference;
 };
 
-#endif // TT_DIALOGPOLYGO_H
+#endif // TT_UI_DIALOG_POLYGO_H

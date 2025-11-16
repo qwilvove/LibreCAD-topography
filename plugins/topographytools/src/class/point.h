@@ -7,9 +7,6 @@
 class Point
 {
 public:
-    Point();
-    ~Point();
-
     enum TYPE
     {
         POINT,
@@ -17,6 +14,17 @@ public:
         REFERENCE,
         MEASURE
     };
+
+    struct TypeProperties
+    {
+        QString name;
+        QColor colour;
+    };
+
+    static const QMap<TYPE, TypeProperties> TYPES;
+
+    Point();
+    ~Point();
 
     TYPE type;
     QString name;
@@ -35,15 +43,6 @@ public:
     QTableWidgetItem* getQTableWidgetItemType();
     QTableWidgetItem* getQTableWidgetItemName();
     QTableWidgetItem* getQTableWidgetItemParameters();
-
-private:
-    struct TypeProperties
-    {
-        QString name;
-        QColor colour;
-    };
-
-    static const QMap<TYPE, TypeProperties> TYPES;
 };
 
 #endif // TT_CLASS_POINT_H

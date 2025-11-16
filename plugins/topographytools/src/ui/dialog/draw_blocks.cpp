@@ -1,7 +1,7 @@
-#include "tt_dialogdrawblocks.h"
-#include "ui_tt_dialogdrawblocks.h"
+#include "draw_blocks.h"
+#include "ui_draw_blocks.h"
 
-#include "tt_dialogmain.h"
+#include "src/ui/dialog/main.h"
 
 #include <cmath>
 #include <QTemporaryDir>

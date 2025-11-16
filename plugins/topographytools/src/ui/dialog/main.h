@@ -1,5 +1,5 @@
-#ifndef TT_DIALOGMAIN_H
-#define TT_DIALOGMAIN_H
+#ifndef TT_UI_DIALOG_MAIN_H
+#define TT_UI_DIALOG_MAIN_H
 
 #include "qc_plugininterface.h"
 #include <QDialog>
@@ -164,4 +164,4 @@ private slots:
     void on_tableWidget_cellDoubleClicked(int row, int column);
 };
 
-#endif // TT_DIALOGMAIN_H
+#endif // TT_UI_DIALOG_MAIN_H

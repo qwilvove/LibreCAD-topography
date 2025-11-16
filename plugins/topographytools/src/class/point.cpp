@@ -1,5 +1,12 @@
 #include "point.h"
 
+const QMap<Point::TYPE, Point::TypeProperties> Point::TYPES = {
+    { Point::TYPE::POINT,     { QObject::tr("POINT"),     QColor(QString("dark green")) } },
+    { Point::TYPE::STATION,   { QObject::tr("STATION"),   QColor(QString("dark red"))   } },
+    { Point::TYPE::REFERENCE, { QObject::tr("REFERENCE"), QColor(QString("dark blue"))  } },
+    { Point::TYPE::MEASURE,   { QObject::tr("MEASURE"),   QColor(QString("dark cyan"))  } }
+};
+
 Point::Point()
 {
 }
@@ -7,13 +14,6 @@ Point::Point()
 Point::~Point()
 {
 }
-
-const QMap<Point::TYPE, Point::TypeProperties> Point::TYPES = {
-    { Point::TYPE::POINT,     { QObject::tr("POINT"),     QColor(QString("dark green")) } },
-    { Point::TYPE::STATION,   { QObject::tr("STATION"),   QColor(QString("dark red"))   } },
-    { Point::TYPE::REFERENCE, { QObject::tr("REFERENCE"), QColor(QString("dark blue"))  } },
-    { Point::TYPE::MEASURE,   { QObject::tr("MEASURE"),   QColor(QString("dark cyan"))  } }
-};
 
 QTableWidgetItem* Point::getQTableWidgetItemLineNumber(int lineNumber)
 {

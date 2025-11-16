@@ -1,5 +1,5 @@
-#include "tt_dialogpolygo.h"
-#include "ui_tt_dialogpolygo.h"
+#include "polygo.h"
+#include "ui_polygo.h"
 
 #include <cmath>
 #include <QMessageBox>

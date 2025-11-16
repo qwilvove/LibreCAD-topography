@@ -1,5 +1,5 @@
-#include "tt_dialogedit.h"
-#include "ui_tt_dialogedit.h"
+#include "edit.h"
+#include "ui_edit.h"
 
 TT_DialogEdit::TT_DialogEdit(QWidget *parent, TT::Point *point) :
     QDialog(parent),
