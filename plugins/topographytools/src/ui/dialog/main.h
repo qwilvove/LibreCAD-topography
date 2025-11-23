@@ -50,22 +50,14 @@ private:
 
     void initMenuBarAndToolbar();
 
-    void readSettings();
-    void writeSettings();
-
+    void loadTtFile();
     void loadPreviousState();
-
-    int loadPoints();
-    void loadPoint(QDataStream &stream, TT::Point *point);
-    int savePoints();
-    void savePoint(QDataStream &stream, TT::Point *point);
 
     void displayPoints();
     void displayPoint(TT::Point *point);
 
     void enableAllTools();
 
-    void importPoints();
     void addPoint();
     void removePoints(QList<int> &indexesToRemove);
     void editPoint(TT::Point *point);
@@ -91,6 +83,8 @@ private slots:
     void actionDrawPoints();
     void actionDrawBlocks();
     void actionDrawGrid();
+    void actionGlobalSettings();
+    void actionProjectSettings();
     void tableWidgetCellDoubleClicked(int row, int column);
 };
 

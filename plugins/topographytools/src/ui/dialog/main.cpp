@@ -4,19 +4,21 @@
 #include "document_interface.h"
 
 #include "src/topographytools.h"
+#include "src/static/io.h"
 #include "src/ui/dialog/add.h"
 #include "src/ui/dialog/draw_blocks.h"
 #include "src/ui/dialog/edit.h"
+#include "src/ui/dialog/global_settings.h"
 #include "src/ui/dialog/grid.h"
 #include "src/ui/dialog/import.h"
 #include "src/ui/dialog/points.h"
 #include "src/ui/dialog/polygo.h"
+#include "src/ui/dialog/project_settings.h"
 #include "src/ui/dialog/v0.h"
 
 #include <QFileDialog>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QSettings>
 #include <QTimer>
 #include <QToolBar>
 
@@ -32,13 +34,10 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     ui->setupUi(this);
     initMenuBarAndToolbar();
 
-    readSettings();
+    IO::PluginSettings ps = { &fileName };
+    IO::readPluginSettings(&ps); // Find current fileName
 
-    if ( loadPoints() > -1 )
-    {
-        displayPoints();
-        enableAllTools();
-    }
+    loadTtFile();
 }
 
 // Destructor
@@ -55,8 +54,29 @@ void TT_DialogMain::showEvent(QShowEvent *event)
 
 void TT_DialogMain::initMenuBarAndToolbar()
 {
+    /* DISABLE PROJECT RELATED ACTIONS BY DEFAULT */
+    //ui->actionNew->setDisabled(true);
+    //ui->actionOpen->setDisabled(true);
+    ui->actionSave->setDisabled(true);
+    ui->actionImport->setDisabled(true);
+    ui->actionAdd->setDisabled(true);
+    ui->actionRemove->setDisabled(true);
+    ui->actionEdit->setDisabled(true);
+    ui->actionUp->setDisabled(true);
+    ui->actionDown->setDisabled(true);
+    ui->actionCalculateV0->setDisabled(true);
+    ui->actionCalculatePolygonation->setDisabled(true);
+    ui->actionCalculatePoints->setDisabled(true);
+    ui->actionDrawPoints->setDisabled(true);
+    ui->actionDrawBlocks->setDisabled(true);
+    ui->actionDrawGrid->setDisabled(true);
+    //ui->actionGlobalSettings->setDisabled(true);
+    ui->actionProjectSettings->setDisabled(true);
+
+    /* MENUBAR */
     QMenuBar* mb = new QMenuBar();
-    QMenu *menu = new QMenu("Menu");
+
+    QMenu *menu = new QMenu(tr("Menu"));
     menu->addAction(ui->actionNew);
     menu->addAction(ui->actionOpen);
     menu->addAction(ui->actionSave);
@@ -77,7 +97,16 @@ void TT_DialogMain::initMenuBarAndToolbar()
     menu->addAction(ui->actionDrawBlocks);
     menu->addAction(ui->actionDrawGrid);
     mb->addMenu(menu);
+
+    QMenu *menu_settings = new QMenu(tr("Settings"));
+    menu_settings->addAction(ui->actionGlobalSettings);
+    menu_settings->addAction(ui->actionProjectSettings);
+    mb->addMenu(menu_settings);
+
     ui->vlToolBar->addWidget(mb);
+
+    /* TOOLBAR */
+    QHBoxLayout *hbl_toolbars = new QHBoxLayout();
 
     QToolBar* tb = new QToolBar();
     tb->addAction(ui->actionNew);
@@ -99,21 +128,41 @@ void TT_DialogMain::initMenuBarAndToolbar()
     tb->addAction(ui->actionDrawPoints);
     tb->addAction(ui->actionDrawBlocks);
     tb->addAction(ui->actionDrawGrid);
-    ui->vlToolBar->addWidget(tb);
+    hbl_toolbars->addWidget(tb);
+
+    QSpacerItem *spacer = new QSpacerItem(1, 0, QSizePolicy::Expanding);
+    hbl_toolbars->addSpacerItem(spacer);
+
+    QToolBar *tb_settings = new QToolBar();
+    tb_settings->addAction(ui->actionGlobalSettings);
+    tb_settings->addAction(ui->actionProjectSettings);
+    hbl_toolbars->addWidget(tb_settings);
+
+    ui->vlToolBar->addLayout(hbl_toolbars);
 }
 
-// Read setting to find current .tt file
-void TT_DialogMain::readSettings()
- {
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
-    fileName = settings.value("lastfilename", "").toString();
- }
-
-// Save .tt file as current working file used
-void TT_DialogMain::writeSettings()
+void TT_DialogMain::loadTtFile()
 {
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
-    settings.setValue("lastfilename", fileName);
+    IO::TtFileData ttfd = { &fileName, nullptr, &points };
+    int returnedValue = IO::readTtFile(&ttfd);
+    if (returnedValue == 0)
+    {
+        ui->label->setText(tr("Active file : %1").arg(fileName));
+    }
+    else if (returnedValue == -2)
+    {
+        ui->label->setText(tr("Active file : none | %1 does not exist!").arg(fileName));
+    }
+    else if (returnedValue == -3)
+    {
+        QMessageBox::critical(this, tr("Error!"), tr("Could not open file!"));
+    }
+
+    if ( points.size() > -1 )
+    {
+        displayPoints();
+        enableAllTools();
+    }
 }
 
 void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
@@ -142,118 +191,6 @@ void TT_DialogMain::loadPreviousState()
     default:
         break;
     }
-}
-
-// Fill points list reading .tt file
-// Data is stored as follows :
-//   - Number of points
-//   - Point 1 data
-//   - Point 2 data
-//   - ...
-int TT_DialogMain::loadPoints()
-{
-    int nbPoints = 0;
-
-    points.clear();
-
-    if (fileName.isEmpty())
-    {
-        return -1;
-    }
-
-    QFile file(fileName);
-    if (!file.exists())
-    {
-        ui->label->setText(tr("Active file : none | %1 does not exist!").arg(fileName));
-        return -1;
-    }
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::critical(this, tr("Error!"), tr("Could not open file!"));
-        return -1;
-    }
-
-    QDataStream stream(&file);
-    int max;
-    stream >> max;
-
-    for (int i = 0; i < max; i++)
-    {
-        TT::Point *point = new TT::Point();
-        loadPoint(stream, point);
-        points.append(point);
-        nbPoints++;
-    }
-
-    file.close();
-
-    ui->label->setText(tr("Active file : %1").arg(fileName));
-
-    return nbPoints;
-}
-
-// Read each information for a single point
-void TT_DialogMain::loadPoint(QDataStream &stream, TT::Point *point)
-{
-    stream >> point->type;
-    stream >> point->name;
-    stream >> point->x;
-    stream >> point->y;
-    stream >> point->hasZ;
-    stream >> point->z;
-    stream >> point->ih;
-    stream >> point->v0;
-    stream >> point->ph;
-    stream >> point->ha;
-    stream >> point->va;
-    stream >> point->id;
-}
-
-// Save all points in the .tt file following the file structure
-// cf loadPoints for file structure
-int TT_DialogMain::savePoints()
-{
-    int nbPoints = 0;
-
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly))
-    {
-        QMessageBox::critical(this, tr("Error!"), tr("Could not save file!"));
-        return -1;
-    }
-
-    QDataStream stream(&file);
-    stream.setVersion(QDataStream::Qt_5_0);
-
-    int len = points.size();
-    stream << len;
-
-    foreach (TT::Point *point, points)
-    {
-        savePoint(stream, point);
-        nbPoints++;
-    }
-
-    file.close();
-
-    return nbPoints;
-}
-
-// Write each information for a single point
-void TT_DialogMain::savePoint(QDataStream &stream, TT::Point *point)
-{
-    stream << point->type;
-    stream << point->name;
-    stream << point->x;
-    stream << point->y;
-    stream << point->hasZ;
-    stream << point->z;
-    stream << point->ih;
-    stream << point->v0;
-    stream << point->ph;
-    stream << point->ha;
-    stream << point->va;
-    stream << point->id;
 }
 
 // Update tableWidget to show point list to the user
@@ -285,34 +222,23 @@ void TT_DialogMain::displayPoint(TT::Point *point)
 // Enable all tools in the top toolbar
 void TT_DialogMain::enableAllTools()
 {
-    foreach (QAction *action, ui->vlToolBar->itemAt(1)->widget()->actions())
-    {
-        action->setEnabled(true);
-    }
-}
-
-// Import points from file and add them to the project
-void TT_DialogMain::importPoints()
-{
-    int nbPointsImported = -1;
-    TT_DialogImport importDialog(this, points, nbPointsImported);
-    if (importDialog.exec() == QDialog::Accepted && nbPointsImported > -1)
-    {
-        ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(fileName).arg(nbPointsImported));
-        displayPoints();
-    }
-}
-
-// Add a point to points
-void TT_DialogMain::addPoint()
-{
-    TT::Point *newPoint = new TT::Point();
-    TT_DialogAdd addDialog(this, newPoint);
-    if (addDialog.exec() == QDialog::Accepted)
-    {
-        points.append(newPoint);
-        displayPoints();
-    }
+    //ui->actionNew->setEnabled(true);
+    //ui->actionOpen->setEnabled(true);
+    ui->actionSave->setEnabled(true);
+    ui->actionImport->setEnabled(true);
+    ui->actionAdd->setEnabled(true);
+    ui->actionRemove->setEnabled(true);
+    ui->actionEdit->setEnabled(true);
+    ui->actionUp->setEnabled(true);
+    ui->actionDown->setEnabled(true);
+    ui->actionCalculateV0->setEnabled(true);
+    ui->actionCalculatePolygonation->setEnabled(true);
+    ui->actionCalculatePoints->setEnabled(true);
+    ui->actionDrawPoints->setEnabled(true);
+    ui->actionDrawBlocks->setEnabled(true);
+    ui->actionDrawGrid->setEnabled(true);
+    //ui->actionGlobalSettings->setEnabled(true);
+    ui->actionProjectSettings->setEnabled(true);
 }
 
 // Remove points according to the list of indexes
@@ -440,7 +366,8 @@ void TT_DialogMain::actionNew()
 
     fileName = fileNameLocal;
 
-    writeSettings();
+    IO::PluginSettings ps = { &fileName };
+    IO::writePluginSettings(&ps);
 
     ui->label->setText(tr("Active file : %1").arg(fileName));
 
@@ -466,32 +393,46 @@ void TT_DialogMain::actionOpen()
 
     fileName = fileNameLocal;
 
-    writeSettings();
+    IO::PluginSettings ps = { &fileName };
+    IO::writePluginSettings(&ps);
 
-    if ( loadPoints() > -1 )
-    {
-        displayPoints();
-        enableAllTools();
-    }
+    loadTtFile();
 }
 
 void TT_DialogMain::actionSave()
 {
-    int nbPointsSaved = TT_DialogMain::savePoints();
-    if (nbPointsSaved > -1)
+    IO::TtFileData ttfd = { &fileName, nullptr, &points };
+    int returnedValue = IO::writeTtFile(&ttfd);
+    if (returnedValue == 0)
     {
-        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(fileName).arg(nbPointsSaved));
+        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(fileName).arg(points.size()));
+    }
+    else if (returnedValue == -1)
+    {
+        QMessageBox::critical(this, tr("Error!"), tr("Could not save file!"));
     }
 }
 
 void TT_DialogMain::actionImport()
 {
-    importPoints();
+    int nbPointsImported = -1;
+    TT_DialogImport importDialog(this, points, nbPointsImported);
+    if (importDialog.exec() == QDialog::Accepted && nbPointsImported > -1)
+    {
+        ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(fileName).arg(nbPointsImported));
+        displayPoints();
+    }
 }
 
 void TT_DialogMain::actionAdd()
 {
-    addPoint();
+    TT::Point *newPoint = new TT::Point();
+    TT_DialogAdd addDialog(this, newPoint);
+    if (addDialog.exec() == QDialog::Accepted)
+    {
+        points.append(newPoint);
+        displayPoints();
+    }
 }
 
 void TT_DialogMain::actionRemove()
@@ -585,6 +526,18 @@ void TT_DialogMain::actionDrawGrid()
 {
     TT_DialogGrid gridDialog(this, doc);
     gridDialog.exec();
+}
+
+void TT_DialogMain::actionGlobalSettings()
+{
+    TT_DialogGlobalSettings globalSettingsDialog(this);
+    globalSettingsDialog.exec();
+}
+
+void TT_DialogMain::actionProjectSettings()
+{
+    TT_DialogProjectSettings projectSettingsDialog(this);
+    projectSettingsDialog.exec();
 }
 
 void TT_DialogMain::tableWidgetCellDoubleClicked(int row, int column)

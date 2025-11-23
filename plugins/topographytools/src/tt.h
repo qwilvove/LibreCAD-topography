@@ -2,6 +2,7 @@
 #define TT_H
 
 #include "class/point.h"
+#include "class/settings.h"
 
 #include "document_interface.h"
 
@@ -9,8 +10,9 @@
 
 namespace TT
 {
-// Add everything from class/point to namespace TT
+// Add everything from classes to namespace TT
 using ::Point;
+using ::Settings;
 
 enum class LAYER
 {

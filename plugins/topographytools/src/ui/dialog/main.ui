@@ -387,6 +387,36 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
+  <action name="actionGlobalSettings">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/settings.svg</normaloff>:/icons/settings.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Global settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Global plugin settings</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionProjectSettings">
+   <property name="icon">
+    <iconset resource="../../../res/icons/icons.qrc">
+     <normaloff>:/icons/drawing_settings.svg</normaloff>:/icons/drawing_settings.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Project settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Current project settings</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../../../res/icons/icons.qrc"/>
@@ -648,6 +678,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionGlobalSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionGlobalSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionProjectSettings</sender>
+   <signal>triggered()</signal>
+   <receiver>TT_DialogMain</receiver>
+   <slot>actionProjectSettings()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>430</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>actionAdd()</slot>
@@ -665,6 +727,8 @@
   <slot>actionDrawPoints()</slot>
   <slot>actionSave()</slot>
   <slot>actionUp()</slot>
+  <slot>actionGlobalSettings()</slot>
+  <slot>actionProjectSettings()</slot>
   <slot>tableWidgetCellDoubleClicked(int,int)</slot>
  </slots>
 </ui>
