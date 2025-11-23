@@ -6,6 +6,7 @@
         <file>down.svg</file>
         <file>draw_blocks.svg</file>
         <file>draw_points.svg</file>
+        <file>drawing_settings.svg</file>
         <file>grid.svg</file>
         <file>import.svg</file>
         <file>left.svg</file>
@@ -15,6 +16,7 @@
         <file>remove.svg</file>
         <file>right.svg</file>
         <file>save.svg</file>
+        <file>settings.svg</file>
         <file>total_length_selected_entities.svg</file>
         <file>up.svg</file>
     </qresource>
