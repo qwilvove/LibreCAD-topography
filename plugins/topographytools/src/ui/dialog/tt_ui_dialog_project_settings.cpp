@@ -1,5 +1,5 @@
-#include "project_settings.h"
-#include "ui_project_settings.h"
+#include "tt_ui_dialog_project_settings.h"
+#include "ui_tt_ui_dialog_project_settings.h"
 
 #include <QMessageBox>
 
