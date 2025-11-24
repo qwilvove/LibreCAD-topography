@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TT_DialogPluginSettings</class>
+ <widget class="QDialog" name="TT_DialogPluginSettings">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>408</width>
+    <height>456</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Plugin global settings</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout" columnstretch="5,1">
+     <item row="0" column="0">
+      <widget class="QLabel" name="lb_autoSave">
+       <property name="toolTip">
+        <string>Save .tt file each time plugin window is closed</string>
+       </property>
+       <property name="text">
+        <string>Auto save .tt file</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="ck_autoSave">
+       <property name="layoutDirection">
+        <enum>Qt::LayoutDirection::RightToLeft</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="lb_codesSettings">
+     <property name="text">
+      <string>Codes settings</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gl_codes" columnstretch="1,5">
+     <item row="2" column="0">
+      <widget class="QLabel" name="lb_code0">
+       <property name="text">
+        <string>0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="lb_code6">
+       <property name="text">
+        <string>6</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="lb_code7">
+       <property name="text">
+        <string>7</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QComboBox" name="cb_code7">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QComboBox" name="cb_code6">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="cb_code2">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="lb_code3">
+       <property name="text">
+        <string>3</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="cb_code0">
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="cb_code4">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QComboBox" name="cb_code5">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="lb_code5">
+       <property name="text">
+        <string>5</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="lb_code4">
+       <property name="text">
+        <string>4</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="lb_code8">
+       <property name="text">
+        <string>8</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="cb_code1">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="lb_code2">
+       <property name="text">
+        <string>2</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lb_code1">
+       <property name="text">
+        <string>1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="cb_code3">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QComboBox" name="cb_code8">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="lb_code9">
+       <property name="text">
+        <string>9</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QComboBox" name="cb_code9">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>-</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Line continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc init</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc middle</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Arc continue</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close with offset</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Close</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>End</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>18</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>TT_DialogPluginSettings</receiver>
+   <slot>slot_validateInputs()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>TT_DialogPluginSettings</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>slot_validateInputs()</slot>
+ </slots>
+</ui>

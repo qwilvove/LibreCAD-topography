@@ -1,36 +1,19 @@
 #include "io.h"
 
 #include <QFile>
-#include <QSettings>
 
-namespace IO
+namespace io
 {
-
-bool readPluginSettings(PluginSettings *pluginSettings)
-{
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
-    *(pluginSettings->fileName) = settings.value("lastfilename", "").toString();
-
-    return true;
-}
-
-bool writePluginSettings(PluginSettings *pluginSettings)
-{
-    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
-    settings.setValue("lastfilename", *(pluginSettings->fileName));
-
-    return true;
-}
 
 /* READ .TT FILE */
-int readTtFile(TtFileData *ttFileData)
+int readTtFile(const QString &fileName, TT::ProjectSettings *projectSettings, QList<TT::Point *> *points)
 {
-    if (ttFileData->fileName->isEmpty())
+    if (fileName.isEmpty())
     {
         return -1;
     }
 
-    QFile file(*(ttFileData->fileName));
+    QFile file(fileName);
     if (!file.exists())
     {
         return -2;
@@ -42,15 +25,15 @@ int readTtFile(TtFileData *ttFileData)
 
     QDataStream stream(&file);
 
-    readTtFileSettings(stream, ttFileData->settings);
-    readTtFilePoints(stream, ttFileData->points);
+    readTtFileSettings(stream, projectSettings);
+    readTtFilePoints(stream, points);
 
     file.close();
 
     return 0;
 }
 
-void readTtFileSettings(QDataStream &stream, TT::Settings *settings)
+void readTtFileSettings(QDataStream &stream, TT::ProjectSettings *settings)
 {
 
 }
@@ -87,9 +70,9 @@ void readTtFilePoint(QDataStream &stream, TT::Point *point)
 }
 
 /* WRITE .TT FILE */
-int writeTtFile(TtFileData *ttFileData)
+int writeTtFile(const QString &fileName, TT::ProjectSettings *projectSettings, QList<TT::Point *> *points)
 {
-    QFile file(*(ttFileData->fileName));
+    QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly))
     {
         return -1;
@@ -98,15 +81,15 @@ int writeTtFile(TtFileData *ttFileData)
     QDataStream stream(&file);
     stream.setVersion(QDataStream::Qt_5_0);
 
-    writeTtFileSettings(stream, ttFileData->settings);
-    writeTtFilePoints(stream, ttFileData->points);
+    writeTtFileSettings(stream, projectSettings);
+    writeTtFilePoints(stream, points);
 
     file.close();
 
     return 0;
 }
 
-void writeTtFileSettings(QDataStream &stream, TT::Settings *settings)
+void writeTtFileSettings(QDataStream &stream, TT::ProjectSettings *settings)
 {
 
 }
@@ -138,4 +121,4 @@ void writeTtFilePoint(QDataStream &stream, TT::Point *point)
     stream << point->id;
 }
 
-} // namespace IO
+} // namespace io

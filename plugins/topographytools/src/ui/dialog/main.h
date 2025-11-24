@@ -44,7 +44,8 @@ protected:
 private:
     Ui::TT_DialogMain *ui;
     Document_Interface *doc;
-    QString fileName;
+    TT::PluginSettings *pluginSettings;
+    TT::ProjectSettings *projectSettings;
     QList<TT::Point*> points;
     State previousState;
 
@@ -83,7 +84,7 @@ private slots:
     void actionDrawPoints();
     void actionDrawBlocks();
     void actionDrawGrid();
-    void actionGlobalSettings();
+    void actionPluginSettings();
     void actionProjectSettings();
     void tableWidgetCellDoubleClicked(int row, int column);
 };

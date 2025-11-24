@@ -8,12 +8,12 @@
 #include "src/ui/dialog/add.h"
 #include "src/ui/dialog/draw_blocks.h"
 #include "src/ui/dialog/edit.h"
-#include "src/ui/dialog/global_settings.h"
 #include "src/ui/dialog/grid.h"
 #include "src/ui/dialog/import.h"
 #include "src/ui/dialog/points.h"
 #include "src/ui/dialog/polygo.h"
-#include "src/ui/dialog/project_settings.h"
+#include "src/ui/dialog/tt_ui_dialog_plugin_settings.h"
+#include "src/ui/dialog/tt_ui_dialog_project_settings.h"
 #include "src/ui/dialog/v0.h"
 
 #include <QFileDialog>
@@ -28,15 +28,16 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     ui(new Ui::TT_DialogMain),
     doc(doc)
 {
-    this->isRunning = true;
-    connect(this, &QDialog::rejected, this, [this]{this->isRunning = false;});
+    isRunning = true;
+    connect(this, &QDialog::rejected, this, [this]{isRunning = false;});
 
     ui->setupUi(this);
     initMenuBarAndToolbar();
 
-    IO::PluginSettings ps = { &fileName };
-    IO::readPluginSettings(&ps); // Find current fileName
+    pluginSettings = new TT::PluginSettings();
+    pluginSettings->read();
 
+    projectSettings = new TT::ProjectSettings();
     loadTtFile();
 }
 
@@ -44,6 +45,8 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 TT_DialogMain::~TT_DialogMain()
 {
     delete ui;
+    delete projectSettings;
+    delete pluginSettings;
 }
 
 void TT_DialogMain::showEvent(QShowEvent *event)
@@ -99,7 +102,7 @@ void TT_DialogMain::initMenuBarAndToolbar()
     mb->addMenu(menu);
 
     QMenu *menu_settings = new QMenu(tr("Settings"));
-    menu_settings->addAction(ui->actionGlobalSettings);
+    menu_settings->addAction(ui->actionPluginSettings);
     menu_settings->addAction(ui->actionProjectSettings);
     mb->addMenu(menu_settings);
 
@@ -134,7 +137,7 @@ void TT_DialogMain::initMenuBarAndToolbar()
     hbl_toolbars->addSpacerItem(spacer);
 
     QToolBar *tb_settings = new QToolBar();
-    tb_settings->addAction(ui->actionGlobalSettings);
+    tb_settings->addAction(ui->actionPluginSettings);
     tb_settings->addAction(ui->actionProjectSettings);
     hbl_toolbars->addWidget(tb_settings);
 
@@ -143,25 +146,23 @@ void TT_DialogMain::initMenuBarAndToolbar()
 
 void TT_DialogMain::loadTtFile()
 {
-    IO::TtFileData ttfd = { &fileName, nullptr, &points };
-    int returnedValue = IO::readTtFile(&ttfd);
+    int returnedValue = io::readTtFile(pluginSettings->getFileName(), projectSettings, &points);
     if (returnedValue == 0)
     {
-        ui->label->setText(tr("Active file : %1").arg(fileName));
+        ui->label->setText(tr("Active file : %1").arg(pluginSettings->getFileName()));
+        if ( points.size() > -1 )
+        {
+            displayPoints();
+            enableAllTools();
+        }
     }
     else if (returnedValue == -2)
     {
-        ui->label->setText(tr("Active file : none | %1 does not exist!").arg(fileName));
+        ui->label->setText(tr("Active file : none | %1 does not exist!").arg(pluginSettings->getFileName()));
     }
     else if (returnedValue == -3)
     {
         QMessageBox::critical(this, tr("Error!"), tr("Could not open file!"));
-    }
-
-    if ( points.size() > -1 )
-    {
-        displayPoints();
-        enableAllTools();
     }
 }
 
@@ -364,12 +365,10 @@ void TT_DialogMain::actionNew()
         return;
     }
 
-    fileName = fileNameLocal;
+    pluginSettings->setFileName(fileNameLocal);
+    pluginSettings->write();
 
-    IO::PluginSettings ps = { &fileName };
-    IO::writePluginSettings(&ps);
-
-    ui->label->setText(tr("Active file : %1").arg(fileName));
+    ui->label->setText(tr("Active file : %1").arg(fileNameLocal));
 
     enableAllTools();
 
@@ -391,21 +390,18 @@ void TT_DialogMain::actionOpen()
         return;
     }
 
-    fileName = fileNameLocal;
-
-    IO::PluginSettings ps = { &fileName };
-    IO::writePluginSettings(&ps);
+    pluginSettings->setFileName(fileNameLocal);
+    pluginSettings->write();
 
     loadTtFile();
 }
 
 void TT_DialogMain::actionSave()
 {
-    IO::TtFileData ttfd = { &fileName, nullptr, &points };
-    int returnedValue = IO::writeTtFile(&ttfd);
+    int returnedValue = io::writeTtFile(pluginSettings->getFileName(), projectSettings, &points);
     if (returnedValue == 0)
     {
-        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(fileName).arg(points.size()));
+        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(pluginSettings->getFileName()).arg(points.size()));
     }
     else if (returnedValue == -1)
     {
@@ -419,7 +415,7 @@ void TT_DialogMain::actionImport()
     TT_DialogImport importDialog(this, points, nbPointsImported);
     if (importDialog.exec() == QDialog::Accepted && nbPointsImported > -1)
     {
-        ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(fileName).arg(nbPointsImported));
+        ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(pluginSettings->getFileName()).arg(nbPointsImported));
         displayPoints();
     }
 }
@@ -508,11 +504,11 @@ void TT_DialogMain::actionDrawPoints()
     int nbPointsDrawn = TT_DialogMain::drawPoints();
     if (nbPointsDrawn > -1)
     {
-        ui->label->setText(tr("Active file : %1 | %2 points drawn.").arg(fileName).arg(nbPointsDrawn));
+        ui->label->setText(tr("Active file : %1 | %2 points drawn.").arg(pluginSettings->getFileName()).arg(nbPointsDrawn));
     }
     else
     {
-        ui->label->setText(tr("Active file : %1 | No points drawn.").arg(fileName));
+        ui->label->setText(tr("Active file : %1 | No points drawn.").arg(pluginSettings->getFileName()));
     }
 }
 
@@ -528,10 +524,10 @@ void TT_DialogMain::actionDrawGrid()
     gridDialog.exec();
 }
 
-void TT_DialogMain::actionGlobalSettings()
+void TT_DialogMain::actionPluginSettings()
 {
-    TT_DialogGlobalSettings globalSettingsDialog(this);
-    globalSettingsDialog.exec();
+    TT_DialogPluginSettings pluginSettingsDialog(this, pluginSettings);
+    pluginSettingsDialog.exec();
 }
 
 void TT_DialogMain::actionProjectSettings()

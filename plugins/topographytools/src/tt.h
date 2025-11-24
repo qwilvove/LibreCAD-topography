@@ -1,8 +1,9 @@
 #ifndef TT_H
 #define TT_H
 
-#include "class/point.h"
-#include "class/settings.h"
+#include "src/class/plugin_settings.h"
+#include "src/class/point.h"
+#include "src/class/project_settings.h"
 
 #include "document_interface.h"
 
@@ -10,9 +11,10 @@
 
 namespace TT
 {
-// Add everything from classes to namespace TT
+// Add classes to namespace TT
+using ::PluginSettings;
 using ::Point;
-using ::Settings;
+using ::ProjectSettings;
 
 enum class LAYER
 {
