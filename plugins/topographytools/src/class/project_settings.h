@@ -6,6 +6,11 @@ class ProjectSettings
 public:
     ProjectSettings();
 
+    double getScale();
+
+    void setScale(double scale);
+
+private:
     double scale; // Project scale stored as a double (e.g. 0.01 for 1:100)
 };
 
