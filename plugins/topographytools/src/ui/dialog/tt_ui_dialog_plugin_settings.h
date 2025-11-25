@@ -18,8 +18,8 @@ public:
     ~TT_DialogPluginSettings();
 
 private:
-    Ui::TT_DialogPluginSettings *ui;
     TT::PluginSettings *settings;
+    Ui::TT_DialogPluginSettings *ui;
 
     void displayCurrentSettings();
     void saveSettings();

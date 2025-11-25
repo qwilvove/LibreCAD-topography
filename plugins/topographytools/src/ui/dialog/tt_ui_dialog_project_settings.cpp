@@ -3,14 +3,15 @@
 
 #include <QMessageBox>
 
-TT_DialogProjectSettings::TT_DialogProjectSettings(QWidget *parent):
+TT_DialogProjectSettings::TT_DialogProjectSettings(QWidget *parent, TT::ProjectSettings *settings):
     QDialog(parent),
+    settings(settings),
     ui(new Ui::TT_DialogProjectSettings)
 {
     ui->setupUi(this);
 
     setVisibleCustomScaleSettings(false);
-    loadCurrentSettings();
+    displayCurrentSettings();
 }
 
 TT_DialogProjectSettings::~TT_DialogProjectSettings()
@@ -18,20 +19,56 @@ TT_DialogProjectSettings::~TT_DialogProjectSettings()
     delete ui;
 }
 
-void TT_DialogProjectSettings::setVisibleCustomScaleSettings(bool visible)
+void TT_DialogProjectSettings::displayCurrentSettings()
 {
-    ui->lb_customScale->setVisible(visible);
-    ui->le_customScale->setVisible(visible);
-}
-
-void TT_DialogProjectSettings::loadCurrentSettings()
-{
-
+    double scale = settings->getScale();
+    if (scale == 1.0/100)
+    {
+        ui->cb_scale->setCurrentIndex(0);
+    }
+    else if (scale == 1.0/200)
+    {
+        ui->cb_scale->setCurrentIndex(1);
+    }
+    else if (scale == 1.0/500)
+    {
+        ui->cb_scale->setCurrentIndex(2);
+    }
+    else
+    {
+        ui->cb_scale->setCurrentIndex(3);
+        int rightPart = (int)(1.0/settings->getScale());
+        ui->le_customScale->setText("1:" + QString::number(rightPart));
+    }
 }
 
 void TT_DialogProjectSettings::saveSettings()
 {
+    int currentIndex = ui->cb_scale->currentIndex();
+    if (currentIndex == 0)
+    {
+        settings->setScale(1.0/100);
+    }
+    else if (currentIndex == 1)
+    {
+        settings->setScale(1.0/200);
+    }
+    else if (currentIndex == 2)
+    {
+        settings->setScale(1.0/500);
+    }
+    else
+    {
+        QString customScale = ui->le_customScale->text();
+        int rightPart = customScale.remove(0,2).toInt(); // Keep everything after 1: (or 1/) e.g. "750" for "1:750"
+        settings->setScale(1.0/rightPart);
+    }
+}
 
+void TT_DialogProjectSettings::setVisibleCustomScaleSettings(bool visible)
+{
+    ui->lb_customScale->setVisible(visible);
+    ui->le_customScale->setVisible(visible);
 }
 
 void TT_DialogProjectSettings::slot_cbScaleIndexChanged(int index)

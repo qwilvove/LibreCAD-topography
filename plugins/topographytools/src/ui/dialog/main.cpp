@@ -532,7 +532,7 @@ void TT_DialogMain::actionPluginSettings()
 
 void TT_DialogMain::actionProjectSettings()
 {
-    TT_DialogProjectSettings projectSettingsDialog(this);
+    TT_DialogProjectSettings projectSettingsDialog(this, projectSettings);
     projectSettingsDialog.exec();
 }
 
