@@ -31,6 +31,7 @@ SOURCES += \
     src/ui/dialog/main.cpp \
     src/ui/dialog/points.cpp \
     src/ui/dialog/polygo.cpp \
+    src/ui/dialog/tt_ui_dialog_draw_points.cpp \
     src/ui/dialog/tt_ui_dialog_plugin_settings.cpp \
     src/ui/dialog/tt_ui_dialog_project_settings.cpp \
     src/ui/dialog/v0.cpp
@@ -50,6 +51,7 @@ HEADERS += \
     src/ui/dialog/main.h \
     src/ui/dialog/points.h \
     src/ui/dialog/polygo.h \
+    src/ui/dialog/tt_ui_dialog_draw_points.h \
     src/ui/dialog/tt_ui_dialog_plugin_settings.h \
     src/ui/dialog/tt_ui_dialog_project_settings.h \
     src/ui/dialog/v0.h
@@ -76,6 +78,7 @@ FORMS += \
     src/ui/dialog/main.ui \
     src/ui/dialog/points.ui \
     src/ui/dialog/polygo.ui \
+    src/ui/dialog/tt_ui_dialog_draw_points.ui \
     src/ui/dialog/tt_ui_dialog_plugin_settings.ui \
     src/ui/dialog/tt_ui_dialog_project_settings.ui \
     src/ui/dialog/v0.ui
