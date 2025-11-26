@@ -12,6 +12,7 @@
 #include "src/ui/dialog/import.h"
 #include "src/ui/dialog/points.h"
 #include "src/ui/dialog/polygo.h"
+#include "src/ui/dialog/tt_ui_dialog_draw_points.h"
 #include "src/ui/dialog/tt_ui_dialog_plugin_settings.h"
 #include "src/ui/dialog/tt_ui_dialog_project_settings.h"
 #include "src/ui/dialog/v0.h"
@@ -288,75 +289,6 @@ void TT_DialogMain::movePointDown(int index)
     ui->tableWidget->setCurrentCell(index + 1, 0);
 }
 
-// Draw points on the current drawing
-int TT_DialogMain::drawPoints()
-{
-    int nbPoints = 0;
-
-    // Check if layers already exist
-    QStringList layers = this->doc->getAllLayer();
-
-    bool hasTtPointsLayer = layers.contains(TT::LAYERS[TT::LAYER::POINTS].name);
-    bool hasTtNameLayer = layers.contains(TT::LAYERS[TT::LAYER::NAME].name);
-    bool hasTtAltiLayer = layers.contains(TT::LAYERS[TT::LAYER::ALTI].name);
-
-    // If at least one of the following layers exists, do not draw points
-    if (hasTtPointsLayer || hasTtNameLayer || hasTtAltiLayer)
-    {
-        return -1;
-    }
-
-    // Prepare layers
-    QString currentLayer = this->doc->getCurrentLayer();
-
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::POINTS].name);
-    this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::POINTS].colour, TT::LAYERS[TT::LAYER::POINTS].lineWidth, TT::LAYERS[TT::LAYER::POINTS].lineType);
-
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::NAME].name);
-    this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::NAME].colour, TT::LAYERS[TT::LAYER::NAME].lineWidth, TT::LAYERS[TT::LAYER::NAME].lineType);
-
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::ALTI].name);
-    this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::ALTI].colour, TT::LAYERS[TT::LAYER::ALTI].lineWidth, TT::LAYERS[TT::LAYER::ALTI].lineType);
-
-    // Draw each point
-    for (auto i = 0; i < points.size(); i++)
-    {
-        TT::Point *currentPoint = points.at(i);
-        if (currentPoint->type == TT::Point::TYPE::POINT)
-        {
-            drawPoint(currentPoint);
-            nbPoints++;
-        }
-    }
-
-    this->doc->setLayer(currentLayer);
-
-    return nbPoints;
-}
-
-// Draw a single point on the current drawing
-void TT_DialogMain::drawPoint(TT::Point *point)
-{
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::POINTS].name);
-    QPointF insertionPoint(point->x, point->y);
-    this->doc->addPoint(&insertionPoint);
-
-    if (!point->name.isEmpty())
-    {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::NAME].name);
-        QPointF textInsertionPoint(point->x + 1.0, point->y + 4.0);
-        this->doc->addText(point->name, "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
-    }
-
-    if (point->hasZ)
-    {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::ALTI].name);
-        QString text = QString("%1").arg(point->z);
-        QPointF textInsertionPoint(point->x + 1.0, point->y - 12.0 - 4.0);
-        this->doc->addText(text, "standard", &textInsertionPoint, 12.0, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
-    }
-}
-
 void TT_DialogMain::actionNew()
 {
     QString fileNameLocal = QFileDialog::getSaveFileName(this, tr("Create a TT file"), "", tr("TT files (*.tt)"));
@@ -501,14 +433,17 @@ void TT_DialogMain::actionCalculatePoints()
 
 void TT_DialogMain::actionDrawPoints()
 {
-    int nbPointsDrawn = TT_DialogMain::drawPoints();
+    int nbPointsDrawn = -1;
+    TT_DialogDrawPoints drawPointsDialog(this, doc, &points, &nbPointsDrawn, projectSettings->getScale());
+    drawPointsDialog.exec();
+
     if (nbPointsDrawn > -1)
     {
         ui->label->setText(tr("Active file : %1 | %2 points drawn.").arg(pluginSettings->getFileName()).arg(nbPointsDrawn));
     }
     else
     {
-        ui->label->setText(tr("Active file : %1 | No points drawn.").arg(pluginSettings->getFileName()));
+        ui->label->setText(tr("Active file : %1 | No point drawn.").arg(pluginSettings->getFileName()));
     }
 }
 
