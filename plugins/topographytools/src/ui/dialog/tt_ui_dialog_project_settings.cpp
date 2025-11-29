@@ -37,8 +37,7 @@ void TT_DialogProjectSettings::displayCurrentSettings()
     else
     {
         ui->cb_scale->setCurrentIndex(3);
-        int rightPart = (int)(1.0/settings->getScale());
-        ui->le_customScale->setText("1:" + QString::number(rightPart));
+        ui->le_customScale->setText("1:" + QString::number(1.0/settings->getScale(), 'f', 0));
     }
 }
 

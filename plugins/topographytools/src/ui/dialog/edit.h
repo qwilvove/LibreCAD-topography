@@ -14,7 +14,7 @@ class TT_DialogEdit : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogEdit(QWidget *parent = nullptr, TT::Point *point = nullptr);
+    explicit TT_DialogEdit(QWidget *parent, TT::Point *point);
     ~TT_DialogEdit();
 
 private slots:

@@ -15,15 +15,6 @@ Point::~Point()
 {
 }
 
-QTableWidgetItem* Point::getQTableWidgetItemLineNumber(int lineNumber)
-{
-    QTableWidgetItem *twi = new QTableWidgetItem(QString("%1").arg(lineNumber));
-
-    twi->setForeground(Point::TYPES[this->type].colour);
-
-    return twi;
-}
-
 QTableWidgetItem* Point::getQTableWidgetItemType()
 {
     QTableWidgetItem *twi = new QTableWidgetItem(Point::TYPES[this->type].name);
@@ -38,6 +29,15 @@ QTableWidgetItem* Point::getQTableWidgetItemName()
     QTableWidgetItem *twi = new QTableWidgetItem(this->name);
 
     twi->setForeground(Point::TYPES[this->type].colour);
+
+    return twi;
+}
+
+QTableWidgetItem* Point::getQTableWidgetItemCode()
+{
+    QTableWidgetItem *twi = new QTableWidgetItem(this->code);
+
+    twi->setForeground(QColor(QString("#606060")));
 
     return twi;
 }
