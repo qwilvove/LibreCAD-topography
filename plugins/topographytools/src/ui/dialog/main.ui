@@ -81,17 +81,6 @@
        </attribute>
        <column>
         <property name="text">
-         <string>Line</string>
-        </property>
-        <property name="font">
-         <font>
-          <family>Monospace</family>
-          <pointsize>9</pointsize>
-         </font>
-        </property>
-       </column>
-       <column>
-        <property name="text">
          <string>Type</string>
         </property>
         <property name="font">
@@ -104,6 +93,17 @@
        <column>
         <property name="text">
          <string>Name</string>
+        </property>
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Code</string>
         </property>
         <property name="font">
          <font>

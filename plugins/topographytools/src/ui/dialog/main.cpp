@@ -165,6 +165,10 @@ void TT_DialogMain::loadTtFile()
     {
         QMessageBox::critical(this, tr("Error!"), tr("Could not open file!"));
     }
+    else if (returnedValue == -4)
+    {
+        QMessageBox::critical(this, tr("Error!"), tr("File format is unknown or wrong TT file version!"));
+    }
 }
 
 void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
@@ -215,9 +219,9 @@ void TT_DialogMain::displayPoint(TT::Point *point)
     ui->tableWidget->setRowCount(lineNumber);
 
     // Fill the row
-    ui->tableWidget->setItem(lineNumber - 1, 0, point->getQTableWidgetItemLineNumber(lineNumber));
-    ui->tableWidget->setItem(lineNumber - 1, 1, point->getQTableWidgetItemType());
-    ui->tableWidget->setItem(lineNumber - 1, 2, point->getQTableWidgetItemName());
+    ui->tableWidget->setItem(lineNumber - 1, 0, point->getQTableWidgetItemType());
+    ui->tableWidget->setItem(lineNumber - 1, 1, point->getQTableWidgetItemName());
+    ui->tableWidget->setItem(lineNumber - 1, 2, point->getQTableWidgetItemCode());
     ui->tableWidget->setItem(lineNumber - 1, 3, point->getQTableWidgetItemParameters());
 }
 

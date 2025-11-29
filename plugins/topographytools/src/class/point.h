@@ -28,6 +28,7 @@ public:
 
     TYPE type;
     QString name;
+    QString code;
     double x;  //                      - for POINT
     double y;  //                      - for POINT
     bool hasZ; //                      - for POINT
@@ -39,9 +40,9 @@ public:
     double va; // Vertical angle       - for REFERENCE & MEASURE
     double id; // Inclined distance    - for REFERENCE & MEASURE
 
-    QTableWidgetItem* getQTableWidgetItemLineNumber(int lineNumber);
     QTableWidgetItem* getQTableWidgetItemType();
     QTableWidgetItem* getQTableWidgetItemName();
+    QTableWidgetItem* getQTableWidgetItemCode();
     QTableWidgetItem* getQTableWidgetItemParameters();
 };
 
