@@ -148,6 +148,7 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
             TT::Point* newPoint = new TT::Point();
             newPoint->type = TT::Point::TYPE::POINT;
             newPoint->name = selectedMeasures.at(i).at(j)->name;
+            newPoint->code = selectedMeasures.at(i).at(j)->code;
             newPoint->x = x;
             newPoint->y = y;
             newPoint->hasZ = false;

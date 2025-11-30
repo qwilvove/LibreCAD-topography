@@ -941,6 +941,24 @@ void Doc_plugin_interface::addArc(QPointF *start, qreal radius, qreal a1, qreal 
 		RS_DEBUG->print("Doc_plugin_interface::addArc: currentContainer is nullptr");
 }
 
+void Doc_plugin_interface::addArcFrom3P(QPointF p1, QPointF p2, QPointF p3){
+    if (doc) {
+        RS_ArcData d = {};
+        RS_Vector v1(p1.x(), p1.y());
+        RS_Vector v2(p2.x(), p2.y());
+        RS_Vector v3(p3.x(), p3.y());
+
+        RS_Arc* entity = new RS_Arc(doc, d);
+        if (entity->createFrom3P(v1, v2, v3))
+        {
+            doc->addEntity(entity);
+            LC_UndoSection undo(doc);
+            undo.addUndoable(entity);
+        }
+    } else
+        RS_DEBUG->print("Doc_plugin_interface::addArc: currentContainer is nullptr");
+}
+
 void Doc_plugin_interface::addEllipse(QPointF *start, QPointF *end, qreal ratio, qreal a1, qreal a2){
     if (doc) {
         RS_Vector v1(start->x(), start->y());

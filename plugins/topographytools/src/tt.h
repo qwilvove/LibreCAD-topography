@@ -22,6 +22,8 @@ enum class LAYER
     NAME,
     ALTI,
 
+    LINES,
+
     VEGETATION,
     ELECTRICITY,
     ROAD
@@ -39,6 +41,8 @@ inline const QMap<LAYER, LayerProperties> LAYERS = {
     { LAYER::POINTS,      { QObject::tr("TT_POINTS"),      0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
     { LAYER::NAME,        { QObject::tr("TT_NAME"),        0x00FFFF, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
     { LAYER::ALTI,        { QObject::tr("TT_ALTI"),        0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
+
+    { LAYER::LINES,       { QObject::tr("TT_LINES"),       0x000000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
 
     { LAYER::VEGETATION,  { QObject::tr("TT_VEGETATION"),  0x00FF00, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },
     { LAYER::ELECTRICITY, { QObject::tr("TT_ELECTRICITY"), 0xFF0000, DPI::LineWidth::WidthDefault, DPI::LineType::SolidLine } },

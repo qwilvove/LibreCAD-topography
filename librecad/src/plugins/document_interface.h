@@ -348,6 +348,7 @@ public:
     *  \param radius radius for circle.
     */
     virtual void addArc(QPointF *start, qreal radius, qreal a1, qreal a2) = 0;
+    virtual void addArcFrom3P(QPointF p1, QPointF p2, QPointF p3) = 0;
 
     //! Add ellipse entity to current document.
     /*! Add ellipse entity to current document with current attributes.
