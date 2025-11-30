@@ -952,7 +952,7 @@ void Doc_plugin_interface::addArcFrom3P(QPointF p1, QPointF p2, QPointF p3){
         if (entity->createFrom3P(v1, v2, v3))
         {
             doc->addEntity(entity);
-            LC_UndoSection undo(doc);
+            LC_UndoSection undo(doc, gView->getViewPort());
             undo.addUndoable(entity);
         }
     } else
