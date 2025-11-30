@@ -88,6 +88,7 @@ public:
 
     void addCircle(QPointF *start, qreal radius) override;
     void addArc(QPointF *start, qreal radius, qreal a1, qreal a2) override;
+    void addArcFrom3P(QPointF p1, QPointF p2, QPointF p3) override;
     void addEllipse(QPointF *start, QPointF *end, qreal ratio, qreal a1, qreal a2) override;
      void addLines(std::vector<QPointF> const& points, bool closed=false) override;
      void addPolyline(std::vector<Plug_VertexData> const& points, bool closed=false) override;

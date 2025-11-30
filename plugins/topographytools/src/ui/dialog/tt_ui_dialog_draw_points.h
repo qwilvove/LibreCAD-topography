@@ -15,18 +15,23 @@ class TT_DialogDrawPoints : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogDrawPoints(QWidget *parent, Document_Interface *doc, QList<TT::Point*> *points, int *nbPointsDrawn, double scale);
+    explicit TT_DialogDrawPoints(QWidget *parent, Document_Interface *doc, TT::PluginSettings *pluginSettings, QList<TT::Point*> *points, int *nbPointsDrawn, double scale);
     ~TT_DialogDrawPoints();
 
 private:
     Ui::TT_DialogDrawPoints *ui;
     Document_Interface *doc;
+    TT::PluginSettings *pluginSettings;
     QList<TT::Point*> *points;
     int *nbPointsDrawn;
     double scale;
 
     int drawPoints();
     void drawPoint(TT::Point *point);
+
+    void drawCodes();
+    void drawLine(std::vector<QPointF> *points);
+    void drawArc(std::vector<QPointF> *points);
 
 private slots:
     void slot_validateInputs();

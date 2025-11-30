@@ -438,7 +438,7 @@ void TT_DialogMain::actionCalculatePoints()
 void TT_DialogMain::actionDrawPoints()
 {
     int nbPointsDrawn = -1;
-    TT_DialogDrawPoints drawPointsDialog(this, doc, &points, &nbPointsDrawn, projectSettings->getScale());
+    TT_DialogDrawPoints drawPointsDialog(this, doc, pluginSettings, &points, &nbPointsDrawn, projectSettings->getScale());
     drawPointsDialog.exec();
 
     if (nbPointsDrawn > -1)

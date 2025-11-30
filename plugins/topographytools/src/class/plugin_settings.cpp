@@ -85,7 +85,7 @@ bool PluginSettings::getAutoSaveOnQuit()
 
 PluginSettings::CODE PluginSettings::getCode(QString codeValue)
 {
-    return codes->value(codeValue);
+    return codes->value(codeValue, CODE::NONE);
 }
 
 void PluginSettings::setFileName(QString fileName)
