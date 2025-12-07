@@ -21,10 +21,13 @@ private:
     TT::PluginSettings *settings;
     Ui::TT_DialogPluginSettings *ui;
 
+    void initUi();
     void displayCurrentSettings();
     void saveSettings();
 
 private slots:
+    void slot_pbLayersSettingsPressed();
+    void slot_pbCodesSettingsPressed();
     void slot_validateInputs();
 };
 

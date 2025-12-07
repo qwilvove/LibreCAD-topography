@@ -15,7 +15,7 @@ class TT_DialogImport : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogImport(QWidget *parent, QList<TT::Point *> &points, int &nbPointsImported);
+    explicit TT_DialogImport(QWidget *parent, QList<TT::Point *> *points, int &nbPointsImported);
     ~TT_DialogImport();
 
 private:
@@ -41,7 +41,7 @@ private slots:
 
 private:
     Ui::TT_DialogImport *ui;
-    QList<TT::Point *> &points;
+    QList<TT::Point *> *points;
     QList<TT::Point *> newPointsFromCsv;
     QList<TT::Point *> newPointsFromGeobase;
     int &nbPointsImported;

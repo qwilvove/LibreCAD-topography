@@ -18,25 +18,25 @@ public:
     explicit TT_DialogDrawBlocks(QWidget *parent = nullptr, Document_Interface *doc = nullptr);
     ~TT_DialogDrawBlocks();
 
-    void loadPreviousState(int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType);
+    void loadPreviousState(int tabIndex, int insertTypeIndex, TT::Block::INSERTION_TYPE insertType);
 
 private:
     Ui::TT_DialogDrawBlocks *ui;
     Document_Interface *doc;
 
-    QList<QList<TT::BLOCK>> blocks;
+    QList<QList<TT::Block>> blocks;
     QList<QList<QToolButton *>> buttons;
-    TT::BLOCK_INSERTION_TYPE currentInsertionType = TT::BLOCK_INSERTION_TYPE::P1;
+    TT::Block::INSERTION_TYPE currentInsertionType = TT::Block::INSERTION_TYPE::P1;
 
     void setupUi();
-    void updateUi(TT::BLOCK_INSERTION_TYPE insertionType);
+    void updateUi(TT::Block::INSERTION_TYPE insertionType);
 
     void createBlockIfNotExists(QString file);
 
-    void drawBlockOnePoint(TT::BLOCK block);
-    void drawBlockTwoPoints(TT::BLOCK block);
-    void drawBlockThreePoints(TT::BLOCK block);
-    void drawBlockTwoPointsPlusValue(TT::BLOCK block);
+    void drawBlockOnePoint(TT::Block block);
+    void drawBlockTwoPoints(TT::Block block);
+    void drawBlockThreePoints(TT::Block block);
+    void drawBlockTwoPointsPlusValue(TT::Block block);
 
 private slots:
     void on_rb1p_clicked();

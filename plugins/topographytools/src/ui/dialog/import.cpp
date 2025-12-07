@@ -4,7 +4,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-TT_DialogImport::TT_DialogImport(QWidget *parent, QList<TT::Point *> &points, int &nbPointsImported) :
+TT_DialogImport::TT_DialogImport(QWidget *parent, QList<TT::Point *> *points, int &nbPointsImported) :
     QDialog(parent),
     ui(new Ui::TT_DialogImport),
     points(points),
@@ -61,7 +61,7 @@ bool TT_DialogImport::loadCsvPointPreview(QString &line)
 {
     bool ok = true;
 
-    double x, y, z;
+    double x, y, z = 0;
     bool hasZ = false;
 
     QStringList splitedLine =  line.split(";");
@@ -75,34 +75,43 @@ bool TT_DialogImport::loadCsvPointPreview(QString &line)
         hasZ = true;
     }
     x = splitedLine.at(0).trimmed().toDouble(&ok);
-    if (!ok) { return false; }
+    if (!ok)
+    {
+        return false;
+    }
     y = splitedLine.at(1).trimmed().toDouble(&ok);
-    if (!ok) { return false; }
+    if (!ok)
+    {
+        return false;
+    }
     if (hasZ)
     {
         z = splitedLine.at(2).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
+        if (!ok)
+        {
+            return false;
+        }
     }
 
     // Create point (Only import points for now)
     TT::Point *point = new TT::Point();
 
-    point->type = TT::Point::TYPE::POINT;
-    point->name = "?";
-    point->x = x;
-    point->y = y;
-    point->hasZ = hasZ;
-    if (point->hasZ)
+    point->setType(TT::Point::TYPE::POINT);
+    point->setName("?");
+    point->setX(x);
+    point->setY(y);
+    point->setHasZ(hasZ);
+    if (point->getHasZ())
     {
-        point->z = z;
+        point->setZ(z);
     }
 
-    int lineNumber = ui->twPointsCsv->rowCount() + 1;
-    ui->twPointsCsv->setRowCount(lineNumber);
+    int newIndex = ui->twPointsCsv->rowCount();
+    ui->twPointsCsv->setRowCount(newIndex + 1);
 
-    ui->twPointsCsv->setItem(lineNumber - 1, 0, point->getQTableWidgetItemType());
-    ui->twPointsCsv->setItem(lineNumber - 1, 1, point->getQTableWidgetItemName());
-    ui->twPointsCsv->setItem(lineNumber - 1, 2, point->getQTableWidgetItemParameters());
+    ui->twPointsCsv->setItem(newIndex, 0, point->getTwiType());
+    ui->twPointsCsv->setItem(newIndex, 1, point->getTwiName());
+    ui->twPointsCsv->setItem(newIndex, 2, point->getTwiParameters());
 
     newPointsFromCsv.append(point);
 
@@ -197,54 +206,106 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
     }
     else if (subStringType == "Point")
     {
-        point->type = TT::Point::TYPE::POINT;
-        point->name = subStringName;
-        point->x = line.mid(44, 14).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->y = line.mid(59, 14).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->z = line.mid(74, 14).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->hasZ = true;
-        if (point->z == -999999)
+        point->setType(TT::Point::TYPE::POINT);
+        point->setName(subStringName);
+        point->setX(line.mid(44, 14).trimmed().toDouble(&ok));
+        if (!ok)
         {
-            point->hasZ = false;
+            delete point;
+            return false;
+        }
+        point->setY(line.mid(59, 14).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setZ(line.mid(74, 14).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setHasZ(true);
+        if (point->getZ() == -999999)
+        {
+            point->setHasZ(false);
         }
     }
     else if (subStringType == "Station")
     {
-        point->type = TT::Point::TYPE::STATION;
-        point->name = subStringName;
-        point->ih = line.mid(43,  8).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->v0 = line.mid(52, 11).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
+        point->setType(TT::Point::TYPE::STATION);
+        point->setName(subStringName);
+        point->setIh(line.mid(43,  8).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setV0(line.mid(52, 11).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
     }
     else if (subStringType == "Reference")
     {
-        point->type = TT::Point::TYPE::REFERENCE;
-        point->name = subStringName;
-        point->ph = line.mid(43,  8).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->ha = line.mid(52, 11).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->va = line.mid(64, 11).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->id = line.mid(76, 10).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
+        point->setType(TT::Point::TYPE::REFERENCE);
+        point->setName(subStringName);
+        point->setPh(line.mid(43,  8).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setHa(line.mid(52, 11).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setVa(line.mid(64, 11).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setId(line.mid(76, 10).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
     }
     else if (subStringType == "Mesure")
     {
-        point->type = TT::Point::TYPE::MEASURE;
-        point->name = subStringName;
-        point->ph = line.mid(43,  8).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->ha = line.mid(52, 11).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->va = line.mid(64, 11).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
-        point->id = line.mid(76, 10).trimmed().toDouble(&ok);
-        if (!ok) { return false; }
+        point->setType(TT::Point::TYPE::MEASURE);
+        point->setName(subStringName);
+        point->setPh(line.mid(43,  8).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setHa(line.mid(52, 11).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setVa(line.mid(64, 11).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
+        point->setId(line.mid(76, 10).trimmed().toDouble(&ok));
+        if (!ok)
+        {
+            delete point;
+            return false;
+        }
     }
     else
     {
@@ -252,12 +313,12 @@ bool TT_DialogImport::loadGeobasePointPreview(QString &line)
         return false;
     }
 
-    int lineNumber = ui->twPointsGeobase->rowCount() + 1;
-    ui->twPointsGeobase->setRowCount(lineNumber);
+    int newIndex = ui->twPointsGeobase->rowCount();
+    ui->twPointsGeobase->setRowCount(newIndex + 1);
 
-    ui->twPointsGeobase->setItem(lineNumber - 1, 0, point->getQTableWidgetItemType());
-    ui->twPointsGeobase->setItem(lineNumber - 1, 1, point->getQTableWidgetItemName());
-    ui->twPointsGeobase->setItem(lineNumber - 1, 2, point->getQTableWidgetItemParameters());
+    ui->twPointsGeobase->setItem(newIndex, 0, point->getTwiType());
+    ui->twPointsGeobase->setItem(newIndex, 1, point->getTwiName());
+    ui->twPointsGeobase->setItem(newIndex, 2, point->getTwiParameters());
 
     newPointsFromGeobase.append(point);
 
@@ -337,11 +398,11 @@ void TT_DialogImport::on_buttonBox_accepted()
 {
     switch (ui->comboBox->currentIndex()) {
     case 0:
-        points.append(newPointsFromCsv);
+        points->append(newPointsFromCsv);
         nbPointsImported = newPointsFromCsv.size();
         break;
     case 1:
-        points.append(newPointsFromGeobase);
+        points->append(newPointsFromGeobase);
         nbPointsImported = newPointsFromGeobase.size();
         break;
     default:

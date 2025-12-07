@@ -15,6 +15,44 @@ public:
         MEASURE
     };
 
+    Point();
+
+    static QString getTypeName(TYPE type);
+    static QColor getTypeColour(TYPE type);
+
+    TYPE getType();
+    QString getName();
+    QString getCode();
+    double getX();
+    double getY();
+    bool getHasZ();
+    double getZ();
+    double getIh();
+    double getV0();
+    double getPh();
+    double getHa();
+    double getVa();
+    double getId();
+    QTableWidgetItem* getTwiType();
+    QTableWidgetItem* getTwiName();
+    QTableWidgetItem* getTwiCode();
+    QTableWidgetItem* getTwiParameters();
+
+    void setType(TYPE type);
+    void setName(QString name);
+    void setCode(QString code);
+    void setX(double x);
+    void setY(double y);
+    void setHasZ(bool hasZ);
+    void setZ(double z);
+    void setIh(double ih);
+    void setV0(double v0);
+    void setPh(double ph);
+    void setHa(double ha);
+    void setVa(double va);
+    void setId(double id);
+
+private:
     struct TypeProperties
     {
         QString name;
@@ -22,9 +60,6 @@ public:
     };
 
     static const QMap<TYPE, TypeProperties> TYPES;
-
-    Point();
-    ~Point();
 
     TYPE type;
     QString name;
@@ -39,11 +74,6 @@ public:
     double ha; // Horizontal angle     - for REFERENCE & MEASURE
     double va; // Vertical angle       - for REFERENCE & MEASURE
     double id; // Inclined distance    - for REFERENCE & MEASURE
-
-    QTableWidgetItem* getQTableWidgetItemType();
-    QTableWidgetItem* getQTableWidgetItemName();
-    QTableWidgetItem* getQTableWidgetItemCode();
-    QTableWidgetItem* getQTableWidgetItemParameters();
 };
 
 #endif // TT_CLASS_POINT_H

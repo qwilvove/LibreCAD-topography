@@ -1,41 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TT_DialogDrawPoints</class>
- <widget class="QDialog" name="TT_DialogDrawPoints">
+ <class>TT_DialogCodeAdd</class>
+ <widget class="QDialog" name="TT_DialogCodeAdd">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>300</width>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Draw points</string>
+   <string>Add a code</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0">
-      <widget class="QCheckBox" name="ck_addName">
+      <widget class="QLabel" name="lb_code">
        <property name="text">
-        <string>Add name label next to drawn points</string>
+        <string>Code</string>
        </property>
       </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="le_code"/>
      </item>
      <item row="1" column="0">
-      <widget class="QCheckBox" name="ck_addHeight">
+      <widget class="QLabel" name="lb_type">
        <property name="text">
-        <string>Add height label next to drawn points</string>
+        <string>Type</string>
        </property>
       </widget>
      </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="cb_type"/>
+     </item>
      <item row="2" column="0">
-      <widget class="QCheckBox" name="ck_useCodes">
+      <widget class="QLabel" name="lb_blockName">
        <property name="text">
-        <string>Draw using codes</string>
+        <string>Block name</string>
        </property>
       </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="le_blockName">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lb_layer">
+       <property name="text">
+        <string>Layer</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="cb_layer"/>
      </item>
     </layout>
    </item>
@@ -64,12 +87,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>le_code</tabstop>
+  <tabstop>cb_type</tabstop>
+  <tabstop>le_blockName</tabstop>
+  <tabstop>cb_layer</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>TT_DialogDrawPoints</receiver>
+   <receiver>TT_DialogCodeAdd</receiver>
    <slot>slot_validateInputs()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -85,7 +114,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>TT_DialogDrawPoints</receiver>
+   <receiver>TT_DialogCodeAdd</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -98,8 +127,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>cb_type</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>TT_DialogCodeAdd</receiver>
+   <slot>slot_cbTypeCurrentIndexChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>194</x>
+     <y>56</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>149</x>
+     <y>124</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
+  <slot>slot_cbTypeCurrentIndexChanged()</slot>
   <slot>slot_validateInputs()</slot>
  </slots>
 </ui>

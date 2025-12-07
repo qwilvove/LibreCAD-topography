@@ -26,45 +26,45 @@ void TT_DialogAdd::saveData()
 {
     if (ui->cbType->currentIndex() == TT::Point::TYPE::POINT)
     {
-        tempPoint.type = TT::Point::TYPE::POINT;
-        tempPoint.name = ui->leName->text().trimmed();
-        tempPoint.x    = ui->leX->text().toDouble();
-        tempPoint.y    = ui->leY->text().toDouble();
-        tempPoint.hasZ = ui->cbHasZ->isChecked();
-        if (tempPoint.hasZ)
+        tempPoint.setType(TT::Point::TYPE::POINT);
+        tempPoint.setName(ui->leName->text().trimmed());
+        tempPoint.setX(ui->leX->text().toDouble());
+        tempPoint.setY(ui->leY->text().toDouble());
+        tempPoint.setHasZ(ui->cbHasZ->isChecked());
+        if (ui->cbHasZ->isChecked())
         {
-            tempPoint.z = ui->leZ->text().toDouble();
+            tempPoint.setZ(ui->leZ->text().toDouble());
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::STATION)
     {
         bool ok = true;
-        tempPoint.type = TT::Point::TYPE::STATION;
-        tempPoint.name = ui->leName->text().trimmed();
-        tempPoint.ih   = ui->leIh->text().toDouble();
-        tempPoint.v0   = ui->leV0->text().toDouble(&ok);
+        tempPoint.setType(TT::Point::TYPE::STATION);
+        tempPoint.setName(ui->leName->text().trimmed());
+        tempPoint.setIh(ui->leIh->text().toDouble());
+        tempPoint.setV0(ui->leV0->text().toDouble(&ok));
         if (!ok)
         {
-            tempPoint.v0 = -1;
+            tempPoint.setV0(-1);
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::REFERENCE)
     {
-        tempPoint.type = TT::Point::TYPE::REFERENCE;
-        tempPoint.name = ui->leName->text().trimmed();
-        tempPoint.ph   = ui->lePh->text().toDouble();
-        tempPoint.ha   = ui->leHa->text().toDouble();
-        tempPoint.va   = ui->leVa->text().toDouble();
-        tempPoint.id   = ui->leId->text().toDouble();
+        tempPoint.setType(TT::Point::TYPE::REFERENCE);
+        tempPoint.setName(ui->leName->text().trimmed());
+        tempPoint.setPh(ui->lePh->text().toDouble());
+        tempPoint.setHa(ui->leHa->text().toDouble());
+        tempPoint.setVa(ui->leVa->text().toDouble());
+        tempPoint.setId(ui->leId->text().toDouble());
     }
     else // ui->cbType->currentIndex() == TT::Point::TYPE::MEASURE
     {
-        tempPoint.type = TT::Point::TYPE::MEASURE;
-        tempPoint.name = ui->leName->text().trimmed();
-        tempPoint.ph   = ui->lePh->text().toDouble();
-        tempPoint.ha   = ui->leHa->text().toDouble();
-        tempPoint.va   = ui->leVa->text().toDouble();
-        tempPoint.id   = ui->leId->text().toDouble();
+        tempPoint.setType(TT::Point::TYPE::MEASURE);
+        tempPoint.setName(ui->leName->text().trimmed());
+        tempPoint.setPh(ui->lePh->text().toDouble());
+        tempPoint.setHa(ui->leHa->text().toDouble());
+        tempPoint.setVa(ui->leVa->text().toDouble());
+        tempPoint.setId(ui->leId->text().toDouble());
     }
 
     *point = tempPoint;

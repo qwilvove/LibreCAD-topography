@@ -27,9 +27,10 @@ private:
     double scale;
 
     int drawPoints();
-    void drawPoint(TT::Point *point);
+    void drawPoint(TT::Point *point, QString pPlayerName, QString nLayerName, QString aLayerName);
 
     void drawCodes();
+    void drawLineCode(TT::Code::TYPE currentCodeType, TT::Code::TYPE lastCodeType, QPointF *firstPointOfTheShape, QPointF *insertionPoint, std::vector<QPointF> *currentLine, std::vector<QPointF> *currentArc);
     void drawLine(std::vector<QPointF> *points);
     void drawArc(std::vector<QPointF> *points);
 

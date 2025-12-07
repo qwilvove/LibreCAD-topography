@@ -24,7 +24,7 @@
        <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -52,7 +52,7 @@
           <string>Add station</string>
          </property>
          <property name="icon">
-          <iconset resource="icons/icons.qrc">
+          <iconset resource="../../../res/icons/icons.qrc">
            <normaloff>:/icons/right.svg</normaloff>:/icons/right.svg</iconset>
          </property>
          <property name="iconSize">
@@ -75,7 +75,7 @@
           <string>Remove station</string>
          </property>
          <property name="icon">
-          <iconset resource="icons/icons.qrc">
+          <iconset resource="../../../res/icons/icons.qrc">
            <normaloff>:/icons/left.svg</normaloff>:/icons/left.svg</iconset>
          </property>
          <property name="iconSize">
@@ -89,7 +89,7 @@
        <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Vertical</enum>
+          <enum>Qt::Orientation::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -123,7 +123,7 @@
             <string>Move line up</string>
            </property>
            <property name="icon">
-            <iconset resource="icons/icons.qrc">
+            <iconset resource="../../../res/icons/icons.qrc">
              <normaloff>:/icons/up.svg</normaloff>:/icons/up.svg</iconset>
            </property>
            <property name="iconSize">
@@ -155,7 +155,7 @@
             <string>Move line down</string>
            </property>
            <property name="icon">
-            <iconset resource="icons/icons.qrc">
+            <iconset resource="../../../res/icons/icons.qrc">
              <normaloff>:/icons/down.svg</normaloff>:/icons/down.svg</iconset>
            </property>
            <property name="iconSize">
@@ -172,7 +172,7 @@
          <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -223,14 +223,14 @@
       <bool>false</bool>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
  <resources>
-  <include location="icons/icons.qrc"/>
+  <include location="../../../res/icons/icons.qrc"/>
  </resources>
  <connections>
   <connection>

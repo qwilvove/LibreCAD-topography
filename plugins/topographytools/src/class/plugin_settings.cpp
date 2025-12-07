@@ -2,29 +2,30 @@
 
 #include <QSettings>
 
-const QMap<QString, PluginSettings::CODE> PluginSettings::DEFAULT_CODES = {
-    { "0", PluginSettings::CODE::LINE_INIT         },
-    { "1", PluginSettings::CODE::LINE_CONTINUE     },
-    { "2", PluginSettings::CODE::ARC_INIT          },
-    { "3", PluginSettings::CODE::ARC_MIDDLE        },
-    { "4", PluginSettings::CODE::ARC_CONTINUE      },
-    { "5", PluginSettings::CODE::OFFSET            },
-    { "6", PluginSettings::CODE::ORIENTATION       },
-    { "7", PluginSettings::CODE::CLOSE_WITH_OFFSET },
-    { "8", PluginSettings::CODE::CLOSE             },
-    { "9", PluginSettings::CODE::END               }
-};
-
 PluginSettings::PluginSettings()
 {
     this->fileName = "";
     this->autoSaveOnQuit = false;
-    this->codes = new QMap(PluginSettings::DEFAULT_CODES);
+    this->insertionLayerPoint = "";
+    this->insertionLayerName = "";
+    this->insertionLayerAlti = "";
+    this->codes = new QList<Code*>();
+    this->layers = new QList<Layer*>();
 }
 
 PluginSettings::~PluginSettings()
 {
+    for (Code *c : *this->codes)
+    {
+        delete c;
+    }
     delete this->codes;
+
+    for (Layer *l : *this->layers)
+    {
+        delete l;
+    }
+    delete this->layers;
 }
 
 bool PluginSettings::read()
@@ -32,25 +33,32 @@ bool PluginSettings::read()
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
     fileName = settings.value("fileName", fileName).toString();
     autoSaveOnQuit = settings.value("autoSaveOnQuit", autoSaveOnQuit).toBool();
+    insertionLayerPoint = settings.value("insertionLayerPoint", insertionLayerPoint).toString();
+    insertionLayerName = settings.value("insertionLayerName", insertionLayerName).toString();
+    insertionLayerAlti = settings.value("insertionLayerAlti", insertionLayerAlti).toString();
 
-    bool mapCleared = false;
+    layers->clear();
+    foreach (const QString &key, settings.allKeys())
+    {
+        if (key.startsWith("Layers/"))
+        {
+            QString name = key;
+            name.remove(0,7); // e.g. Layers/Foo to Foo
+            QStringList list = settings.value(key, "").toString().split(",");
+            layers->append(new Layer(name, QColor(list.at(0)), (DPI::LineWidth)list.at(1).toInt(), (DPI::LineType)list.at(2).toInt()));
+        }
+    }
+
+    codes->clear();
     foreach (const QString &key, settings.allKeys())
     {
         if (key.startsWith("Codes/"))
         {
-            int value = settings.value(key, 0).toInt();
-            if ((CODE)value == CODE::NONE || DEFAULT_CODES.values().contains((CODE)value))
-            {
-                if (!mapCleared) // Clear Map only if at least one valid code is set in settings, otherwise don't clear (use defaults)
-                {
-                    codes->clear();
-                    mapCleared = true;
-                }
-
-                QString editedKey(key);
-                editedKey.remove(0,6); // e.g. Codes/1 to 1
-                codes->insert(editedKey, (CODE)value);
-            }
+            QString code = key;
+            code.remove(0,6); // e.g. Codes/10 to 10
+            QStringList list = settings.value(key, "").toString().split(",");
+            Layer *layer = getLayerByName(list.at(2));
+            codes->append(new Code(code, (Code::TYPE)list.at(0).toInt(), list.at(1), layer));
         }
     }
 
@@ -60,13 +68,24 @@ bool PluginSettings::read()
 bool PluginSettings::write()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "LibreCAD", "topographytools");
+    settings.clear();
     settings.setValue("fileName", fileName);
     settings.setValue("autoSaveOnQuit", autoSaveOnQuit);
+    settings.setValue("insertionLayerPoint", insertionLayerPoint);
+    settings.setValue("insertionLayerName", insertionLayerName);
+    settings.setValue("insertionLayerAlti", insertionLayerAlti);
+
+    settings.beginGroup("Layers");
+    for (Layer *l : *layers)
+    {
+        settings.setValue(l->getName(), QString("%1,%2,%3").arg(l->getColour().name(), QString::number((int)l->getLineWidth()), QString::number((int)l->getLineType())));
+    }
+    settings.endGroup();
 
     settings.beginGroup("Codes");
-    for (auto it = codes->keyValueBegin(); it != codes->keyValueEnd(); ++it)
+    for (Code *c : *codes)
     {
-        settings.setValue(it->first, (int)it->second);
+        settings.setValue(c->getCode(), QString("%1,%2,%3").arg(QString::number((int)(c->getType())), c->getBlockName(), c->getLayer()->getName()));
     }
     settings.endGroup();
 
@@ -83,9 +102,61 @@ bool PluginSettings::getAutoSaveOnQuit()
     return autoSaveOnQuit;
 }
 
-PluginSettings::CODE PluginSettings::getCode(QString codeValue)
+QString PluginSettings::getInsertionLayerPoint()
 {
-    return codes->value(codeValue, CODE::NONE);
+    return insertionLayerPoint;
+}
+
+QString PluginSettings::getInsertionLayerName()
+{
+    return insertionLayerName;
+}
+
+QString PluginSettings::getInsertionLayerAlti()
+{
+    return insertionLayerAlti;
+}
+
+QList<Layer*> *PluginSettings::getLayers()
+{
+    return layers;
+}
+
+Layer *PluginSettings::getLayerByName(QString name)
+{
+    Layer *layer = nullptr;
+
+    for (Layer *l : *layers)
+    {
+        if (l->getName() == name)
+        {
+            layer = l;
+            break;
+        }
+    }
+
+    return layer;
+}
+
+QList<Code *> *PluginSettings::getCodes()
+{
+    return codes;
+}
+
+Code *PluginSettings::getCodeByCode(QString code)
+{
+    Code *returned_code = nullptr;
+
+    for (Code *c : *codes)
+    {
+        if (c->getCode() == code)
+        {
+            returned_code = c;
+            break;
+        }
+    }
+
+    return returned_code;
 }
 
 void PluginSettings::setFileName(QString fileName)
@@ -98,7 +169,55 @@ void PluginSettings::setAutoSaveOnQuit(bool autoSaveOnQuit)
     this->autoSaveOnQuit = autoSaveOnQuit;
 }
 
-void PluginSettings::setCode(QString codeValue, PluginSettings::CODE codeAction)
+void PluginSettings::setInsertionLayerPoint(QString insertionLayerPoint)
 {
-    this->codes->insert(codeValue, codeAction);
+    this->insertionLayerPoint = insertionLayerPoint;
+}
+
+void PluginSettings::setInsertionLayerName(QString insertionLayerName)
+{
+    this->insertionLayerName = insertionLayerName;
+}
+
+void PluginSettings::setInsertionLayerAlti(QString insertionLayerAlti)
+{
+    this->insertionLayerAlti = insertionLayerAlti;
+}
+
+bool PluginSettings::removeLayerAt(int index)
+{
+    if (index < 0 || index >= layers->size())
+    {
+        return false;
+    }
+
+    Layer *layer = layers->at(index);
+
+    for (Code *c : *codes)
+    {
+        if (c->getLayer() == layer)
+        {
+            return false;
+        }
+    }
+
+    layers->removeAt(index);
+    delete layer;
+
+    return true;
+}
+
+bool PluginSettings::removeCodeAt(int index)
+{
+    if (index < 0 || index >= codes->size())
+    {
+        return false;
+    }
+
+    Code *code = codes->at(index);
+
+    codes->removeAt(index);
+    delete code;
+
+    return true;
 }
