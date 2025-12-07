@@ -224,6 +224,16 @@ set(SHARED_INCLUDES
     librecad/src/ui/view
 )
 
+set(LIBRECAD_RES
+    librecad/res/arrows/arrows.qrc
+    librecad/res/controls/controls.qrc
+    librecad/res/dxf/dxf.qrc
+    librecad/res/gdt/gdt.qrc
+    librecad/res/icons/icons.qrc
+    librecad/res/images/images.qrc
+    licenses/licenses.qrc
+)
+
 # Shared sources: All from SOURCES except main, consoles, and tests
 set(SHARED_SOURCES
     libraries/jwwlib/src/dl_attributes.h
@@ -738,6 +748,8 @@ set(SHARED_SOURCES
     librecad/src/lib/engine/document/entities/lc_parabola.cpp
     librecad/src/lib/engine/document/entities/lc_rect.cpp
     librecad/src/lib/engine/document/entities/lc_rect.h
+    librecad/src/lib/engine/document/entities/lc_splinehelper.cpp
+    librecad/src/lib/engine/document/entities/lc_splinehelper.h
     librecad/src/lib/engine/document/entities/lc_splinepoints.cpp
     librecad/src/lib/engine/document/entities/lc_splinepoints.h
     librecad/src/lib/engine/document/entities/lc_tolerance.cpp
@@ -1556,13 +1568,7 @@ set(MAIN_SOURCES
     librecad/src/main/console_dxf2png.h
     librecad/src/ui/dialogs/main/qg_dlginitial.cpp
     librecad/src/ui/dialogs/main/qg_dlginitial.h
-    librecad/res/arrows/arrows.qrc
-    librecad/res/controls/controls.qrc
-    librecad/res/dxf/dxf.qrc
-    librecad/res/gdt/gdt.qrc
-    librecad/res/icons/icons.qrc
-    librecad/res/images/images.qrc
-    licenses/licenses.qrc
+    ${LIBRECAD_RES}
 )
 
 # Main executable
@@ -1580,7 +1586,7 @@ target_link_libraries(librecad PRIVATE
 install(TARGETS librecad RUNTIME DESTINATION bin)
 
 # Translations
-set(TS_DIR ../librecad/ts)
+set(TS_DIR librecad/ts)
 set(TS_FILES
     librecad/ts/librecad_ar.ts
     librecad/ts/librecad_ca.ts
@@ -1672,9 +1678,12 @@ if(BUILD_TESTS)
 	# this is needed to allow testing methods used by main()
 	# main() is excluded when BUILD_TEST=ON
 	${MAIN_SOURCES}
+        ${LIBRECAD_RES}
 	### The actual tests
-        librecad/src/lib/math/tests/rs_math_tests.cpp
+        librecad/src/lib/engine/document/entities/tests/lc_splinehelper_tests.cpp
         librecad/src/lib/engine/document/entities/tests/rs_ellipse_tests.cpp
+        librecad/src/lib/engine/document/entities/tests/rs_spline_tests.cpp
+        librecad/src/lib/math/tests/rs_math_tests.cpp
     )
 
     # Include directories for rs_math.h and other dependencies
