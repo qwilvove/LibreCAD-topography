@@ -4,7 +4,7 @@
 #include <QCheckBox>
 #include <QMessageBox>
 
-TT_DialogPoints::TT_DialogPoints(QWidget *parent, QList<TT::Point *> &points) :
+TT_DialogPoints::TT_DialogPoints(QWidget *parent, QList<TT::Point *> *points) :
     QDialog(parent),
     ui(new Ui::TT_DialogPoints),
     points(points)
@@ -22,22 +22,22 @@ TT_DialogPoints::~TT_DialogPoints()
 
 void TT_DialogPoints::identifyStationsAndMeasures()
 {
-    for (int i = 0; i < points.size(); )
+    for (int i = 0; i < points->size(); )
     {
-        if (points.at(i)->type == TT::Point::TYPE::STATION)
+        if (points->at(i)->getType() == TT::Point::TYPE::STATION)
         {
-            TT::Point *currentStation = points.at(i);
+            TT::Point *currentStation = points->at(i);
             QList<TT::Point*> currentMeasures = {};
 
             do
             {
                 i++;
-                if (i < points.size() && points.at(i)->type == TT::Point::TYPE::MEASURE)
+                if (i < points->size() && points->at(i)->getType() == TT::Point::TYPE::MEASURE)
                 {
-                    currentMeasures.append(points.at(i));
+                    currentMeasures.append(points->at(i));
                 }
             }
-            while (i < points.size() && points.at(i)->type != TT::Point::TYPE::STATION);
+            while (i < points->size() && points->at(i)->getType() != TT::Point::TYPE::STATION);
 
             stations.append(currentStation);
             measures.append(currentMeasures);
@@ -54,7 +54,7 @@ void TT_DialogPoints::setupCheckBoxes()
     for (int i = 0; i < stations.size(); i++)
     {
         QCheckBox *cb = new QCheckBox(this);
-        cb->setText(stations.at(i)->name);
+        cb->setText(stations.at(i)->getName());
         ui->verticalLayout_2->addWidget(cb);
     }
 }
@@ -100,19 +100,19 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
     for (int i = 0; i < selectedStations.size(); i++)
     {
         bool found = false;
-        for (int j = 0; j < points.size(); j++)
+        for (int j = 0; j < points->size(); j++)
         {
-            if (points.at(j)->type == TT::Point::TYPE::POINT && points.at(j)->name == selectedStations.at(i)->name)
+            if (points->at(j)->getType() == TT::Point::TYPE::POINT && points->at(j)->getName() == selectedStations.at(i)->getName())
             {
-                stationsCoordinates.append(points.at(j));
-                calculateWithZ.append(points.at(j)->hasZ);
+                stationsCoordinates.append(points->at(j));
+                calculateWithZ.append(points->at(j)->getHasZ());
                 found = true;
                 break;
             }
         }
         if (!found)
         {
-            QMessageBox::warning(this, tr("Error!"), tr("Station %1 has no coordinates!").arg(selectedStations.at(i)->name), QMessageBox::StandardButton::Ok);
+            QMessageBox::warning(this, tr("Error!"), tr("Station %1 has no coordinates!").arg(selectedStations.at(i)->getName()), QMessageBox::StandardButton::Ok);
             return;
         }
     }
@@ -120,9 +120,9 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
     // Check if each checked station has v0
     for (int i = 0; i < selectedStations.size(); i++)
     {
-        if (selectedStations.at(i)->v0 < 0)
+        if (selectedStations.at(i)->getV0() < 0)
         {
-            QMessageBox::warning(this, tr("Error!"), tr("Station %1 has no v0!").arg(selectedStations.at(i)->name), QMessageBox::StandardButton::Ok);
+            QMessageBox::warning(this, tr("Error!"), tr("Station %1 has no v0!").arg(selectedStations.at(i)->getName()), QMessageBox::StandardButton::Ok);
             return;
         }
     }
@@ -135,32 +135,32 @@ void TT_DialogPoints::on_pbCalculatePoints_clicked()
         for (int j = 0; j < selectedMeasures.at(i).size(); j++)
         {
             // Calculate horizontal distance
-            double va = selectedMeasures.at(i).at(j)->va;
-            double id = selectedMeasures.at(i).at(j)->id;
+            double va = selectedMeasures.at(i).at(j)->getVa();
+            double id = selectedMeasures.at(i).at(j)->getId();
             double horizontalDistance = id * std::sin(va * M_PI / 200.0);
 
             // Calculate X
-            double x = stationsCoordinates.at(i)->x + horizontalDistance * std::sin(( selectedStations.at(i)->v0 + selectedMeasures.at(i).at(j)->ha ) * M_PI / 200.0);
+            double x = stationsCoordinates.at(i)->getX() + horizontalDistance * std::sin(( selectedStations.at(i)->getV0() + selectedMeasures.at(i).at(j)->getHa() ) * M_PI / 200.0);
 
             // Calculate Y
-            double y = stationsCoordinates.at(i)->y + horizontalDistance * std::cos(( selectedStations.at(i)->v0 + selectedMeasures.at(i).at(j)->ha ) * M_PI / 200.0);
+            double y = stationsCoordinates.at(i)->getY() + horizontalDistance * std::cos(( selectedStations.at(i)->getV0() + selectedMeasures.at(i).at(j)->getHa() ) * M_PI / 200.0);
 
             TT::Point* newPoint = new TT::Point();
-            newPoint->type = TT::Point::TYPE::POINT;
-            newPoint->name = selectedMeasures.at(i).at(j)->name;
-            newPoint->code = selectedMeasures.at(i).at(j)->code;
-            newPoint->x = x;
-            newPoint->y = y;
-            newPoint->hasZ = false;
-            newPoint->z = 0.0;
+            newPoint->setType(TT::Point::TYPE::POINT);
+            newPoint->setName(selectedMeasures.at(i).at(j)->getName());
+            newPoint->setCode(selectedMeasures.at(i).at(j)->getCode());
+            newPoint->setX(x);
+            newPoint->setY(y);
+            newPoint->setHasZ(false);
+            newPoint->setZ(0.0);
 
             // If needed, calculate Z
             if (calculateWithZ.at(i))
             {
-                double z = stationsCoordinates.at(i)->z + selectedStations.at(i)->ih + id * std::cos(va * M_PI / 200.0) - selectedMeasures.at(i).at(j)->ph;
+                double z = stationsCoordinates.at(i)->getZ() + selectedStations.at(i)->getIh() + id * std::cos(va * M_PI / 200.0) - selectedMeasures.at(i).at(j)->getPh();
 
-                newPoint->hasZ = true;
-                newPoint->z = z;
+                newPoint->setHasZ(true);
+                newPoint->setZ(z);
             }
             newPointsForTheStation.append(newPoint);
             nbMeasuresCalculated++;
@@ -179,7 +179,7 @@ void TT_DialogPoints::on_buttonBox_accepted()
     {
         for (int j = 0; j < newPoints.at(i).size(); j++)
         {
-            points.append(newPoints.at(i).at(j));
+            points->append(newPoints.at(i).at(j));
         }
     }
 }

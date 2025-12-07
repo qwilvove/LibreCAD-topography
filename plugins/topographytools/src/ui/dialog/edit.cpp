@@ -24,35 +24,35 @@ TT_DialogEdit::~TT_DialogEdit()
 
 void TT_DialogEdit::loadData()
 {
-    ui->cbType->setCurrentIndex(point->type);
-    ui->leName->setText(point->name);
-    ui->leCode->setText(point->code);
+    ui->cbType->setCurrentIndex(point->getType());
+    ui->leName->setText(point->getName());
+    ui->leCode->setText(point->getCode());
 
     if (ui->cbType->currentIndex() == TT::Point::TYPE::POINT)
     {
-        ui->leX->setText(QString("%1").arg(point->x, 0, 'f', 3));
-        ui->leY->setText(QString("%1").arg(point->y, 0, 'f', 3));
-        ui->cbHasZ->setChecked(point->hasZ);
-        if (point->hasZ)
+        ui->leX->setText(QString("%1").arg(point->getX(), 0, 'f', 3));
+        ui->leY->setText(QString("%1").arg(point->getY(), 0, 'f', 3));
+        ui->cbHasZ->setChecked(point->getHasZ());
+        if (point->getHasZ())
         {
-            ui->leZ->setText(QString("%1").arg(point->z, 0, 'f', 3));
+            ui->leZ->setText(QString("%1").arg(point->getZ(), 0, 'f', 3));
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::STATION)
     {
-        ui->leIh->setText(QString("%1").arg(point->ih, 0, 'f', 3));
-        if (point->v0 >= 0)
+        ui->leIh->setText(QString("%1").arg(point->getIh(), 0, 'f', 3));
+        if (point->getV0() >= 0)
         {
-            ui->leV0->setText(QString("%1").arg(point->v0, 0, 'f', 5));
+            ui->leV0->setText(QString("%1").arg(point->getV0(), 0, 'f', 5));
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::REFERENCE ||
              ui->cbType->currentIndex() == TT::Point::TYPE::MEASURE)
     {
-        ui->lePh->setText(QString("%1").arg(point->ph, 0, 'f', 3));
-        ui->leHa->setText(QString("%1").arg(point->ha, 0, 'f', 5));
-        ui->leVa->setText(QString("%1").arg(point->va, 0, 'f', 5));
-        ui->leId->setText(QString("%1").arg(point->id, 0, 'f', 3));
+        ui->lePh->setText(QString("%1").arg(point->getPh(), 0, 'f', 3));
+        ui->leHa->setText(QString("%1").arg(point->getHa(), 0, 'f', 5));
+        ui->leVa->setText(QString("%1").arg(point->getVa(), 0, 'f', 5));
+        ui->leId->setText(QString("%1").arg(point->getId(), 0, 'f', 3));
     }
 
     ui->buttonBox->setEnabled(true);
@@ -60,46 +60,46 @@ void TT_DialogEdit::loadData()
 
 void TT_DialogEdit::saveData()
 {
-    point->name = ui->leName->text().trimmed();
-    point->code = ui->leCode->text().trimmed();
+    point->setName(ui->leName->text().trimmed());
+    point->setCode(ui->leCode->text().trimmed());
 
     if (ui->cbType->currentIndex() == TT::Point::TYPE::POINT)
     {
-        point->type = TT::Point::TYPE::POINT;
-        point->x    = ui->leX->text().toDouble();
-        point->y    = ui->leY->text().toDouble();
-        point->hasZ = ui->cbHasZ->isChecked();
-        if (point->hasZ)
+        point->setType(TT::Point::TYPE::POINT);
+        point->setX(ui->leX->text().toDouble());
+        point->setY(ui->leY->text().toDouble());
+        point->setHasZ(ui->cbHasZ->isChecked());
+        if (ui->cbHasZ->isChecked())
         {
-            point->z = ui->leZ->text().toDouble();
+            point->setZ(ui->leZ->text().toDouble());
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::STATION)
     {
         bool ok = true;
-        point->type = TT::Point::TYPE::STATION;
-        point->ih   = ui->leIh->text().toDouble();
-        point->v0   = ui->leV0->text().toDouble(&ok);
+        point->setType(TT::Point::TYPE::STATION);
+        point->setIh(ui->leIh->text().toDouble());
+        point->setV0(ui->leV0->text().toDouble(&ok));
         if (!ok)
         {
-            point->v0 = -1;
+            point->setV0(-1);
         }
     }
     else if (ui->cbType->currentIndex() == TT::Point::TYPE::REFERENCE)
     {
-        point->type = TT::Point::TYPE::REFERENCE;
-        point->ph   = ui->lePh->text().toDouble();
-        point->ha   = ui->leHa->text().toDouble();
-        point->va   = ui->leVa->text().toDouble();
-        point->id   = ui->leId->text().toDouble();
+        point->setType(TT::Point::TYPE::REFERENCE);
+        point->setPh(ui->lePh->text().toDouble());
+        point->setHa(ui->leHa->text().toDouble());
+        point->setVa(ui->leVa->text().toDouble());
+        point->setId(ui->leId->text().toDouble());
     }
     else // ui->cbType->currentIndex() == TT::Point::TYPE::MEASURE
     {
-        point->type = TT::Point::TYPE::MEASURE;
-        point->ph   = ui->lePh->text().toDouble();
-        point->ha   = ui->leHa->text().toDouble();
-        point->va   = ui->leVa->text().toDouble();
-        point->id   = ui->leId->text().toDouble();
+        point->setType(TT::Point::TYPE::MEASURE);
+        point->setPh(ui->lePh->text().toDouble());
+        point->setHa(ui->leHa->text().toDouble());
+        point->setVa(ui->leVa->text().toDouble());
+        point->setId(ui->leId->text().toDouble());
     }
 }
 

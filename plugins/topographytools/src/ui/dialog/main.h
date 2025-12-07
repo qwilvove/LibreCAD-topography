@@ -23,7 +23,7 @@ struct State
     // If DRAW_BLOCKS
     int tabIndex;
     int insertTypeIndex;
-    TT::BLOCK_INSERTION_TYPE insertType;
+    TT::Block::INSERTION_TYPE insertType;
 };
 
 class TT_DialogMain : public QDialog
@@ -36,7 +36,7 @@ public:
 
     bool isRunning;
 
-    void savePreviousState(DIALOG dialog = DIALOG::NONE, int tabIndex = 0, int insertTypeIndex = 0, TT::BLOCK_INSERTION_TYPE insertType = TT::BLOCK_INSERTION_TYPE::P1);
+    void savePreviousState(DIALOG dialog = DIALOG::NONE, int tabIndex = 0, int insertTypeIndex = 0, TT::Block::INSERTION_TYPE insertType = TT::Block::INSERTION_TYPE::P1);
 
 protected:
     void showEvent(QShowEvent *event) override;
@@ -46,13 +46,12 @@ private:
     Document_Interface *doc;
     TT::PluginSettings *pluginSettings;
     TT::ProjectSettings *projectSettings;
-    QList<TT::Point*> points;
+    QList<TT::Point*> *points;
     State previousState;
 
     void initMenuBarAndToolbar();
 
     void loadTtFile();
-    void loadPreviousState();
 
     void displayPoints();
     void displayPoint(TT::Point *point);
@@ -69,6 +68,8 @@ private:
     void drawPoint(TT::Point *point);
 
 private slots:
+    void loadPreviousState();
+
     void actionNew();
     void actionOpen();
     void actionSave();

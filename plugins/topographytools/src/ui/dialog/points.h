@@ -14,7 +14,7 @@ class TT_DialogPoints : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogPoints(QWidget *parent, QList<TT::Point *> &points);
+    explicit TT_DialogPoints(QWidget *parent, QList<TT::Point *> *points);
     ~TT_DialogPoints();
 
 private slots:
@@ -30,7 +30,7 @@ private slots:
 
 private:
     Ui::TT_DialogPoints *ui;
-    QList<TT::Point *> &points;
+    QList<TT::Point *> *points;
 
     QList<TT::Point*> stations;
     QList<QList<TT::Point*>> measures;

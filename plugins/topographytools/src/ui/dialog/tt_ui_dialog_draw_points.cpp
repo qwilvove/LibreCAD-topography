@@ -1,6 +1,8 @@
 #include "tt_ui_dialog_draw_points.h"
 #include "ui_tt_ui_dialog_draw_points.h"
 
+#include <QMessageBox>
+
 TT_DialogDrawPoints::TT_DialogDrawPoints(QWidget *parent, Document_Interface *doc, TT::PluginSettings *pluginSettings, QList<TT::Point*> *points, int *nbPointsDrawn, double scale):
     QDialog(parent),
     ui(new Ui::TT_DialogDrawPoints),
@@ -26,35 +28,66 @@ int TT_DialogDrawPoints::drawPoints()
         return 0;
     }
 
-    // Check if layers already exist
     QStringList layers = this->doc->getAllLayer();
 
-    bool hasTtPointsLayer = layers.contains(TT::LAYERS[TT::LAYER::POINTS].name);
-    bool hasTtNameLayer = layers.contains(TT::LAYERS[TT::LAYER::NAME].name);
-    bool hasTtAltiLayer = layers.contains(TT::LAYERS[TT::LAYER::ALTI].name);
-
-    // If at least one of the required layers exists, do not draw points
-    if (hasTtPointsLayer || (hasTtNameLayer && ui->ck_addName->isChecked()) || (hasTtAltiLayer && ui->ck_addHeight->isChecked()))
+    if ( pluginSettings->getInsertionLayerPoint() == "" )
     {
+        QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points is not set!\nIt can be set in plugin settings"), QMessageBox::StandardButton::Ok);
         return -1;
+    }
+    else if (layers.contains(pluginSettings->getInsertionLayerPoint()))
+    {
+        QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points (%1) already exists in current document!\nTo redraw points, remove layer \"%1\" from document and draw again").arg(pluginSettings->getInsertionLayerPoint()), QMessageBox::StandardButton::Ok);
+        return -1;
+    }
+
+    if (ui->ck_addName->isChecked())
+    {
+        if ( pluginSettings->getInsertionLayerName() == "" )
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points names is not set!\nIt can be set in plugin settings"), QMessageBox::StandardButton::Ok);
+            return -1;
+        }
+        else if (layers.contains(pluginSettings->getInsertionLayerName()))
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points names (%1) already exists in current document!\nTo redraw points, remove layer \"%1\" from document and draw again").arg(pluginSettings->getInsertionLayerName()), QMessageBox::StandardButton::Ok);
+            return -1;
+        }
+    }
+
+    if (ui->ck_addHeight->isChecked())
+    {
+        if ( pluginSettings->getInsertionLayerAlti() == "" )
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points altitudes is not set!\nIt can be set in plugin settings"), QMessageBox::StandardButton::Ok);
+            return -1;
+        }
+        else if (layers.contains(pluginSettings->getInsertionLayerAlti()))
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("Insertion layer for points altitudes (%1) already exists in current document!\nTo redraw points, remove layer \"%1\" from document and draw again").arg(pluginSettings->getInsertionLayerAlti()), QMessageBox::StandardButton::Ok);
+            return -1;
+        }
     }
 
     // Prepare layers
     QString initialLayer = this->doc->getCurrentLayer();
 
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::POINTS].name);
-    this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::POINTS].colour, TT::LAYERS[TT::LAYER::POINTS].lineWidth, TT::LAYERS[TT::LAYER::POINTS].lineType);
+    TT::Layer *pLayer = pluginSettings->getLayerByName(pluginSettings->getInsertionLayerPoint());
+    this->doc->setLayer(pLayer->getName());
+    this->doc->setCurrentLayerProperties(pLayer->getColour().rgb(), pLayer->getLineWidth(), pLayer->getLineType());
 
     if (ui->ck_addName->isChecked())
     {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::NAME].name);
-        this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::NAME].colour, TT::LAYERS[TT::LAYER::NAME].lineWidth, TT::LAYERS[TT::LAYER::NAME].lineType);
+        TT::Layer *nLayer = pluginSettings->getLayerByName(pluginSettings->getInsertionLayerName());
+        this->doc->setLayer(nLayer->getName());
+        this->doc->setCurrentLayerProperties(nLayer->getColour().rgb(), nLayer->getLineWidth(), nLayer->getLineType());
     }
 
     if (ui->ck_addHeight->isChecked())
     {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::ALTI].name);
-        this->doc->setCurrentLayerProperties(TT::LAYERS[TT::LAYER::ALTI].colour, TT::LAYERS[TT::LAYER::ALTI].lineWidth, TT::LAYERS[TT::LAYER::ALTI].lineType);
+        TT::Layer *aLayer = pluginSettings->getLayerByName(pluginSettings->getInsertionLayerAlti());
+        this->doc->setLayer(aLayer->getName());
+        this->doc->setCurrentLayerProperties(aLayer->getColour().rgb(), aLayer->getLineWidth(), aLayer->getLineType());
     }
 
     // Draw each point
@@ -62,9 +95,9 @@ int TT_DialogDrawPoints::drawPoints()
     for (auto i = 0; i < points->size(); i++)
     {
         TT::Point *currentPoint = points->at(i);
-        if (currentPoint->type == TT::Point::TYPE::POINT)
+        if (currentPoint->getType() == TT::Point::TYPE::POINT)
         {
-            drawPoint(currentPoint);
+            drawPoint(currentPoint, pluginSettings->getInsertionLayerPoint(), pluginSettings->getInsertionLayerName(), pluginSettings->getInsertionLayerAlti());
             nbPoints++;
         }
     }
@@ -75,27 +108,26 @@ int TT_DialogDrawPoints::drawPoints()
 }
 
 // Draw a single point on the current drawing
-void TT_DialogDrawPoints::drawPoint(TT::Point *point)
+void TT_DialogDrawPoints::drawPoint(TT::Point *point, QString pPlayerName, QString nLayerName, QString aLayerName)
 {
-    this->doc->setLayer(TT::LAYERS[TT::LAYER::POINTS].name);
-    QPointF insertionPoint(point->x, point->y);
+    this->doc->setLayer(pPlayerName);
+    QPointF insertionPoint(point->getX(), point->getY());
     this->doc->addPoint(&insertionPoint);
 
     double fontSize = 12.0 * scale * 100.0; // 12pt for 1:100 scale
 
-    if (ui->ck_addName->isChecked() && !point->name.isEmpty())
+    if (ui->ck_addName->isChecked() && !point->getName().isEmpty())
     {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::NAME].name);
-        QPointF textInsertionPoint(point->x + 1.0, point->y + fontSize/3);
-        this->doc->addText(point->name, "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
+        this->doc->setLayer(nLayerName);
+        QPointF textInsertionPoint(point->getX() + 1.0, point->getY() + fontSize/3);
+        this->doc->addText(point->getName(), "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 
-    if (ui->ck_addHeight->isChecked() && point->hasZ)
+    if (ui->ck_addHeight->isChecked() && point->getHasZ())
     {
-        this->doc->setLayer(TT::LAYERS[TT::LAYER::ALTI].name);
-        QString text = QString("%1").arg(point->z);
-        QPointF textInsertionPoint(point->x + 1.0, point->y - fontSize - fontSize/3);
-        this->doc->addText(text, "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
+        this->doc->setLayer(aLayerName);
+        QPointF textInsertionPoint(point->getX() + 1.0, point->getY() - fontSize - fontSize/3);
+        this->doc->addText(QString::number(point->getZ(), 'f', 3), "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 }
 
@@ -106,128 +138,153 @@ void TT_DialogDrawPoints::drawCodes()
         return;
     }
 
-    // Check if layer already exists
+    QList<TT::Layer*> layersToUse;
+    for (TT::Code *c : *pluginSettings->getCodes())
+    {
+        if (!layersToUse.contains(c->getLayer()))
+        {
+            layersToUse.append(c->getLayer());
+        }
+    }
+
+    // Check if layers already exist
     QStringList layers = this->doc->getAllLayer();
 
-    TT::LayerProperties linesLayerProperties = TT::LAYERS[TT::LAYER::LINES];
-
-    bool hasTtLinesLayer = layers.contains(linesLayerProperties.name);
-
-    // If the required layer exists, do not draw codes
-    if (hasTtLinesLayer)
+    for (TT::Layer *l : layersToUse)
     {
-        return;
+        if (layers.contains(l->getName()))
+        {
+            QMessageBox::warning(this, tr("Error!"), tr("At least one layer used by codes already exist in current document!"), QMessageBox::StandardButton::Ok);
+            return;
+        }
     }
 
     // Prepare layer
     QString initialLayer = this->doc->getCurrentLayer();
 
-    this->doc->setLayer(linesLayerProperties.name);
-    this->doc->setCurrentLayerProperties(linesLayerProperties.colour, linesLayerProperties.lineWidth, linesLayerProperties.lineType);
+    for (TT::Layer *l : layersToUse)
+    {
+        this->doc->setLayer(l->getName());
+        this->doc->setCurrentLayerProperties(l->getColour().rgb(), l->getLineWidth(), l->getLineType());
+    }
 
     QPointF firstPointOfTheShape(0.0, 0.0);
     std::vector<QPointF> currentLine;
     std::vector<QPointF> currentArc;
-    TT::PluginSettings::CODE lastCode = TT::PluginSettings::CODE::NONE;
+    TT::Code::TYPE currentLineCodeType = TT::Code::TYPE::NONE;
+    TT::Code::TYPE lastLineCodeType = TT::Code::TYPE::NONE;
 
     // Draw each code
     for (auto i = 0; i < points->size(); i++)
     {
         TT::Point *currentPoint = points->at(i);
-        if (currentPoint->type == TT::Point::TYPE::POINT)
+        TT::Code *currentCode = pluginSettings->getCodeByCode(currentPoint->getCode());
+
+        if (currentPoint->getType() != TT::Point::TYPE::POINT || currentCode == nullptr)
         {
-            QPointF insertionPoint(currentPoint->x, currentPoint->y);
-            TT::PluginSettings::CODE currentCode = pluginSettings->getCode(currentPoint->code);
+            continue;
+        }
 
-            if (currentCode == TT::PluginSettings::CODE::LINE_INIT)
-            {
-                drawArc(&currentArc);
-                drawLine(&currentLine);
-                currentLine.push_back(insertionPoint);
-                firstPointOfTheShape = insertionPoint;
-            }
-            else if (currentCode == TT::PluginSettings::CODE::LINE_CONTINUE)
-            {
-                if (lastCode == TT::PluginSettings::CODE::ARC_INIT ||
-                    lastCode == TT::PluginSettings::CODE::ARC_MIDDLE ||
-                    lastCode == TT::PluginSettings::CODE::ARC_CONTINUE)
-                {
-                    currentArc.push_back(insertionPoint);
-                    drawArc(&currentArc);
-                }
-                currentLine.push_back(insertionPoint);
-            }
-            else if (currentCode == TT::PluginSettings::CODE::ARC_INIT)
-            {
-                drawArc(&currentArc);
-                drawLine(&currentLine);
-                currentArc.push_back(insertionPoint);
-                firstPointOfTheShape = insertionPoint;
-            }
-            else if (currentCode == TT::PluginSettings::CODE::ARC_MIDDLE)
-            {
-                currentArc.push_back(insertionPoint);
-            }
-            else if (currentCode == TT::PluginSettings::CODE::ARC_CONTINUE)
-            {
-                if (lastCode == TT::PluginSettings::CODE::LINE_INIT ||
-                    lastCode == TT::PluginSettings::CODE::LINE_CONTINUE)
-                {
-                    currentLine.push_back(insertionPoint);
-                    drawLine(&currentLine);
-                }
-                if (lastCode == TT::PluginSettings::CODE::ARC_INIT ||
-                    lastCode == TT::PluginSettings::CODE::ARC_MIDDLE ||
-                    lastCode == TT::PluginSettings::CODE::ARC_CONTINUE)
-                {
-                    currentArc.push_back(insertionPoint);
-                    drawArc(&currentArc);
-                }
-                currentArc.push_back(insertionPoint);
-            }
-            else if (currentCode == TT::PluginSettings::CODE::CLOSE)
-            {
-                if (lastCode == TT::PluginSettings::CODE::LINE_INIT ||
-                    lastCode == TT::PluginSettings::CODE::LINE_CONTINUE)
-                {
-                    currentLine.push_back(insertionPoint);
-                }
-                if (lastCode == TT::PluginSettings::CODE::ARC_INIT ||
-                    lastCode == TT::PluginSettings::CODE::ARC_MIDDLE ||
-                    lastCode == TT::PluginSettings::CODE::ARC_CONTINUE)
-                {
-                    currentArc.push_back(insertionPoint);
-                }
-                drawArc(&currentArc);
-                drawLine(&currentLine);
-                currentLine.push_back(firstPointOfTheShape);
-                currentLine.push_back(insertionPoint);
-                drawLine(&currentLine);
-            }
-            else if (currentCode == TT::PluginSettings::CODE::END)
-            {
-                if (lastCode == TT::PluginSettings::CODE::LINE_INIT ||
-                    lastCode == TT::PluginSettings::CODE::LINE_CONTINUE)
-                {
-                    currentLine.push_back(insertionPoint);
-                }
-                if (lastCode == TT::PluginSettings::CODE::ARC_INIT ||
-                    lastCode == TT::PluginSettings::CODE::ARC_MIDDLE ||
-                    lastCode == TT::PluginSettings::CODE::ARC_CONTINUE)
-                {
-                    currentArc.push_back(insertionPoint);
-                }
-                drawArc(&currentArc);
-                drawLine(&currentLine);
-            }
+        this->doc->setLayer(currentCode->getLayer()->getName());
 
-            lastCode = currentCode;
+        QPointF insertionPoint(currentPoint->getX(), currentPoint->getY());
+
+        if (TT::Code::isLineType(currentCode->getType()))
+        {
+            currentLineCodeType = currentCode->getType();
+            drawLineCode(currentLineCodeType, lastLineCodeType, &firstPointOfTheShape, &insertionPoint, &currentLine, &currentArc);
+            lastLineCodeType = currentCode->getType();
         }
     }
 
     this->doc->setLayer(initialLayer);
 
     return;
+}
+
+void TT_DialogDrawPoints::drawLineCode(TT::Code::TYPE currentCodeType, TT::Code::TYPE lastCodeType, QPointF *firstPointOfTheShape, QPointF *insertionPoint, std::vector<QPointF> *currentLine, std::vector<QPointF> *currentArc)
+{
+    if (currentCodeType == TT::Code::TYPE::LINE_SEGMENT_INIT)
+    {
+        drawArc(currentArc);
+        drawLine(currentLine);
+        currentLine->push_back(*insertionPoint);
+        *firstPointOfTheShape = *insertionPoint;
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_SEGMENT_CONTINUE)
+    {
+        if (lastCodeType == TT::Code::TYPE::LINE_ARC_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_MIDDLE  ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_CONTINUE)
+        {
+            currentArc->push_back(*insertionPoint);
+            drawArc(currentArc);
+        }
+        currentLine->push_back(*insertionPoint);
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_ARC_INIT)
+    {
+        drawArc(currentArc);
+        drawLine(currentLine);
+        currentArc->push_back(*insertionPoint);
+        *firstPointOfTheShape = *insertionPoint;
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_ARC_MIDDLE)
+    {
+        currentArc->push_back(*insertionPoint);
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_ARC_CONTINUE)
+    {
+        if (lastCodeType == TT::Code::TYPE::LINE_SEGMENT_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_SEGMENT_CONTINUE)
+        {
+            currentLine->push_back(*insertionPoint);
+            drawLine(currentLine);
+        }
+        if (lastCodeType == TT::Code::TYPE::LINE_ARC_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_MIDDLE  ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_CONTINUE)
+        {
+            currentArc->push_back(*insertionPoint);
+            drawArc(currentArc);
+        }
+        currentArc->push_back(*insertionPoint);
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_CLOSE)
+    {
+        if (lastCodeType == TT::Code::TYPE::LINE_SEGMENT_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_SEGMENT_CONTINUE)
+        {
+            currentLine->push_back(*insertionPoint);
+        }
+        if (lastCodeType == TT::Code::TYPE::LINE_ARC_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_MIDDLE  ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_CONTINUE)
+        {
+            currentArc->push_back(*insertionPoint);
+        }
+        drawArc(currentArc);
+        drawLine(currentLine);
+        currentLine->push_back(*firstPointOfTheShape);
+        currentLine->push_back(*insertionPoint);
+        drawLine(currentLine);
+    }
+    else if (currentCodeType == TT::Code::TYPE::LINE_END)
+    {
+        if (lastCodeType == TT::Code::TYPE::LINE_SEGMENT_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_SEGMENT_CONTINUE)
+        {
+            currentLine->push_back(*insertionPoint);
+        }
+        if (lastCodeType == TT::Code::TYPE::LINE_ARC_INIT    ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_MIDDLE  ||
+            lastCodeType == TT::Code::TYPE::LINE_ARC_CONTINUE)
+        {
+            currentArc->push_back(*insertionPoint);
+        }
+        drawArc(currentArc);
+        drawLine(currentLine);
+    }
 }
 
 void TT_DialogDrawPoints::drawLine(std::vector<QPointF> *points)

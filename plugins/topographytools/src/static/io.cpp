@@ -74,19 +74,24 @@ void readTtFilePoints(QDataStream &stream, QList<TT::Point*> *points)
 
 void readTtFilePoint(QDataStream &stream, TT::Point *point)
 {
-    stream >> point->type;
-    stream >> point->name;
-    stream >> point->code;
-    stream >> point->x;
-    stream >> point->y;
-    stream >> point->hasZ;
-    stream >> point->z;
-    stream >> point->ih;
-    stream >> point->v0;
-    stream >> point->ph;
-    stream >> point->ha;
-    stream >> point->va;
-    stream >> point->id;
+    int     i = 0;
+    QString s = "";
+    double  d = 0;
+    bool    b = false;
+
+    stream >> i; point->setType((TT::Point::TYPE)i);
+    stream >> s; point->setName(s);
+    stream >> s; point->setCode(s);
+    stream >> d; point->setX(d);
+    stream >> d; point->setY(d);
+    stream >> b; point->setHasZ(b);
+    stream >> d; point->setZ(d);
+    stream >> d; point->setIh(d);
+    stream >> d; point->setV0(d);
+    stream >> d; point->setPh(d);
+    stream >> d; point->setHa(d);
+    stream >> d; point->setVa(d);
+    stream >> d; point->setId(d);
 }
 
 /* WRITE .TT FILE */
@@ -133,19 +138,19 @@ void writeTtFilePoints(QDataStream &stream, QList<TT::Point*> *points)
 
 void writeTtFilePoint(QDataStream &stream, TT::Point *point)
 {
-    stream << point->type;
-    stream << point->name;
-    stream << point->code;
-    stream << point->x;
-    stream << point->y;
-    stream << point->hasZ;
-    stream << point->z;
-    stream << point->ih;
-    stream << point->v0;
-    stream << point->ph;
-    stream << point->ha;
-    stream << point->va;
-    stream << point->id;
+    stream << (int)point->getType();
+    stream << point->getName();
+    stream << point->getCode();
+    stream << point->getX();
+    stream << point->getY();
+    stream << point->getHasZ();
+    stream << point->getZ();
+    stream << point->getIh();
+    stream << point->getV0();
+    stream << point->getPh();
+    stream << point->getHa();
+    stream << point->getVa();
+    stream << point->getId();
 }
 
 } // namespace io

@@ -3,7 +3,7 @@
 
 #include <QMessageBox>
 
-TT_DialogPolygo::TT_DialogPolygo(QWidget *parent, QList<TT::Point *> &points) :
+TT_DialogPolygo::TT_DialogPolygo(QWidget *parent, QList<TT::Point *> *points) :
     QDialog(parent),
     ui(new Ui::TT_DialogPolygo),
     points(points)
@@ -22,22 +22,22 @@ TT_DialogPolygo::~TT_DialogPolygo()
 
 void TT_DialogPolygo::fillStationsAndReferences()
 {
-    for (int i = 0; i < points.size(); )
+    for (int i = 0; i < points->size(); )
     {
-        if (points.at(i)->type == TT::Point::TYPE::STATION)
+        if (points->at(i)->getType() == TT::Point::TYPE::STATION)
         {
-            TT::Point *currentStation = points.at(i);
+            TT::Point *currentStation = points->at(i);
             QList<TT::Point*> currentReferences = {};
 
             do
             {
                 i++;
-                if (i < points.size() && points.at(i)->type == TT::Point::TYPE::REFERENCE)
+                if (i < points->size() && points->at(i)->getType() == TT::Point::TYPE::REFERENCE)
                 {
-                    currentReferences.append(points.at(i));
+                    currentReferences.append(points->at(i));
                 }
             }
-            while (i < points.size() && points.at(i)->type != TT::Point::TYPE::STATION);
+            while (i < points->size() && points->at(i)->getType() != TT::Point::TYPE::STATION);
 
             stations.append(currentStation);
             references.append(currentReferences);
@@ -62,13 +62,13 @@ void TT_DialogPolygo::displayItems()
     ui->listStations->clear();
     for (int i = 0; i < itemsStations.size(); i++)
     {
-        ui->listStations->addItem(itemsStations.at(i)->name);
+        ui->listStations->addItem(itemsStations.at(i)->getName());
     }
 
     ui->listPolygo->clear();
     for (int i = 0; i < itemsPolygo.size(); i++)
     {
-        ui->listPolygo->addItem(itemsPolygo.at(i)->name);
+        ui->listPolygo->addItem(itemsPolygo.at(i)->getName());
     }
 }
 
@@ -82,7 +82,7 @@ void TT_DialogPolygo::calculateAntennaPath()
     {
         for (int j = 0; j < stations.size(); j++)
         {
-            if (itemsPolygo.at(i)->name == stations.at(j)->name)
+            if (itemsPolygo.at(i)->getName() == stations.at(j)->getName())
             {
                 polygoReferences.append(references.at(j));
             }
@@ -99,12 +99,12 @@ void TT_DialogPolygo::calculateAntennaPath()
     // Check if the first station of the path has coordinates (at least X and Y)
     TT::Point *firstStationCoordinates = nullptr;
     bool found = false;
-    for (int i = 0; i < points.size(); i++)
+    for (int i = 0; i < points->size(); i++)
     {
-        if (points.at(i)->type == TT::Point::TYPE::POINT && points.at(i)->name == itemsPolygo.at(0)->name)
+        if (points->at(i)->getType() == TT::Point::TYPE::POINT && points->at(i)->getName() == itemsPolygo.at(0)->getName())
         {
-            firstStationCoordinates = points.at(i);
-            calculateWithZ = points.at(i)->hasZ;
+            firstStationCoordinates = points->at(i);
+            calculateWithZ = points->at(i)->getHasZ();
             found = true;
             break;
         }
@@ -116,7 +116,7 @@ void TT_DialogPolygo::calculateAntennaPath()
     }
 
     // Check if the first station of the path has a V0
-    if (itemsPolygo.at(0)->v0 < 0)
+    if (itemsPolygo.at(0)->getV0() < 0)
     {
         QMessageBox::warning(this, tr("Error!"), tr("The first station of the path has no V0!"), QMessageBox::StandardButton::Ok);
         return;
@@ -133,7 +133,7 @@ void TT_DialogPolygo::calculateAntennaPath()
             bool found = false;
             for (int j = 0; j < polygoReferences.at(i).size(); j++)
             {
-                if (polygoReferences.at(i).at(j)->name == itemsPolygo.at(i+1)->name)
+                if (polygoReferences.at(i).at(j)->getName() == itemsPolygo.at(i+1)->getName())
                 {
                     found = true;
                     orderedReference.frontReference = polygoReferences.at(i).at(j);
@@ -142,7 +142,7 @@ void TT_DialogPolygo::calculateAntennaPath()
             }
             if (!found)
             {
-                QMessageBox::warning(this, tr("Error!"), tr("Missing front view between stations %1 and %2!").arg(itemsPolygo.at(i)->name).arg(itemsPolygo.at(i+1)->name), QMessageBox::StandardButton::Ok);
+                QMessageBox::warning(this, tr("Error!"), tr("Missing front view between stations %1 and %2!").arg(itemsPolygo.at(i)->getName(), itemsPolygo.at(i+1)->getName()), QMessageBox::StandardButton::Ok);
                 return;
             }
         }
@@ -153,7 +153,7 @@ void TT_DialogPolygo::calculateAntennaPath()
             bool found = false;
             for (int j = 0; j < polygoReferences.at(i).size(); j++)
             {
-                if (polygoReferences.at(i).at(j)->name == itemsPolygo.at(i-1)->name)
+                if (polygoReferences.at(i).at(j)->getName() == itemsPolygo.at(i-1)->getName())
                 {
                     found = true;
                     orderedReference.backReference = polygoReferences.at(i).at(j);
@@ -162,7 +162,7 @@ void TT_DialogPolygo::calculateAntennaPath()
             }
             if (!found)
             {
-                QMessageBox::warning(this, tr("Error!"), tr("Missing back view between stations %1 and %2!").arg(itemsPolygo.at(i)->name).arg(itemsPolygo.at(i-1)->name), QMessageBox::StandardButton::Ok);
+                QMessageBox::warning(this, tr("Error!"), tr("Missing back view between stations %1 and %2!").arg(itemsPolygo.at(i)->getName(), itemsPolygo.at(i-1)->getName()), QMessageBox::StandardButton::Ok);
                 return;
             }
         }
@@ -171,28 +171,28 @@ void TT_DialogPolygo::calculateAntennaPath()
 
     // v0s (for each stations of the polygo)
     v0s.clear();
-    v0s.append(itemsPolygo.at(0)->v0);
+    v0s.append(itemsPolygo.at(0)->getV0());
     // Horizontal distances (for each stations of the polygo, 0 for S1)
     hds.clear();
     hds.append(0.0);
     // X (for each stations of the polygo)
     xs.clear();
-    xs.append(firstStationCoordinates->x);
+    xs.append(firstStationCoordinates->getX());
     // Y (for each stations of the polygo)
     ys.clear();
-    ys.append(firstStationCoordinates->y);
+    ys.append(firstStationCoordinates->getY());
     // Z (for each stations of the polygo)
     zs.clear();
     if (calculateWithZ)
     {
-        zs.append(firstStationCoordinates->z);
+        zs.append(firstStationCoordinates->getZ());
     }
 
     // For each station (except the first one)
     for (int i = 1; i < itemsPolygo.size(); i++)
     {
         // First, calculate v0
-        double v0 = std::fmod(v0s.at(i-1) + orderedReferences.at(i-1).frontReference->ha - orderedReferences.at(i).backReference->ha + 200.0, 400.0);
+        double v0 = std::fmod(v0s.at(i-1) + orderedReferences.at(i-1).frontReference->getHa() - orderedReferences.at(i).backReference->getHa() + 200.0, 400.0);
         if (v0 < 0.0)
         {
             v0 += 400.0;
@@ -200,31 +200,31 @@ void TT_DialogPolygo::calculateAntennaPath()
         v0s.append(v0);
 
         // Then, calculate horizontal distance (front and back, then average)
-        double va = orderedReferences.at(i-1).frontReference->va;
-        double id = orderedReferences.at(i-1).frontReference->id;
+        double va = orderedReferences.at(i-1).frontReference->getVa();
+        double id = orderedReferences.at(i-1).frontReference->getId();
         double horizontalDistanceFront = id * std::sin(va * M_PI / 200.0);
 
-        va = orderedReferences.at(i).backReference->va;
-        id = orderedReferences.at(i).backReference->id;
+        va = orderedReferences.at(i).backReference->getVa();
+        id = orderedReferences.at(i).backReference->getId();
         double horizontalDistanceBack = id * std::sin(va * M_PI / 200.0);
 
         double horizontalDistanceAverage = ( horizontalDistanceFront + horizontalDistanceBack ) / 2.0;
         hds.append(horizontalDistanceAverage);
 
         // Calculate X
-        double x = xs.at(i-1) + hds.at(i) * std::sin(( v0s.at(i-1) + orderedReferences.at(i-1).frontReference->ha ) * M_PI / 200.0);
+        double x = xs.at(i-1) + hds.at(i) * std::sin(( v0s.at(i-1) + orderedReferences.at(i-1).frontReference->getHa() ) * M_PI / 200.0);
         xs.append(x);
 
         // Calculate Y
-        double y = ys.at(i-1) + hds.at(i) * std::cos(( v0s.at(i-1) + orderedReferences.at(i-1).frontReference->ha ) * M_PI / 200.0);
+        double y = ys.at(i-1) + hds.at(i) * std::cos(( v0s.at(i-1) + orderedReferences.at(i-1).frontReference->getHa() ) * M_PI / 200.0);
         ys.append(y);
 
         // If needed, calculate Z
         if (calculateWithZ)
         {
-            va = orderedReferences.at(i-1).frontReference->va;
-            id = orderedReferences.at(i-1).frontReference->id;
-            double z = zs.at(i-1) + itemsPolygo.at(i-1)->ih + id * std::cos(va * M_PI / 200.0) - orderedReferences.at(i-1).frontReference->ph;
+            va = orderedReferences.at(i-1).frontReference->getVa();
+            id = orderedReferences.at(i-1).frontReference->getId();
+            double z = zs.at(i-1) + itemsPolygo.at(i-1)->getIh() + id * std::cos(va * M_PI / 200.0) - orderedReferences.at(i-1).frontReference->getPh();
             zs.append(z);
         }
     }
@@ -238,11 +238,11 @@ void TT_DialogPolygo::writeDataAfterCalculateAntennaPath()
     // Write v0s for each station (except the first one)
     for (int i = 1; i < itemsPolygo.size(); i++)
     {
-        for (int j = 0; j < points.size(); j++)
+        for (int j = 0; j < points->size(); j++)
         {
-            if (points.at(j)->name == itemsPolygo.at(i)->name && points.at(j)->type == itemsPolygo.at(i)->type)
+            if (points->at(j)->getName() == itemsPolygo.at(i)->getName() && points->at(j)->getType() == itemsPolygo.at(i)->getType())
             {
-                points.at(j)->v0 = v0s.at(i);
+                points->at(j)->setV0(v0s.at(i));
                 break;
             }
         }
@@ -251,21 +251,21 @@ void TT_DialogPolygo::writeDataAfterCalculateAntennaPath()
     // Create points for each station (except the first one)
     for (int i = 1; i < itemsPolygo.size(); i++)
     {
-        for (int j = 0; j < points.size(); j++)
+        for (int j = 0; j < points->size(); j++)
         {
-            if (points.at(j)->name == itemsPolygo.at(i)->name && points.at(j)->type == itemsPolygo.at(i)->type)
+            if (points->at(j)->getName() == itemsPolygo.at(i)->getName() && points->at(j)->getType() == itemsPolygo.at(i)->getType())
             {
                 TT::Point *newPoint = new TT::Point();
-                newPoint->type = TT::Point::TYPE::POINT;
-                newPoint->name = itemsPolygo.at(i)->name;
-                newPoint->x = xs.at(i);
-                newPoint->y = ys.at(i);
+                newPoint->setType(TT::Point::TYPE::POINT);
+                newPoint->setName(itemsPolygo.at(i)->getName());
+                newPoint->setX(xs.at(i));
+                newPoint->setY(ys.at(i));
                 if (zs.size() > 0)
                 {
-                    newPoint->hasZ = true;
-                    newPoint->z = zs.at(i);
+                    newPoint->setHasZ(true);
+                    newPoint->setZ(zs.at(i));
                 }
-                points.append(newPoint);
+                points->append(newPoint);
                 break;
             }
         }

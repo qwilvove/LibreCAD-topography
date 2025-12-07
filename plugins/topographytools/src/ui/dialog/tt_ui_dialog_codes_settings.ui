@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TT_DialogCodesSettings</class>
+ <widget class="QDialog" name="TT_DialogCodesSettings">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>580</width>
+    <height>430</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Codes</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="pb_add">
+       <property name="minimumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="icon">
+        <iconset resource="../../../res/icons/icons.qrc">
+         <normaloff>:/icons/add.svg</normaloff>:/icons/add.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_remove">
+       <property name="minimumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="icon">
+        <iconset resource="../../../res/icons/icons.qrc">
+         <normaloff>:/icons/remove.svg</normaloff>:/icons/remove.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_edit">
+       <property name="minimumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+       <property name="icon">
+        <iconset resource="../../../res/icons/icons.qrc">
+         <normaloff>:/icons/attributes.svg</normaloff>:/icons/attributes.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="tw">
+     <property name="font">
+      <font>
+       <family>Monospace</family>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+     </property>
+     <attribute name="horizontalHeaderDefaultSectionSize">
+      <number>135</number>
+     </attribute>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string>Code</string>
+      </property>
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Action</string>
+      </property>
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Block</string>
+      </property>
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Layer</string>
+      </property>
+      <property name="font">
+       <font>
+        <family>Monospace</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../../../res/icons/icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>pb_add</sender>
+   <signal>pressed()</signal>
+   <receiver>TT_DialogCodesSettings</receiver>
+   <slot>slot_addCode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>25</x>
+     <y>25</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_edit</sender>
+   <signal>pressed()</signal>
+   <receiver>TT_DialogCodesSettings</receiver>
+   <slot>slot_editCode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>101</x>
+     <y>25</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_remove</sender>
+   <signal>pressed()</signal>
+   <receiver>TT_DialogCodesSettings</receiver>
+   <slot>slot_removeCode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>63</x>
+     <y>25</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tw</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>TT_DialogCodesSettings</receiver>
+   <slot>slot_editCode()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>234</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>289</x>
+     <y>214</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>slot_addCode()</slot>
+  <slot>slot_editCode()</slot>
+  <slot>slot_removeCode()</slot>
+ </slots>
+</ui>

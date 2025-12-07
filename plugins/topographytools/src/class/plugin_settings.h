@@ -4,25 +4,12 @@
 #include <QMap>
 #include <QString>
 
+#include "src/class/tt_class_code.h"
+#include "src/class/tt_class_layer.h"
+
 class PluginSettings
 {
 public:
-    enum class CODE
-    {
-        NONE,
-
-        LINE_INIT,
-        LINE_CONTINUE,
-        ARC_INIT,
-        ARC_MIDDLE,
-        ARC_CONTINUE,
-        OFFSET,
-        ORIENTATION,
-        CLOSE_WITH_OFFSET,
-        CLOSE,
-        END
-    };
-
     PluginSettings();
     ~PluginSettings();
 
@@ -31,18 +18,31 @@ public:
 
     QString getFileName();
     bool getAutoSaveOnQuit();
-    CODE getCode(QString codeValue);
+    QString getInsertionLayerPoint();
+    QString getInsertionLayerName();
+    QString getInsertionLayerAlti();
+    QList<Layer *> *getLayers();
+    Layer *getLayerByName(QString name);
+    QList<Code *> *getCodes();
+    Code *getCodeByCode(QString code);
 
     void setFileName(QString fileName);
     void setAutoSaveOnQuit(bool autoSaveOnQuit);
-    void setCode(QString codeValue, CODE codeAction);
+    void setInsertionLayerPoint(QString insertionLayerPoint);
+    void setInsertionLayerName(QString insertionLayerName);
+    void setInsertionLayerAlti(QString insertionLayerAlti);
+
+    bool removeLayerAt(int index);
+    bool removeCodeAt(int index);
 
 private:
-    static const QMap<QString, CODE> DEFAULT_CODES;
-
     QString fileName;
     bool autoSaveOnQuit;
-    QMap<QString, CODE> *codes;
+    QString insertionLayerPoint;
+    QString insertionLayerName;
+    QString insertionLayerAlti;
+    QList<Layer*> *layers;
+    QList<Code*> *codes;
 };
 
 #endif // TT_CLASS_PLUGIN_SETTINGS_H

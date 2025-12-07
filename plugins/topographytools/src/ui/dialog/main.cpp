@@ -38,6 +38,8 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     pluginSettings = new TT::PluginSettings();
     pluginSettings->read();
 
+    points = new QList<TT::Point*>();
+
     projectSettings = new TT::ProjectSettings();
     loadTtFile();
 }
@@ -45,9 +47,14 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
 // Destructor
 TT_DialogMain::~TT_DialogMain()
 {
-    delete ui;
+    for (TT::Point *p : *points)
+    {
+        delete p;
+    }
+    delete points;
     delete projectSettings;
     delete pluginSettings;
+    delete ui;
 }
 
 void TT_DialogMain::showEvent(QShowEvent *event)
@@ -147,11 +154,11 @@ void TT_DialogMain::initMenuBarAndToolbar()
 
 void TT_DialogMain::loadTtFile()
 {
-    int returnedValue = io::readTtFile(pluginSettings->getFileName(), projectSettings, &points);
+    int returnedValue = io::readTtFile(pluginSettings->getFileName(), projectSettings, points);
     if (returnedValue == 0)
     {
         ui->label->setText(tr("Active file : %1").arg(pluginSettings->getFileName()));
-        if ( points.size() > -1 )
+        if ( points->size() > -1 )
         {
             displayPoints();
             enableAllTools();
@@ -171,7 +178,7 @@ void TT_DialogMain::loadTtFile()
     }
 }
 
-void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::BLOCK_INSERTION_TYPE insertType)
+void TT_DialogMain::savePreviousState(DIALOG dialog, int tabIndex, int insertTypeIndex, TT::Block::INSERTION_TYPE insertType)
 {
     this->previousState.dialog = dialog;
     this->previousState.tabIndex = tabIndex;
@@ -205,7 +212,7 @@ void TT_DialogMain::displayPoints()
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
 
-    foreach (TT::Point *point, points)
+    foreach (TT::Point *point, *points)
     {
         displayPoint(point);
     }
@@ -215,14 +222,14 @@ void TT_DialogMain::displayPoints()
 void TT_DialogMain::displayPoint(TT::Point *point)
 {
     // Add one line at the end
-    int lineNumber = ui->tableWidget->rowCount() + 1;
-    ui->tableWidget->setRowCount(lineNumber);
+    int newIndex = ui->tableWidget->rowCount();
+    ui->tableWidget->setRowCount(newIndex + 1);
 
     // Fill the row
-    ui->tableWidget->setItem(lineNumber - 1, 0, point->getQTableWidgetItemType());
-    ui->tableWidget->setItem(lineNumber - 1, 1, point->getQTableWidgetItemName());
-    ui->tableWidget->setItem(lineNumber - 1, 2, point->getQTableWidgetItemCode());
-    ui->tableWidget->setItem(lineNumber - 1, 3, point->getQTableWidgetItemParameters());
+    ui->tableWidget->setItem(newIndex, 0, point->getTwiType());
+    ui->tableWidget->setItem(newIndex, 1, point->getTwiName());
+    ui->tableWidget->setItem(newIndex, 2, point->getTwiCode());
+    ui->tableWidget->setItem(newIndex, 3, point->getTwiParameters());
 }
 
 // Enable all tools in the top toolbar
@@ -257,7 +264,7 @@ void TT_DialogMain::removePoints(QList<int> &indexesToRemove)
     // in order to keep indexes correct
     for (int i = indexesToRemove.size() - 1; i >= 0; i--)
     {
-        points.remove(indexesToRemove[i]);
+        points->removeAt(indexesToRemove[i]);
     }
 
     displayPoints();
@@ -276,7 +283,7 @@ void TT_DialogMain::editPoint(TT::Point *point)
 // Move points[index] one position up in points QList
 void TT_DialogMain::movePointUp(int index)
 {
-    points.move(index, index - 1);
+    points->move(index, index - 1);
 
     displayPoints();
 
@@ -286,7 +293,7 @@ void TT_DialogMain::movePointUp(int index)
 // Move points[index] one position down in points QList
 void TT_DialogMain::movePointDown(int index)
 {
-    points.move(index, index + 1);
+    points->move(index, index + 1);
 
     displayPoints();
 
@@ -308,7 +315,7 @@ void TT_DialogMain::actionNew()
 
     enableAllTools();
 
-    points.clear();
+    points->clear();
     displayPoints();
 }
 
@@ -334,10 +341,10 @@ void TT_DialogMain::actionOpen()
 
 void TT_DialogMain::actionSave()
 {
-    int returnedValue = io::writeTtFile(pluginSettings->getFileName(), projectSettings, &points);
+    int returnedValue = io::writeTtFile(pluginSettings->getFileName(), projectSettings, points);
     if (returnedValue == 0)
     {
-        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(pluginSettings->getFileName()).arg(points.size()));
+        ui->label->setText(tr("Active file : %1 | %2 points saved.").arg(pluginSettings->getFileName()).arg(points->size()));
     }
     else if (returnedValue == -1)
     {
@@ -362,7 +369,7 @@ void TT_DialogMain::actionAdd()
     TT_DialogAdd addDialog(this, newPoint);
     if (addDialog.exec() == QDialog::Accepted)
     {
-        points.append(newPoint);
+        points->append(newPoint);
         displayPoints();
     }
 }
@@ -386,15 +393,15 @@ void TT_DialogMain::actionRemove()
 
 void TT_DialogMain::actionEdit()
 {
-    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size())
+    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points->size())
     {
-        editPoint(points.at(ui->tableWidget->currentRow()));
+        editPoint(points->at(ui->tableWidget->currentRow()));
     }
 }
 
 void TT_DialogMain::actionUp()
 {
-    if (ui->tableWidget->currentRow() >= 1 && ui->tableWidget->currentRow() < points.size())
+    if (ui->tableWidget->currentRow() >= 1 && ui->tableWidget->currentRow() < points->size())
     {
         movePointUp(ui->tableWidget->currentRow());
     }
@@ -402,7 +409,7 @@ void TT_DialogMain::actionUp()
 
 void TT_DialogMain::actionDown()
 {
-    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points.size() - 1)
+    if (ui->tableWidget->currentRow() >= 0 && ui->tableWidget->currentRow() < points->size() - 1)
     {
         movePointDown(ui->tableWidget->currentRow());
     }
@@ -438,7 +445,7 @@ void TT_DialogMain::actionCalculatePoints()
 void TT_DialogMain::actionDrawPoints()
 {
     int nbPointsDrawn = -1;
-    TT_DialogDrawPoints drawPointsDialog(this, doc, pluginSettings, &points, &nbPointsDrawn, projectSettings->getScale());
+    TT_DialogDrawPoints drawPointsDialog(this, doc, pluginSettings, points, &nbPointsDrawn, projectSettings->getScale());
     drawPointsDialog.exec();
 
     if (nbPointsDrawn > -1)
@@ -479,5 +486,5 @@ void TT_DialogMain::tableWidgetCellDoubleClicked(int row, int column)
 {
     Q_UNUSED(column);
 
-    editPoint(points.at(row));
+    editPoint(points->at(row));
 }
