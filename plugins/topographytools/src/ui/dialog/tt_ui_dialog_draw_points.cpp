@@ -119,14 +119,14 @@ void TT_DialogDrawPoints::drawPoint(TT::Point *point, QString pPlayerName, QStri
     if (ui->ck_addName->isChecked() && !point->getName().isEmpty())
     {
         this->doc->setLayer(nLayerName);
-        QPointF textInsertionPoint(point->getX() + 1.0, point->getY() + fontSize/3);
+        QPointF textInsertionPoint(point->getX() + fontSize/4, point->getY() + fontSize/3);
         this->doc->addText(point->getName(), "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 
     if (ui->ck_addHeight->isChecked() && point->getHasZ())
     {
         this->doc->setLayer(aLayerName);
-        QPointF textInsertionPoint(point->getX() + 1.0, point->getY() - fontSize - fontSize/3);
+        QPointF textInsertionPoint(point->getX() + fontSize/4, point->getY() - fontSize - fontSize/3);
         this->doc->addText(QString::number(point->getZ(), 'f', 3), "standard", &textInsertionPoint, fontSize, 0.0, DPI::HAlignLeft, DPI::VAlignTop);
     }
 }

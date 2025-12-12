@@ -317,6 +317,8 @@ void TT_DialogMain::actionNew()
 
     points->clear();
     displayPoints();
+
+    io::writeTtFile(pluginSettings->getFileName(), projectSettings, points);
 }
 
 void TT_DialogMain::actionOpen()
