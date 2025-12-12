@@ -355,7 +355,7 @@ void TT_DialogMain::actionSave()
 void TT_DialogMain::actionImport()
 {
     int nbPointsImported = -1;
-    TT_DialogImport importDialog(this, points, nbPointsImported);
+    TT_DialogImport importDialog(this, points, &nbPointsImported);
     if (importDialog.exec() == QDialog::Accepted && nbPointsImported > -1)
     {
         ui->label->setText(tr("Active file : %1 | %2 points imported.").arg(pluginSettings->getFileName()).arg(nbPointsImported));

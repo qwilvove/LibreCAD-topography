@@ -2,9 +2,12 @@
 #define TT_UI_DIALOG_IMPORT_H
 
 #include <QDialog>
-#include <QTextStream>
 
 #include "src/tt.h"
+
+#include "src/ui/groupbox/tt_ui_groupbox_import_csv.h"
+#include "src/ui/groupbox/tt_ui_groupbox_import_geobase.h"
+#include "src/ui/groupbox/tt_ui_groupbox_import_gsi.h"
 
 namespace Ui {
     class TT_DialogImport;
@@ -15,36 +18,24 @@ class TT_DialogImport : public QDialog
     Q_OBJECT
 
 public:
-    explicit TT_DialogImport(QWidget *parent, QList<TT::Point *> *points, int &nbPointsImported);
+    explicit TT_DialogImport(QWidget *parent, QList<TT::Point *> *points, int *nbPointsImported);
     ~TT_DialogImport();
 
 private:
-    void loadCsvFilePreview(QTextStream &stream);
-    void loadCsvPointsPreview(QTextStream &stream);
-    bool loadCsvPointPreview(QString &line);
-
-    int importPointsFromCsv();
-    //bool importPointFromCsv(QString &line, TT::Point *point);
-
-    void loadGeobaseFilePreview(QTextStream &stream);
-    void loadGeobasePointsPreview(QTextStream &stream);
-    bool loadGeobasePointPreview(QString &line);
-
-    int importPointsFromGeobase();
-    //bool importPointFromGeobase(QString &line, TT::Point *point);
-
-private slots:
-    void on_comboBox_currentIndexChanged(int index);
-    void on_tbOpenCsv_clicked();
-    void on_tbOpenGeobase_clicked();
-    void on_buttonBox_accepted();
+    void initUi();
 
 private:
-    Ui::TT_DialogImport *ui;
     QList<TT::Point *> *points;
-    QList<TT::Point *> newPointsFromCsv;
-    QList<TT::Point *> newPointsFromGeobase;
-    int &nbPointsImported;
+    int *nbPointsImported;
+    Ui::TT_DialogImport *ui;
+    TT_GroupBoxImportCsv *gbCsv;
+    TT_GroupBoxImportGeobase *gbGeobase;
+    TT_GroupBoxImportGsi *gbGsi;
+
+private slots:
+    void slot_cbTypeCurrentIndexChanged();
+
+    void slot_validateInputs();
 };
 
 #endif // TT_UI_DIALOG_IMPORT_H

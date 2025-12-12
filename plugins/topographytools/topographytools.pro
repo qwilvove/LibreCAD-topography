@@ -43,7 +43,10 @@ SOURCES += \
     src/ui/dialog/tt_ui_dialog_layers_settings.cpp \
     src/ui/dialog/tt_ui_dialog_plugin_settings.cpp \
     src/ui/dialog/tt_ui_dialog_project_settings.cpp \
-    src/ui/dialog/v0.cpp
+    src/ui/dialog/v0.cpp \
+    src/ui/groupbox/tt_ui_groupbox_import_csv.cpp \
+    src/ui/groupbox/tt_ui_groupbox_import_geobase.cpp \
+    src/ui/groupbox/tt_ui_groupbox_import_gsi.cpp
 
 HEADERS += \
     src/class/plugin_settings.h \
@@ -72,7 +75,10 @@ HEADERS += \
     src/ui/dialog/tt_ui_dialog_layers_settings.h \
     src/ui/dialog/tt_ui_dialog_plugin_settings.h \
     src/ui/dialog/tt_ui_dialog_project_settings.h \
-    src/ui/dialog/v0.h
+    src/ui/dialog/v0.h \
+    src/ui/groupbox/tt_ui_groupbox_import_csv.h \
+    src/ui/groupbox/tt_ui_groupbox_import_geobase.h \
+    src/ui/groupbox/tt_ui_groupbox_import_gsi.h
 
 # Installation Directory
 win32 {
@@ -105,7 +111,10 @@ FORMS += \
     src/ui/dialog/tt_ui_dialog_layers_settings.ui \
     src/ui/dialog/tt_ui_dialog_plugin_settings.ui \
     src/ui/dialog/tt_ui_dialog_project_settings.ui \
-    src/ui/dialog/v0.ui
+    src/ui/dialog/v0.ui \
+    src/ui/groupbox/tt_ui_groupbox_import_csv.ui \
+    src/ui/groupbox/tt_ui_groupbox_import_geobase.ui \
+    src/ui/groupbox/tt_ui_groupbox_import_gsi.ui
 
 RESOURCES += \
     res/blocks/blocks.qrc \
