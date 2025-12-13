@@ -30,7 +30,6 @@ TT_DialogMain::TT_DialogMain(QWidget *parent, Document_Interface *doc) :
     doc(doc)
 {
     isRunning = true;
-    connect(this, &QDialog::rejected, this, [this]{isRunning = false;});
 
     ui->setupUi(this);
     initMenuBarAndToolbar();
@@ -61,6 +60,26 @@ void TT_DialogMain::showEvent(QShowEvent *event)
 {
     QDialog::showEvent(event);
     QTimer::singleShot(0, this, SLOT(loadPreviousState()));
+}
+
+void TT_DialogMain::reject()
+{
+    isRunning = false;
+
+    if (pluginSettings->getAutoSaveOnQuit())
+    {
+        int returnedValue = io::writeTtFile(pluginSettings->getFileName(), projectSettings, points);
+        if (returnedValue != 0)
+        {
+            int ret = QMessageBox::warning(this, tr("Could not save file!"), tr("Changes will be lost if the main dialog is closed!\nClose dialog anyway ?"), QMessageBox::StandardButton::Ok | QMessageBox::StandardButton::Cancel);
+            if (ret != QMessageBox::StandardButton::Ok)
+            {
+                return;
+            }
+        }
+    }
+
+    QDialog::reject();
 }
 
 void TT_DialogMain::initMenuBarAndToolbar()

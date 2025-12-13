@@ -5,7 +5,7 @@
 PluginSettings::PluginSettings()
 {
     this->fileName = "";
-    this->autoSaveOnQuit = false;
+    this->autoSaveOnQuit = true;
     this->insertionLayerPoint = "";
     this->insertionLayerName = "";
     this->insertionLayerAlti = "";

@@ -40,6 +40,7 @@ public:
 
 protected:
     void showEvent(QShowEvent *event) override;
+    void reject() override;
 
 private:
     Ui::TT_DialogMain *ui;
