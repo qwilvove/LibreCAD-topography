@@ -1,189 +1,174 @@
 ;NSIS Modern User Interface
-;Basic Example Script
+;Updated for MSVC Qt builds + explicit plugin copy to fix DLL loading issues
+;Multilingual installer UI + explicit LibreCAD .qm handling with error check
+;Recommended: Use windeployqt before running NSIS for automatic plugin deployment
+!include "LogicLib.nsh"
+!include "FileFunc.nsh"  ; For GetParent if needed
 
 ;--------------------------------
-;Include custom settings if exists
+;Include custom settings if exists (override Qt paths here)
   !include /NONFATAL "custom.nsh"
 
 ;--------------------------------
 ;Include version information
   !include /NONFATAL "generated_scmrev.nsh"
 !ifndef SCMREVISION
-    !define SCMREVISION "2.2.x"
+    !define SCMREVISION "2.2.1.3"
 !endif
 
 ;--------------------------------
 ;Include Modern UI
-
   !include "MUI2.nsh"
   !include "WinVer.nsh"
-
   !define MUI_ICON "..\..\librecad\res\main\librecad.ico"
   !define MUI_UNICON "..\..\librecad\res\main\uninstall.ico"
-
-  !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
-
-  ; GPL is not an EULA, no need to agree to it.
-  !define MUI_LICENSEPAGE_BUTTON $(^NextBtn)
-  !define MUI_LICENSEPAGE_TEXT_BOTTOM "You are now aware of your rights. Click Next to continue."
+  !define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\LibreCAD"
+  !define APPNAME "LibreCAD"
 
 ;--------------------------------
 ;General
-
-  ;Name and file
-  Name "${APPNAME}"
-  OutFile "../../generated/${InstallerName}.exe"
-
-  ;Default installation folder
-  InstallDir "${ProgramsFolder}\LibreCAD"
-
-  ;Get installation folder from registry if available
-  InstallDirRegKey HKCU "Software\${AppKeyName}" ""
-
-  ;Request application privileges for Windows Vista
+  Name "${APPNAME} ${SCMREVISION}"
+  OutFile "../../generated/LibreCAD-${SCMREVISION}-win64.exe"  ; Adjust name as needed
+  InstallDir "$PROGRAMFILES64\LibreCAD"  ; 64-bit default
+  InstallDirRegKey HKCU "Software\LibreCAD" ""
   RequestExecutionLevel admin
-  ;TargetMinimalOS 5.1
 
 ;--------------------------------
 ;Interface Settings
-
   !define MUI_ABORTWARNING
 
 ;--------------------------------
 ;Pages
-
   !insertmacro MUI_PAGE_LICENSE "../../licenses/gpl-2.0.txt"
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
-
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
 
 ;--------------------------------
 ;Languages
-
-  !insertmacro MUI_LANGUAGE "English"
-
-
+  !insertmacro MUI_LANGUAGE "English" ; Default
+  !insertmacro MUI_LANGUAGE "French"
+  !insertmacro MUI_LANGUAGE "German"
+  !insertmacro MUI_LANGUAGE "Spanish"
+  !insertmacro MUI_LANGUAGE "SpanishInternational"
+  !insertmacro MUI_LANGUAGE "SimpChinese"
+  !insertmacro MUI_LANGUAGE "TradChinese"
+  !insertmacro MUI_LANGUAGE "Japanese"
+  !insertmacro MUI_LANGUAGE "Korean"
+  !insertmacro MUI_LANGUAGE "Italian"
+  !insertmacro MUI_LANGUAGE "Dutch"
+  !insertmacro MUI_LANGUAGE "Russian"
+  !insertmacro MUI_LANGUAGE "Polish"
+  !insertmacro MUI_LANGUAGE "Portuguese"
+  !insertmacro MUI_LANGUAGE "PortugueseBR"
+  !insertmacro MUI_LANGUAGE "Czech"
+  !insertmacro MUI_LANGUAGE "Swedish"
+  !insertmacro MUI_LANGUAGE "Finnish"
+  !insertmacro MUI_LANGUAGE "Greek"
+  !insertmacro MUI_LANGUAGE "Turkish"
+  !insertmacro MUI_LANGUAGE "Arabic"
 
 Function .onInit
-
-  Push $R0
-  Push $R1
-  Push $R2
-
-; get account info into $R2
+  ; Admin check (keep for older Windows, optional now)
   userInfo::getAccountType
-  pop $0
-  StrCpy $R2 $0 5
-
-${If} ${IsWin2000}
-    strCmp $R2 "Admin" lbl_checkok
-    messageBox MB_OK "I am sorry, this installer needs Admin privileges, Please login as an administrator and install the software."
+  Pop $0
+  StrCpy $1 $0 5
+  ${If} $1 != "Admin"
+    MessageBox MB_OK|MB_ICONSTOP "This installer requires Administrator privileges."
     Quit
-${EndIf}
-
-${If} ${IsWinXP}
-    strCmp $R2 "Admin" lbl_checkok
-    messageBox MB_OK "I am sorry, this installer needs Admin privileges, Please login as an administrator and install the software."
-    Quit
-${EndIf}
-
-  lbl_checkok:
-  Pop $R2
-  Pop $R1
-  Pop $R0
-
+  ${EndIf}
 FunctionEnd
 
-;--- define Qt folders if not already defined in custom-5.3.nsi
+;--------------------------------
+; Qt paths for MSVC (override in custom.nsh if needed)
 !ifndef Qt_Dir
-    !define Qt_Dir 	"C:\Qt\Qt5.15.2"
+    !define Qt_Dir "C:\Qt"  ; Common root, adjust if different
 !endif
 !ifndef Qt_Version
-    !define Qt_Version 	"5.15.2"
+    !define Qt_Version "5.15.2"  ; Recommended for 2.2.x branch
 !endif
-!ifndef Mingw_Ver
-    !define Mingw_Ver 	"mingw81_64"
+!ifndef Arch_Suffix
+    !define Arch_Suffix "_64"  ; Use "" for 32-bit
 !endif
-;--- folder contains mingw32-make.exe
-!define MINGW_DIR 	"${Qt_Dir}\Tools\${Mingw_Ver}\bin"
-!define QTCREATOR_DIR 	"${Qt_Dir}\Tools\QtCreator\bin"
-!define QTMINGW_DIR 	"${Qt_Dir}\${Qt_Version}\${Mingw_Ver}"
-;--- folder contains qmake.exe
-!define QMAKE_DIR 	"${QTMINGW_DIR}\bin"
-!define PLUGINS_DIR 	"${QTMINGW_DIR}\plugins"
-!define TRANSLATIONS_DIR	"${QTMINGW_DIR}\translations"
+!ifndef MSVC_Ver
+    !define MSVC_Ver "msvc2019${Arch_Suffix}"
+!endif
+
+!define QT_BIN_DIR "${Qt_Dir}\${Qt_Version}\${MSVC_Ver}\bin"
+!define PLUGINS_DIR "${Qt_Dir}\${Qt_Version}\${MSVC_Ver}\plugins"
+!define TRANSLATIONS_DIR "${Qt_Dir}\${Qt_Version}\${MSVC_Ver}\translations"
 
 ;--------------------------------
-;Installer Sections
-
-Section "Install Section" SecInstall
+;Installer Section
+Section "Main Section" SecMain
   SetOutPath "$INSTDIR"
+
+  ; Copy built files (adjust if your build output is elsewhere)
   File /r "..\..\windows\*.*"
+
+  ; === Best option: Use windeployqt (recommended for MSVC) ===
+  ; Run this BEFORE compiling NSIS to auto-copy all needed DLLs/plugins to ..\..\windows\
+  ; Example command:
+  ; "${QT_BIN_DIR}\windeployqt.exe" --release "..\..\windows\LibreCAD.exe"
+  ; This handles all plugins, DLLs, and translations automatically.
+
+  ; === Fallback: Explicit critical plugin copies (non-fatal warnings if missing) ===
+  SetOutPath "$INSTDIR\platforms"
+  File /nonfatal "${PLUGINS_DIR}\platforms\qwindows.dll"
+  File /nonfatal "${PLUGINS_DIR}\platforms\qminimal.dll"
+  File /nonfatal "${PLUGINS_DIR}\platforms\qoffscreen.dll"
+
+  SetOutPath "$INSTDIR\imageformats"
+  File /nonfatal "${PLUGINS_DIR}\imageformats\qgif.dll"
+  File /nonfatal "${PLUGINS_DIR}\imageformats\qico.dll"
+  File /nonfatal "${PLUGINS_DIR}\imageformats\qjpeg.dll"
+  File /nonfatal "${PLUGINS_DIR}\imageformats\qsvg.dll"
+  File /nonfatal "${PLUGINS_DIR}\imageformats\qtiff.dll"
+
+  SetOutPath "$INSTDIR\styles"
+  File /nonfatal "${PLUGINS_DIR}\styles\qwindowsvistastyle.dll"
+
   SetOutPath "$INSTDIR\resources\qm"
-  File /NONFATAL "${TRANSLATIONS_DIR}\qt*.qm"
-  SetOutPath "$INSTDIR"
+  File /nonfatal "${TRANSLATIONS_DIR}\qt_*.qm"
+  File /nonfatal "${TRANSLATIONS_DIR}\qtbase_*.qm"
 
-  ;Store installation folder
-  WriteRegStr HKCU "Software\LibreCAD" "" $INSTDIR
+  ; === LibreCAD translations (.qm) ===
+  SetOutPath "$INSTDIR\ts"
+  ClearErrors
+  File /r "..\..\windows\ts\*.qm"
+  ${If} ${Errors}
+    MessageBox MB_OK|MB_ICONSTOP "ERROR: No LibreCAD translation files (.qm) found!$\r$\nRun 'lrelease' on .ts files before building installer."
+    Abort
+  ${EndIf}
 
-  ;Create uninstaller
+  ; Registry + Shortcuts
+  WriteRegStr HKCU "Software\LibreCAD" "" "$INSTDIR"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-  ; create shortcuts
-  createShortCut "$DESKTOP\LibreCAD.lnk" "$INSTDIR\LibreCAD.exe"
+  SetShellVarContext all  ; For all-users shortcuts
+  CreateDirectory "$SMPROGRAMS\LibreCAD"
+  CreateShortCut "$SMPROGRAMS\LibreCAD\LibreCAD.lnk" "$INSTDIR\LibreCAD.exe"
+  CreateShortCut "$SMPROGRAMS\LibreCAD\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+  CreateShortCut "$DESKTOP\LibreCAD.lnk" "$INSTDIR\LibreCAD.exe"  ; Optional desktop
 
-  ; Startmenu shortcuts
-  createDirectory "$SMPROGRAMS\LibreCAD\"
-  createShortCut "$SMPROGRAMS\LibreCAD\LibreCAD.lnk" "$INSTDIR\LibreCAD.exe"
-  createShortCut "$SMPROGRAMS\LibreCAD\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
-
-  ; create add/remove software entries
-  WriteRegStr HKLM "${UNINSTKEY}" "DisplayName" "${APPNAME}"
+  ; Uninstall info
+  WriteRegStr HKLM "${UNINSTKEY}" "DisplayName" "LibreCAD ${SCMREVISION}"
   WriteRegStr HKLM "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\LibreCAD.exe"
   WriteRegStr HKLM "${UNINSTKEY}" "DisplayVersion" "${SCMREVISION}"
   WriteRegStr HKLM "${UNINSTKEY}" "Publisher" "LibreCAD Team"
-  WriteRegStr HKLM "${UNINSTKEY}" "Version" "2.2.1"
-  WriteRegStr HKLM "${UNINSTKEY}" "HelpLink" "https://librecad.org/"
+  WriteRegStr HKLM "${UNINSTKEY}" "URLInfoAbout" "https://librecad.org"
   WriteRegStr HKLM "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKLM "${UNINSTKEY}" "URLInfoAbout" "http://librecad.org/"
-  WriteRegStr HKLM "${UNINSTKEY}" "Comments" "LibreCAD - Open Source 2D-CAD"
   WriteRegStr HKLM "${UNINSTKEY}" "UninstallString" "$INSTDIR\Uninstall.exe"
-  WriteRegDWORD HKLM "${UNINSTKEY}" "VersionMinor" "2"
-  WriteRegDWORD HKLM "${UNINSTKEY}" "VersionMajor" "2"
-  WriteRegDWORD HKLM "${UNINSTKEY}" "NoModify" "1"
-  WriteRegDWORD HKLM "${UNINSTKEY}" "NoRepair" "1"
-
-  ; Open Donate URL
-  IfSilent +2
-  Exec "rundll32 url.dll,FileProtocolHandler http://librecad.org/donate.html"
-
+  WriteRegDWORD HKLM "${UNINSTKEY}" "NoModify" 1
+  WriteRegDWORD HKLM "${UNINSTKEY}" "NoRepair" 1
 SectionEnd
-
-;--------------------------------
-;Descriptions
-
-  ;Language strings
-  LangString DESC_SecInstall ${LANG_ENGLISH} "A test section."
-
-;--------------------------------
-;Uninstaller Section
 
 Section "Uninstall"
-
-  ;ADD YOUR OWN FILES HERE...
-
-  Delete "$INSTDIR\Uninstall.exe"
+  SetShellVarContext all
   Delete "$DESKTOP\LibreCAD.lnk"
-  RMDir /r "$SMPROGRAMS\LibreCAD\"
-  RMDir /r $INSTDIR
-
-  RMDir "$INSTDIR"
-
-  DeleteRegKey /ifempty HKCU "Software\${AppKeyName}"
+  RMDir /r "$SMPROGRAMS\LibreCAD"
+  RMDir /r "$INSTDIR"
+  DeleteRegKey HKCU "Software\LibreCAD"
   DeleteRegKey HKLM "${UNINSTKEY}"
-
 SectionEnd
-
-
