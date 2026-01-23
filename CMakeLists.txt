@@ -13,7 +13,7 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 COMPONENTS Gui Core Widgets PrintSupport Svg Network REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
-find_package(Boost REQUIRED COMPONENTS)
+find_package(Boost REQUIRED)
 find_package(Freetype)
 
 # Define all sources (as before)
@@ -224,6 +224,16 @@ set(SHARED_INCLUDES
     librecad/src/ui/view
 )
 
+set(LIBRECAD_RES
+    librecad/res/arrows/arrows.qrc
+    librecad/res/controls/controls.qrc
+    librecad/res/dxf/dxf.qrc
+    librecad/res/gdt/gdt.qrc
+    librecad/res/icons/icons.qrc
+    librecad/res/images/images.qrc
+    licenses/licenses.qrc
+)
+
 # Shared sources: All from SOURCES except main, consoles, and tests
 set(SHARED_SOURCES
     libraries/jwwlib/src/dl_attributes.h
@@ -371,6 +381,8 @@ set(SHARED_SOURCES
     librecad/src/actions/drawing/draw/curve/lc_actiondrawarc2pointslength.h
     librecad/src/actions/drawing/draw/curve/lc_actiondrawarc2pointsradius.cpp
     librecad/src/actions/drawing/draw/curve/lc_actiondrawarc2pointsradius.h
+    librecad/src/actions/drawing/draw/curve/lc_actiondrawhyperbolafp.cpp
+    librecad/src/actions/drawing/draw/curve/lc_actiondrawhyperbolafp.cpp
     librecad/src/actions/drawing/draw/curve/lc_actiondrawparabola4points.cpp
     librecad/src/actions/drawing/draw/curve/lc_actiondrawparabolaFD.cpp
     librecad/src/actions/drawing/draw/curve/rs_actiondrawarc.cpp
@@ -738,6 +750,8 @@ set(SHARED_SOURCES
     librecad/src/lib/engine/document/entities/lc_parabola.cpp
     librecad/src/lib/engine/document/entities/lc_rect.cpp
     librecad/src/lib/engine/document/entities/lc_rect.h
+    librecad/src/lib/engine/document/entities/lc_splinehelper.cpp
+    librecad/src/lib/engine/document/entities/lc_splinehelper.h
     librecad/src/lib/engine/document/entities/lc_splinepoints.cpp
     librecad/src/lib/engine/document/entities/lc_splinepoints.h
     librecad/src/lib/engine/document/entities/lc_tolerance.cpp
@@ -924,6 +938,8 @@ set(SHARED_SOURCES
     librecad/src/lib/fileio/lc_filenameselectionservice.h
     librecad/src/lib/fileio/rs_fileio.cpp
     librecad/src/lib/fileio/rs_fileio.h
+    librecad/src/lib/filters/lc_hyperbolaspline.cpp
+    librecad/src/lib/filters/lc_hyperbolaspline.h
     librecad/src/lib/filters/rs_filtercxf.cpp
     librecad/src/lib/filters/rs_filterdxf1.cpp
     librecad/src/lib/filters/rs_filterdxf1.h
@@ -1260,6 +1276,8 @@ set(SHARED_SOURCES
     librecad/src/ui/dialogs/entity/lc_entitypropertieseditorsupport.h
     librecad/src/ui/dialogs/entity/lc_entitypropertieseditorwidget.cpp
     librecad/src/ui/dialogs/entity/lc_entitypropertieseditorwidget.h
+    librecad/src/ui/dialogs/entity/lc_hyperbolapropertieseditingwidget.h
+    librecad/src/ui/dialogs/entity/lc_hyperbolapropertieseditingwidget.cpp
     librecad/src/ui/dialogs/entity/lc_imagepropertieseditingwidget.cpp
     librecad/src/ui/dialogs/entity/lc_imagepropertieseditingwidget.h
     librecad/src/ui/dialogs/entity/lc_insertpropertieseditingwidget.cpp
@@ -1538,7 +1556,6 @@ target_include_directories(librecad_lib PRIVATE
 
 target_link_libraries(librecad_lib PRIVATE
     Qt6::Core Qt6::Widgets Qt6::Gui Qt6::PrintSupport Qt6::Svg Qt6::Network
-    ${Boost_LIBRARIES}
 )
 set_property(TARGET librecad_lib PROPERTY AUTOUIC_OPTIONS --connections string)
 
@@ -1556,13 +1573,7 @@ set(MAIN_SOURCES
     librecad/src/main/console_dxf2png.h
     librecad/src/ui/dialogs/main/qg_dlginitial.cpp
     librecad/src/ui/dialogs/main/qg_dlginitial.h
-    librecad/res/arrows/arrows.qrc
-    librecad/res/controls/controls.qrc
-    librecad/res/dxf/dxf.qrc
-    librecad/res/gdt/gdt.qrc
-    librecad/res/icons/icons.qrc
-    librecad/res/images/images.qrc
-    licenses/licenses.qrc
+    ${LIBRECAD_RES}
 )
 
 # Main executable
@@ -1580,7 +1591,7 @@ target_link_libraries(librecad PRIVATE
 install(TARGETS librecad RUNTIME DESTINATION bin)
 
 # Translations
-set(TS_DIR ../librecad/ts)
+set(TS_DIR librecad/ts)
 set(TS_FILES
     librecad/ts/librecad_ar.ts
     librecad/ts/librecad_ca.ts
@@ -1672,9 +1683,14 @@ if(BUILD_TESTS)
 	# this is needed to allow testing methods used by main()
 	# main() is excluded when BUILD_TEST=ON
 	${MAIN_SOURCES}
+        ${LIBRECAD_RES}
 	### The actual tests
-        librecad/src/lib/math/tests/rs_math_tests.cpp
+        librecad/src/lib/engine/document/entities/tests/lc_splinehelper_tests.cpp
+        librecad/src/lib/engine/document/entities/tests/lc_hyperbola_tests.cpp
         librecad/src/lib/engine/document/entities/tests/rs_ellipse_tests.cpp
+        librecad/src/lib/engine/document/entities/tests/rs_spline_tests.cpp
+        librecad/src/lib/math/tests/rs_math_tests.cpp
+        librecad/src/lib/math/tests/lc_quadratic_tests.cpp
     )
 
     # Include directories for rs_math.h and other dependencies
@@ -1686,7 +1702,6 @@ if(BUILD_TESTS)
     target_link_libraries(librecad_tests PRIVATE
         librecad_lib
         Catch2::Catch2WithMain
-        ${Boost_LIBRARIES}
         Qt6::Core
         Qt6::Gui
         Qt6::Network
