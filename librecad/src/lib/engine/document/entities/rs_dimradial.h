@@ -38,7 +38,7 @@ struct RS_DimRadialData {
      * Default constructor. Leaves the data object uninitialized.
      */
     RS_DimRadialData();
-        RS_DimRadialData(const RS_DimRadialData& other);
+
     /**
      * Constructor with initialisation.
      *
@@ -82,8 +82,8 @@ public:
         return m_dimRadialData;
     }
 
-	RS_VectorSolutions getRefPoints() const override;
-	QString getMeasuredLabel() override;
+    RS_VectorSolutions getRefPoints() const override;
+    QString getMeasuredLabel() override;
 
 
     RS_Vector getDefinitionPoint() {

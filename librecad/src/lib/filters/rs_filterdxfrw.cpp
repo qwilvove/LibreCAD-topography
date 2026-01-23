@@ -24,19 +24,19 @@
 **********************************************************************/
 
 #include<cstdlib>
+#include <stack>
 #include<utility>
 
 #include <QRegularExpression>
 #include <QStringList>
 #include <QStringConverter>
-
-
 #include <QFile>
 #include <QFileInfo>
-#include <stack>
 
 #include "rs_filterdxfrw.h"
 #include "lc_containertraverser.h"
+#include "lc_hyperbola.h"
+#include "lc_hyperbolaspline.h"
 #include "lc_parabola.h"
 #include "rs_arc.h"
 #include "rs_circle.h"
@@ -79,6 +79,15 @@
 #include "libdwgr.h"
 #include "rs_debug.h"
 #endif // DWGSUPPORT
+
+namespace {
+
+// convert DRW_Coord to RS_Vector
+RS_Vector coordToVector(const std::shared_ptr<DRW_Coord>& c) {
+    return c ? RS_Vector(c->x, c->y) : RS_Vector(false);
+};
+
+}
 
 /**
  * Default constructor.
@@ -831,77 +840,115 @@ void RS_FilterDXFRW::addPolyline(const DRW_Polyline& data) {
     m_currentContainer->addEntity(polyline.release());
 }
 
+bool RS_FilterDXFRW::handleQuadraticConicSpline(const DRW_Spline* data) {
+    if (data->degree != 2 || data->controllist.size() != 3) {
+        return false;
+    }
+
+    // Try hyperbola first
+    std::unique_ptr<RS_Entity> en = LC_HyperbolaSpline::splineToHyperbola(*data, m_currentContainer);
+    if (en == nullptr) {
+        // Fallback to parabola
+        LC_ParabolaData pd{{
+                coordToVector(data->controllist.at(0)),
+                coordToVector(data->controllist.at(1)),
+                coordToVector(data->controllist.at(2))
+               }};
+        en = std::make_unique<LC_Parabola>(m_currentContainer, pd);
+    }
+    setEntityAttributes(en.get(), data);
+    en->update();
+    m_currentContainer->addEntity(en.release());
+
+    return true;
+}
+
 /**
  * Implementation of the method which handles splines.
  */
 void RS_FilterDXFRW::addSpline(const DRW_Spline* data) {
     RS_DEBUG->print("RS_FilterDXFRW::addSpline: degree: %d", data->degree);
 
-    // todo - sand - review this, quite a strange logic there... why spline points can't be with degree 3, for example?
-    if(data->degree == 2){
-        if (data->controllist.size() == 3) { // parabola
-            auto toRs = [](const std::shared_ptr<DRW_Coord>& coord) -> RS_Vector {
-                return coord ? RS_Vector{coord->x, coord->y} : RS_Vector{};
-            };
-            LC_ParabolaData d{{toRs(data->controllist.at(0)),
-                               toRs(data->controllist.at(1)),
-                               toRs(data->controllist.at(2))}};
-            auto* parabola = new LC_Parabola(m_currentContainer, d);
-            setEntityAttributes(parabola, data);
-            parabola->update();
-            m_currentContainer->addEntity(parabola);
-            return;
-        }
-        else { // spline points
-            LC_SplinePoints *splinePoints;
-            LC_SplinePointsData d(((data->flags & 0x1) == 0x1), data->nfit == 0);
-            splinePoints = new LC_SplinePoints(m_currentContainer, d);
-            setEntityAttributes(splinePoints, data);
-            m_currentContainer->addEntity(splinePoints);
+    // Special case: rational quadratic conic (hyperbola or parabola)
+    if (handleQuadraticConicSpline(data)) {
+        return;  // Conic handled successfully
+    }
 
-            for (auto const &vert: data->controllist) {
+    // Spline points case (degree 2, more than 3 control points)
+    if (data->degree == 2) {
+        bool closed = (data->flags & 0x1) == 0x1;
+        bool controlOnly = data->nfit == 0;
+
+        LC_SplinePointsData d(closed, controlOnly);
+        LC_SplinePoints* splinePoints = new LC_SplinePoints(m_currentContainer, d);
+        setEntityAttributes(splinePoints, data);
+
+        for (const auto& vert : data->controllist) {
+            if (vert) {
                 splinePoints->addControlPoint({vert->x, vert->y});
             }
-
-            for (auto const &vert: data->fitlist) {
+        }
+        for (const auto& vert : data->fitlist) {
+            if (vert) {
                 splinePoints->addPoint({vert->x, vert->y});
             }
-
-            splinePoints->update();
-            return;
         }
-    }
 
-    // ordinary spline
-    RS_Spline* spline = nullptr;
-    if (data->degree >= 1 && data->degree <= 3) {
-        RS_SplineData d(data->degree, ((data->flags&0x1)==0x1));
-        if (data->knotslist.size()) {
-            double tolknot {(0 >= data->tolknot) ? 1e-7 : data->tolknot};
-            for (auto const& k : data->knotslist) {
-                d.knotslist.push_back( RS_Math::round(k, tolknot));
-            }
-        }
-        spline = new RS_Spline(m_currentContainer, d);
-        setEntityAttributes(spline, data);
-
-        m_currentContainer->addEntity(spline);
-    } else {
-        RS_DEBUG->print(RS_Debug::D_WARNING,
-                        "RS_FilterDXF::addSpline: Invalid degree for spline: %d. "
-                        "Accepted values are 1..3.", data->degree);
+        splinePoints->update();
+        m_currentContainer->addEntity(splinePoints);
         return;
     }
-    for (auto const& vert: data->controllist) {
-        spline->addControlPoint({vert->x, vert->y});
+
+    // General spline (degree 1–3)
+    if (data->degree < 1 || data->degree > 3) {
+        RS_DEBUG->print(RS_Debug::D_WARNING,
+                        "RS_FilterDXFRW::addSpline: unsupported spline degree %d", data->degree);
+        return;
     }
-    if (data->ncontrol== 0 && data->degree != 2){
-        for (auto const& vert: data->fitlist)
-            spline->addControlPoint({vert->x, vert->y});
+
+    bool isClosed = (data->flags & 0x1) == 0x1;
+
+    RS_SplineData d(data->degree, isClosed);
+    if (!data->knotslist.empty()) {
+        double tolknot = (data->tolknot > 0.0) ? data->tolknot : 1e-7;
+        for (double k : data->knotslist) {
+            d.knotslist.push_back(RS_Math::round(k, tolknot));
+        }
     }
-    // ensure that the spline is really closed
-    if (spline->data.closed and !spline->hasWrappedControlPoints()) {
-        spline->data.closed = 0;
+
+    d.type = isClosed ? RS_SplineData::SplineType::Standard : RS_SplineData::SplineType::ClampedOpen;
+
+    RS_Spline* spline = new RS_Spline(m_currentContainer, d);
+    setEntityAttributes(spline, data);
+    m_currentContainer->addEntity(spline);
+
+    // Control points and weights
+    size_t numCtrl = data->controllist.size();
+    if (numCtrl != data->weightlist.size()) {
+        RS_DEBUG->print(RS_Debug::D_WARNING,
+                        "RS_FilterDXFRW::addSpline: control points (%zu) != weights (%zu)",
+                        numCtrl, data->weightlist.size());
+    }
+
+    for (size_t i = 0; i < numCtrl; ++i) {
+        const auto& vert = data->controllist[i];
+        double weight = (i < data->weightlist.size()) ? data->weightlist[i] : 1.0;
+        if (vert) {
+            spline->addControlPointRaw({vert->x, vert->y}, weight);
+        }
+    }
+
+    // Fit points fallback
+    if (numCtrl == 0 && data->degree != 2) {
+        std::vector<RS_Vector> fitPoints;
+        std::transform(data->fitlist.begin(), data->fitlist.end(), std::back_inserter(fitPoints), [](const std::shared_ptr<DRW_Coord>& coord) {
+            return RS_Vector{coord->x, coord->y};
+        });
+        spline->setFitPoints(fitPoints);
+    }
+
+    if (isClosed) {
+        spline->setClosed(true);
     }
 
     spline->update();
@@ -1230,9 +1277,9 @@ LC_ExtEntityData* RS_FilterDXFRW::extractEntityExtData(const std::vector<std::sh
     int currentValType = -1;
     std::stack<LC_ExtDataTag*> tagStack;
     bool expectType = false;
-    int listLevel = 0;
+    [[maybe_unused]] int listLevel = 0;
     bool inTagsList = false;
-    for (auto v: extData) {
+    for (auto& v: extData) {
         int code = v->code();
         switch (code) {
             case 1001: { // application name
@@ -3567,6 +3614,8 @@ void RS_FilterDXFRW::writeEntity(RS_Entity* e){
     case RS2::EntityEllipse:
         writeEllipse(static_cast<RS_Ellipse*>(e));
         break;
+    case RS2::EntityHyperbola:
+        writeHyperbola(static_cast<LC_Hyperbola*>(e));
     case RS2::EntityPolyline:
         writeLWPolyline(static_cast<RS_Polyline*>(e));
         break;
@@ -3797,7 +3846,7 @@ void RS_FilterDXFRW::writeSpline(RS_Spline *s) {
 
     if (s->getNumberOfControlPoints() < size_t(s->getDegree()+1)) {
         RS_DEBUG->print(RS_Debug::D_ERROR, "RS_FilterDXF::writeSpline: "
-                        "Discarding spline: not enough control points given.");
+                                           "Discarding spline: not enough control points given.");
         return;
     }
 
@@ -3806,7 +3855,7 @@ void RS_FilterDXFRW::writeSpline(RS_Spline *s) {
         DRW_Polyline pol;
         for(RS_Entity* e: lc::LC_ContainerTraverser{*s, RS2::ResolveNone}.entities()) {
             pol.addVertex( DRW_Vertex(e->getStartpoint().x,
-                                      e->getStartpoint().y, 0.0, 0.0));
+                                     e->getStartpoint().y, 0.0, 0.0));
         }
         if (s->isClosed()) {
             pol.flags = 1;
@@ -3822,18 +3871,19 @@ void RS_FilterDXFRW::writeSpline(RS_Spline *s) {
 
     // dxf spline group code=70
     // bit coded: 1: closed; 2: periodic; 4: rational; 8: planar; 16:linear
-    sp.flags = (s->isClosed()) ? 0x1011 : 0x1000;
+    sp.flags = (s->isClosed()) ? 0b1011 : 0b1000;
 
     // write spline control points:
-    for (const RS_Vector& v: s->getControlPoints()) {
+    for (const RS_Vector& v: s->getUnwrappedControlPoints()) {
         sp.controllist.push_back(std::make_shared<DRW_Coord>(v.x, v.y));
     }
+    sp.weightlist = s->getUnwrappedWeights();
 
     sp.ncontrol = sp.controllist.size();
     sp.degree = s->getDegree();
 
     // knot vector from RS_Spline
-    sp.knotslist = (s->isClosed()) ? s->knotu(sp.ncontrol, sp.degree + 1) : s->knot(sp.ncontrol, sp.degree + 1);
+    sp.knotslist = s->getUnwrappedKnotVector();
     sp.nknots = sp.knotslist.size();
 
     getEntityAttributes(&sp, s);
@@ -3943,6 +3993,24 @@ void RS_FilterDXFRW::writeEllipse(RS_Ellipse* s) {
         el.endparam = s->getAngle2();
     }
     m_dxfW->writeEllipse(&el);
+}
+
+/**
+ * Write a hyperbola entity as an exact rational quadratic SPLINE.
+ *
+ * Uses LC_HyperbolaSpline to create the standard SPLINE representation.
+ */
+void RS_FilterDXFRW::writeHyperbola(LC_Hyperbola* h) {
+    if (h == nullptr || !h->isValid() || m_dxfW == nullptr) {
+        return;
+    }
+
+    DRW_Spline spl;
+    getEntityAttributes(&spl, h);
+
+    if (LC_HyperbolaSpline::hyperbolaToSpline(h->getData(), spl)) {
+        m_dxfW->writeSpline(&spl);
+    }
 }
 
 /**

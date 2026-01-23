@@ -84,45 +84,53 @@ RS_Entity::RS_Entity(RS_EntityContainer *parent)
 // }
 
 RS_Entity::RS_Entity(const RS_Entity& other):
-    parent{other.parent}
-    , minV {other.minV}
-    , maxV {other.maxV}
-    , m_layer {other.m_layer}
-    , updateEnabled {other.updateEnabled}
-    , m_pImpl{std::make_unique<Impl>(*other.m_pImpl)}{
-    init(false);
+                                               parent{other.parent}
+                                               , minV {other.minV}
+                                               , maxV {other.maxV}
+                                               , m_layer {other.m_layer}
+                                               , updateEnabled {other.updateEnabled}
+                                               , m_pImpl{std::make_unique<Impl>(*other.m_pImpl)}{
+  setFlag(RS2::FlagVisible);
+  initId();
 }
 
 RS_Entity& RS_Entity::operator = (const RS_Entity& other){
+  if (this != &other) {
     parent = other.parent;
     minV  = other.minV;
     maxV  = other.maxV;
     m_layer  = other.m_layer;
     updateEnabled = other.updateEnabled;
-    m_pImpl->fromOther(other.m_pImpl.get());
+    m_pImpl = std::make_unique<Impl>(*other.m_pImpl);
+    setFlag(RS2::FlagVisible);
     initId();
-    return *this;
+  }
+  return *this;
 }
 
 RS_Entity::RS_Entity(RS_Entity&& other):
-    parent{other.parent}
-    , minV {other.minV}
-    , maxV {other.maxV}
-    , m_layer {other.m_layer}
-    , updateEnabled {other.updateEnabled}
-    , m_pImpl{std::move(other.m_pImpl)}{
-    initId();
+                                          parent{other.parent}
+                                          , minV {other.minV}
+                                          , maxV {other.maxV}
+                                          , m_layer {other.m_layer}
+                                          , updateEnabled {other.updateEnabled}
+                                          , m_pImpl{std::move(other.m_pImpl)}{
+  setFlag(RS2::FlagVisible);
+  initId();
 }
 
 RS_Entity& RS_Entity::operator = (RS_Entity&& other){
+  if (this != &other) {
     parent = other.parent;
     minV  = other.minV;
     maxV  = other.maxV;
     m_layer  = other.m_layer;
     updateEnabled = other.updateEnabled;
     m_pImpl = std::move(other.m_pImpl);
+    setFlag(RS2::FlagVisible);
     initId();
-    return *this;
+  }
+  return *this;
 }
 
 RS_Entity::~RS_Entity() = default;
@@ -1019,6 +1027,7 @@ bool RS_Entity::trimmable() const{
     case RS2::EntityArc:
     case RS2::EntityCircle: // fixme - check whether prepareTrim() is supported there?
     case RS2::EntityEllipse:
+    case RS2::EntityHyperbola:
     case RS2::EntityLine:
     case RS2::EntityParabola:
     case RS2::EntitySplinePoints: // fixme - check whether prepareTrim() is supported there?

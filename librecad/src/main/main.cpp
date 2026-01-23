@@ -57,6 +57,10 @@
 #include "rs_settings.h"
 #include "rs_system.h"
 
+// default version: if not supplied by during building
+#ifndef LC_VERSION
+#define LC_VERSION "2.2.2-alpha"
+#endif
 
 // fixme - sand - files - complete refactoring
 namespace
@@ -243,8 +247,14 @@ int main(int argc, char** argv) {
 
 #    else
 
-    QT_REQUIRE_VERSION(argc, argv, "5.2.1");
-
+    // Create compilater's error: this QT macros may be in .pro file only.
+    //QT_REQUIRE_VERSION(argc, argv, "6.4");
+    
+    // May be this code must be on begin of main.cpp?
+    #if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+        #error "This programm requires Qt6 ver.6.4.0 or higher."
+    #endif
+    
     // Check first two arguments in order to decide if we want to run librecad
     // as console dxf2pdf or dxf2png tools. On Linux we can create a link to
     // librecad executable and  name it dxf2pdf. So, we can run either:
@@ -474,7 +484,6 @@ QStringList handleArgs(int argc, char** argv, const QList<int>& argClean){
 
 QString LCReleaseLabel(){
     QString version{XSTR(LC_VERSION)};
-    QString label;
     const std::map<QString, QString> labelMap = {
         {"rc", QObject::tr("Release Candidate")},
         {"beta", QObject::tr("BETA")},
@@ -482,11 +491,12 @@ QString LCReleaseLabel(){
     };
     for (const auto& [key, value]: labelMap) {
         if (version.contains(key, Qt::CaseInsensitive)) {
-            label=value;
-            break;
+            return value;
         }
     }
-    return label;
+
+    // Issue #2371: default version to alpha
+    return QObject::tr("ALPHA");
 }
 
 namespace {
